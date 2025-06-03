@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.miyukbooks.app"
+      "bundleIdentifier": "com.miyukbooks.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -27,6 +30,11 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "miyuk-books"
+    "scheme": "miyuk-books",
+    "extra": {
+      "eas": {
+        "projectId": "5e6bb0cc-2956-487a-ad08-309c5a6362ca"
+      }
+    }
   }
 }
