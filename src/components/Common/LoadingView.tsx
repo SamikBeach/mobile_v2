@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 
-export default function LoadingView(): React.JSX.Element {
+export function LoadingView(): React.JSX.Element {
   return (
     <View style={styles.container}>
       <ActivityIndicator size='large' color='#007AFF' />

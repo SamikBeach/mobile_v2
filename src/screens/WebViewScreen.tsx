@@ -2,8 +2,8 @@ import React, { useRef, useState } from 'react';
 import { StyleSheet, SafeAreaView, Platform } from 'react-native';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
-import LoadingView from '../components/LoadingView';
-import ErrorView from '../components/ErrorView';
+import { LoadingView } from '../components/Common/LoadingView';
+import { ErrorView } from '../components/Common/ErrorView';
 
 const MIYUK_BOOKS_URL = 'https://miyukbooks.com/';
 

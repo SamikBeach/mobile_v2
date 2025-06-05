@@ -5,7 +5,7 @@ interface ErrorViewProps {
   onRetry: () => void;
 }
 
-export default function ErrorView({ onRetry }: ErrorViewProps): React.JSX.Element {
+export function ErrorView({ onRetry }: ErrorViewProps): React.JSX.Element {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>연결 오류</Text>

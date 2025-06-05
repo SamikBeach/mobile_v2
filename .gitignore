@@ -32,8 +32,13 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+.env.production
+.env.development
 
 # typescript
 *.tsbuildinfo
 
 static-lens-255718-d738416ff70f.json
+
+src_frontend/*
