@@ -61,12 +61,23 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 export const BookCardSkeleton: React.FC = () => {
   return (
     <View style={styles.bookCardContainer}>
-      <Skeleton style={styles.bookCoverSkeleton} />
+      <View style={styles.bookImageContainer}>
+        <Skeleton style={styles.bookCoverSkeleton} />
+      </View>
       <View style={styles.bookContentSkeleton}>
-        <Skeleton width='100%' height={16} style={{ marginBottom: 8 }} />
-        <Skeleton width='70%' height={14} style={{ marginBottom: 8 }} />
-        <Skeleton width='50%' height={12} style={{ marginBottom: 8 }} />
-        <Skeleton width='40%' height={12} />
+        <Skeleton width='100%' height={20} style={{ marginBottom: 2 }} />
+        <Skeleton width='100%' height={20} style={{ marginBottom: 2 }} />
+        <Skeleton width='70%' height={18} style={{ marginBottom: 4 }} />
+        <View style={styles.bookRatingSkeleton}>
+          <View style={styles.bookRatingItem}>
+            <Skeleton width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+            <Skeleton width={25} height={13} />
+          </View>
+          <View style={styles.bookRatingItem}>
+            <Skeleton width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+            <Skeleton width={20} height={13} />
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -77,18 +88,25 @@ export const LibraryCardSkeleton: React.FC = () => {
     <View style={styles.libraryCardContainer}>
       <View style={styles.libraryHeaderSkeleton}>
         <View style={styles.libraryOwnerSkeleton}>
-          <Skeleton width={40} height={40} borderRadius={20} style={{ marginRight: 12 }} />
-          <View>
-            <Skeleton width={80} height={14} style={{ marginBottom: 4 }} />
-            <Skeleton width={120} height={16} />
+          <Skeleton width={32} height={32} borderRadius={16} style={{ marginRight: 8 }} />
+          <View style={{ flex: 1 }}>
+            <Skeleton width={80} height={14} style={{ marginBottom: 2 }} />
+            <Skeleton width={60} height={12} />
           </View>
         </View>
-        <Skeleton width={40} height={20} borderRadius={10} />
+        <Skeleton width={40} height={20} borderRadius={12} />
       </View>
-      <Skeleton width='100%' height={40} style={{ marginBottom: 12 }} />
+      <View style={{ paddingHorizontal: 12, marginBottom: 12 }}>
+        <Skeleton width='100%' height={14} />
+      </View>
+      <View style={styles.libraryBooksSkeleton}>
+        <Skeleton style={styles.libraryBookImageSkeleton} />
+        <Skeleton style={styles.libraryBookImageSkeleton} />
+        <Skeleton style={styles.libraryBookImageSkeleton} />
+      </View>
       <View style={styles.libraryStatsSkeleton}>
-        <Skeleton width={60} height={12} />
-        <Skeleton width={80} height={12} />
+        <Skeleton width={40} height={12} />
+        <Skeleton width={40} height={12} />
       </View>
     </View>
   );
@@ -100,12 +118,11 @@ export const ReviewCardSkeleton: React.FC = () => {
       <View style={styles.reviewHeaderSkeleton}>
         <View style={styles.reviewUserSkeleton}>
           <Skeleton width={40} height={40} borderRadius={20} style={{ marginRight: 12 }} />
-          <View>
-            <Skeleton width={80} height={14} style={{ marginBottom: 4 }} />
+          <View style={{ flex: 1 }}>
+            <Skeleton width={80} height={14} style={{ marginBottom: 2 }} />
             <Skeleton width={60} height={12} />
           </View>
         </View>
-        <Skeleton width={60} height={16} />
       </View>
       <Skeleton width='100%' height={60} style={{ marginBottom: 12 }} />
       <View style={styles.reviewBookSkeleton}>
@@ -137,63 +154,69 @@ const styles = StyleSheet.create({
   },
   bookCardContainer: {
     backgroundColor: 'white',
-    borderRadius: 12,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    width: '100%',
   },
   bookCoverSkeleton: {
-    aspectRatio: 3 / 4.5,
+    width: '100%',
+    height: '100%',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   bookContentSkeleton: {
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    paddingBottom: 10,
   },
   libraryCardContainer: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    overflow: 'hidden',
+    minHeight: 300,
+    flex: 1,
   },
   libraryHeaderSkeleton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    padding: 12,
+    paddingBottom: 8,
   },
   libraryOwnerSkeleton: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: 8,
+  },
+  libraryBooksSkeleton: {
+    flexDirection: 'row',
+    gap: 6,
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingBottom: 8,
+  },
+  libraryBookImageSkeleton: {
+    flex: 1,
+    aspectRatio: 5 / 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   libraryStatsSkeleton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 16,
+    paddingHorizontal: 12,
+    paddingBottom: 12,
   },
   reviewCardContainer: {
     backgroundColor: 'white',
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   reviewHeaderSkeleton: {
     flexDirection: 'row',
@@ -209,7 +232,7 @@ const styles = StyleSheet.create({
   reviewBookSkeleton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#F9FAFB',
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
@@ -217,5 +240,23 @@ const styles = StyleSheet.create({
   reviewStatsSkeleton: {
     flexDirection: 'row',
     gap: 16,
+  },
+  bookImageContainer: {
+    backgroundColor: 'white',
+    width: '100%',
+    height: 280,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bookRatingSkeleton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 4,
+  },
+  bookRatingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
 });

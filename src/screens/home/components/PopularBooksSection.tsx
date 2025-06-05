@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { TrendingUp } from 'lucide-react-native';
 import { BookCard, SkeletonLoader } from '../../../components';
 import { useHomePopularBooksQuery } from '../../../hooks/useHomeQueries';
 import { HomeBookPreview } from '../../../apis';
@@ -51,7 +52,7 @@ export const PopularBooksSection: React.FC<PopularBooksSectionProps> = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <Text style={styles.icon}>💡</Text>
+          <TrendingUp size={20} color='#9333EA' />
           <Text style={styles.title}>지금 인기 있는 책</Text>
         </View>
         <TouchableOpacity onPress={handleMorePress}>
@@ -90,17 +91,28 @@ export const PopularBooksSkeleton: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <Text style={styles.icon}>💡</Text>
+          <TrendingUp size={20} color='#9333EA' />
           <Text style={styles.title}>지금 인기 있는 책</Text>
         </View>
         <Text style={styles.moreButton}>더보기</Text>
       </View>
-      <View style={styles.booksGrid}>
-        {[...Array(3)].map((_, index) => (
-          <View key={index} style={styles.bookItem}>
+      <View style={styles.flatListContainer}>
+        <View style={styles.row}>
+          <View style={styles.bookItem}>
             <SkeletonLoader.BookCardSkeleton />
           </View>
-        ))}
+          <View style={styles.bookItem}>
+            <SkeletonLoader.BookCardSkeleton />
+          </View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.bookItem}>
+            <SkeletonLoader.BookCardSkeleton />
+          </View>
+          <View style={styles.bookItem}>
+            <SkeletonLoader.BookCardSkeleton />
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -108,38 +120,32 @@ export const PopularBooksSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 8, // p-2
-    paddingVertical: 8,
+    padding: 16,
     backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8, // mb-2
+    marginBottom: 16,
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6, // gap-1.5
+    gap: 8,
   },
-  icon: {
-    fontSize: 16, // h-4 w-4
-    color: '#9333EA', // text-purple-600
-  },
+
   title: {
-    fontSize: 18, // text-lg
-    fontWeight: '600', // font-semibold
-    color: '#111827', // text-gray-900
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
   },
   moreButton: {
-    fontSize: 12, // text-xs
-    color: '#6B7280', // text-gray-500
-    fontWeight: '500', // font-medium
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
   },
-  booksGrid: {
-    // 이제 사용하지 않음
-  },
+
   bookItem: {
     flex: 1,
     marginHorizontal: 4, // gap-2와 비슷
@@ -168,6 +174,7 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 8, // gap-2와 비슷
   },
 });

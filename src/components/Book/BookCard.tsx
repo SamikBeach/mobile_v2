@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { Star, MessageCircle } from 'lucide-react-native';
+import { Star, MessageSquare } from 'lucide-react-native';
 import { HomeBookPreview } from '../../apis';
 
 interface BookCardProps {
@@ -9,22 +9,24 @@ interface BookCardProps {
 }
 
 export const BookCard: React.FC<BookCardProps> = ({ book, onPress }) => {
+  const [aspectRatio, setAspectRatio] = useState<number>(3 / 4.5);
+
   // rating을 안전하게 숫자로 변환
   const rating =
     typeof book.rating === 'string' ? parseFloat(book.rating) || 0 : (book.rating ?? 0);
-
-  // 디버깅 로그 추가
-  console.log('[BookCard] rendering book:', book.title, 'rating:', rating);
 
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       <View style={styles.imageContainer}>
         <Image
           source={{ uri: book.coverImage }}
-          style={styles.image}
-          resizeMode='cover'
-          onLoad={() => console.log('[BookCard] Image loaded:', book.title)}
-          onError={() => console.log('[BookCard] Image error:', book.title)}
+          style={[styles.image, { aspectRatio }]}
+          resizeMode='contain'
+          onLoad={event => {
+            const { width, height } = event.nativeEvent.source;
+            const ratio = width / height;
+            setAspectRatio(ratio);
+          }}
         />
       </View>
       <View style={styles.content}>
@@ -36,12 +38,12 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onPress }) => {
         </Text>
         <View style={styles.ratingContainer}>
           <View style={styles.ratingItem}>
-            <Star size={14} color='#EAB308' fill='#EAB308' />
+            <Star size={14} color='#FFAB00' fill='#FFAB00' />
             <Text style={styles.rating}>{rating.toFixed(1)}</Text>
           </View>
           {book.reviews !== undefined && (
             <View style={styles.ratingItem}>
-              <MessageCircle size={14} color='#6B7280' />
+              <MessageSquare size={14} color='#4B5563' />
               <Text style={styles.reviews}>{book.reviews}</Text>
             </View>
           )}
@@ -54,18 +56,23 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onPress }) => {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: 'white',
-    borderRadius: 6,
     overflow: 'hidden',
     width: '100%',
+    flexDirection: 'column',
   },
   imageContainer: {
-    aspectRatio: 3 / 4.5,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'white',
     width: '100%',
+    height: 280,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   image: {
     width: '100%',
-    height: '100%',
+    maxHeight: '100%',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   content: {
     paddingHorizontal: 10,
@@ -89,7 +96,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingTop: 2,
+    paddingTop: 4,
   },
   ratingItem: {
     flexDirection: 'row',
@@ -99,11 +106,11 @@ const styles = StyleSheet.create({
   rating: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#6B7280',
+    color: '#4B5563',
   },
   reviews: {
     fontSize: 13,
     fontWeight: '400',
-    color: '#6B7280',
+    color: '#4B5563',
   },
 });

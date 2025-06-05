@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { Compass } from 'lucide-react-native';
 import { BookCard, SkeletonLoader } from '../../../components';
 import { useHomeDiscoverBooksQuery } from '../../../hooks/useHomeQueries';
 import { HomeBookPreview } from '../../../apis';
@@ -52,7 +53,7 @@ export const DiscoverBooksSection: React.FC<DiscoverBooksSectionProps> = ({
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <Text style={styles.icon}>🧭</Text>
+          <Compass size={20} color='#00C471' />
           <Text style={styles.title}>오늘의 발견</Text>
         </View>
         <TouchableOpacity onPress={handleMorePress}>
@@ -88,17 +89,28 @@ export const DiscoverBooksSkeleton: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <Text style={styles.icon}>🧭</Text>
+          <Compass size={20} color='#00C471' />
           <Text style={styles.title}>오늘의 발견</Text>
         </View>
         <Text style={styles.moreButton}>더보기</Text>
       </View>
-      <View style={styles.booksGrid}>
-        {[...Array(4)].map((_, index) => (
-          <View key={index} style={[styles.bookItem, index === 3 && styles.hiddenOnTablet]}>
+      <View style={styles.flatListContainer}>
+        <View style={styles.row}>
+          <View style={styles.bookItem}>
             <SkeletonLoader.BookCardSkeleton />
           </View>
-        ))}
+          <View style={styles.bookItem}>
+            <SkeletonLoader.BookCardSkeleton />
+          </View>
+        </View>
+        <View style={styles.row}>
+          <View style={styles.bookItem}>
+            <SkeletonLoader.BookCardSkeleton />
+          </View>
+          <View style={styles.bookItem}>
+            <SkeletonLoader.BookCardSkeleton />
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -106,38 +118,32 @@ export const DiscoverBooksSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 8,
-    paddingVertical: 8,
+    padding: 16,
     backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  icon: {
-    fontSize: 16,
-    color: '#00C471',
-  },
+
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: '#1F2937',
   },
   moreButton: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#6B7280',
     fontWeight: '500',
   },
-  booksGrid: {
-    // 이제 사용하지 않음
-  },
+
   bookItem: {
     flex: 1,
     marginHorizontal: 4,
@@ -166,6 +172,7 @@ const styles = StyleSheet.create({
   },
   row: {
     justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
 });
