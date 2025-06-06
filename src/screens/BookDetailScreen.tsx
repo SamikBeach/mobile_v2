@@ -504,16 +504,16 @@ const styles = StyleSheet.create({
   },
   categoryTag: {
     backgroundColor: '#1F2937',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 14,
   },
   subcategoryTag: {
     backgroundColor: '#4B5563',
   },
   categoryText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
   },
   subcategoryText: {
