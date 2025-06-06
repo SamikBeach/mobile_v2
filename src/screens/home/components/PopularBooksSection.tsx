@@ -91,7 +91,7 @@ export const PopularBooksSkeleton: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <TrendingUp size={20} color='#9333EA' />
+          <TrendingUp size={20} color='#ㅊㅍ' />
           <Text style={styles.title}>지금 인기 있는 책</Text>
         </View>
         <Text style={styles.moreButton}>더보기</Text>

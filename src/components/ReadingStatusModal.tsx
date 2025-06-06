@@ -70,13 +70,25 @@ export const ReadingStatusModal: React.FC<ReadingStatusModalProps> = ({
     }
   };
 
+  const getStatusColor = (status: ReadingStatusType) => {
+    switch (status) {
+      case ReadingStatusType.WANT_TO_READ:
+        return '#7C3AED'; // 보라색
+      case ReadingStatusType.READING:
+        return '#2563EB'; // 파란색
+      case ReadingStatusType.READ:
+        return '#059669'; // 초록색
+      default:
+        return '#111827';
+    }
+  };
+
   const renderContent = () => (
     <BottomSheetView style={styles.contentContainer}>
-      <Text style={styles.modalTitle}>읽기 상태 선택</Text>
-
       <View style={styles.optionsContainer}>
         {Object.values(ReadingStatusType).map(status => {
           const isSelected = currentStatus === status;
+          const statusColor = getStatusColor(status);
 
           return (
             <TouchableOpacity
@@ -85,10 +97,8 @@ export const ReadingStatusModal: React.FC<ReadingStatusModalProps> = ({
               onPress={() => handleStatusSelect(status)}
             >
               {getStatusIcon(status)}
-              <Text style={[styles.optionText, isSelected && { color: '#3B82F6' }]}>
-                {StatusTexts[status]}
-              </Text>
-              {isSelected && <Check size={20} color='#3B82F6' />}
+              <Text style={[styles.optionText, { color: statusColor }]}>{StatusTexts[status]}</Text>
+              {isSelected && <Check size={20} color={statusColor} />}
             </TouchableOpacity>
           );
         })}
@@ -103,14 +113,7 @@ export const ReadingStatusModal: React.FC<ReadingStatusModalProps> = ({
           onPress={() => handleStatusSelect(null)}
         >
           <Text style={styles.emoji}>❌</Text>
-          <Text
-            style={[
-              styles.optionText,
-              currentStatus === null ? { color: '#EF4444' } : { color: '#111827' },
-            ]}
-          >
-            {StatusTexts['NONE']}
-          </Text>
+          <Text style={[styles.optionText, { color: '#EF4444' }]}>{StatusTexts['NONE']}</Text>
           {currentStatus === null && <Check size={20} color='#EF4444' />}
         </TouchableOpacity>
       </View>
@@ -157,17 +160,8 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    textAlign: 'center',
-    marginBottom: 8,
-    marginTop: 16,
-    paddingHorizontal: 20,
-  },
   optionsContainer: {
-    paddingTop: 8,
+    paddingTop: 16,
   },
   optionItem: {
     flexDirection: 'row',
