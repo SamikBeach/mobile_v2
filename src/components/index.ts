@@ -9,3 +9,6 @@ export * from './Library';
 
 // 공통 컴포넌트
 export * from './Common';
+
+export * from './Header/Header';
+export * from './ReadingStatusModal';

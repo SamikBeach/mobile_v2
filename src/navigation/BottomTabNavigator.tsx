@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Flame, Compass, Users, Library, User } from 'lucide-react-native';
-import { HomeScreen } from '../screens/HomeScreen';
+import { HomeScreenWrapper } from '../screens/HomeScreenWrapper';
 import { Header } from '../components/Header/Header';
 import { useHeaderTabBarVisibility } from '../hooks/useTabBarVisibility';
 import { MainTabParamList } from './types';
@@ -125,7 +125,7 @@ export const BottomTabNavigator: React.FC = () => {
     >
       <Tab.Screen
         name='Home'
-        component={HomeScreen}
+        component={HomeScreenWrapper}
         options={{
           title: '홈',
           tabBarLabel: '홈',

@@ -17,8 +17,24 @@ export interface Book {
     id: number;
     name: string;
   };
+  subcategory?: {
+    id: number;
+    name: string;
+  };
   totalRatings?: number;
   libraryAdds?: number;
+  authorInfo?: string;
+}
+
+// 책 상세 정보 인터페이스 (Book + 사용자별 추가 정보)
+export interface BookDetails extends Book {
+  userRating?: number | null;
+  userReadingStatus?: string | null;
+  readingStats?: {
+    wantToRead: number;
+    reading: number;
+    read: number;
+  };
 }
 
 // 홈화면용 책 미리보기 인터페이스

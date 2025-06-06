@@ -6,3 +6,8 @@ export type MainTabParamList = {
   Libraries: undefined;
   My: undefined;
 };
+
+export type RootStackParamList = {
+  MainTabs: undefined;
+  BookDetail: { isbn: string; title?: string };
+};
