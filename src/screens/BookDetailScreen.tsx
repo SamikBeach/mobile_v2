@@ -28,6 +28,7 @@ import { ReadingStatusType, StatusTexts, StatusColors } from '../constants';
 import { ReadingStatusBottomSheet } from '../components/ReadingStatusBottomSheet';
 import { LibrarySelectionBottomSheet } from '../components/LibrarySelectionBottomSheet';
 import { CreateLibraryBottomSheet } from '../components/CreateLibraryBottomSheet';
+import { ReviewBottomSheet } from '../components/ReviewBottomSheet';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -229,6 +230,7 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
   const [librarySelectionBottomSheetVisible, setLibrarySelectionBottomSheetVisible] =
     useState(false);
   const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
+  const [reviewBottomSheetVisible, setReviewBottomSheetVisible] = useState(false);
 
   const { data: book } = useSuspenseQuery({
     queryKey: ['book-detail', isbn],
@@ -287,8 +289,18 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
   };
 
   const handleReviewPress = () => {
-    // TODO: 리뷰 작성 화면으로 네비게이션
-    Alert.alert('리뷰 작성', '리뷰 작성 기능을 구현해주세요.');
+    setReviewBottomSheetVisible(true);
+  };
+
+  const handleReviewSubmit = (
+    rating: number,
+    content: string,
+    readingStatus?: ReadingStatusType | null
+  ) => {
+    // TODO: 실제 API 호출로 리뷰 제출
+    console.log('Review submitted:', { rating, content, readingStatus });
+    Alert.alert('성공', '리뷰가 등록되었습니다.');
+    setReviewBottomSheetVisible(false);
   };
 
   if (!book) return null;
@@ -427,6 +439,15 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
         isVisible={createLibraryBottomSheetVisible}
         onClose={() => setCreateLibraryBottomSheetVisible(false)}
         onSuccess={handleLibraryCreated}
+      />
+
+      {/* 리뷰 작성 바텀시트 */}
+      <ReviewBottomSheet
+        isVisible={reviewBottomSheetVisible}
+        onClose={() => setReviewBottomSheetVisible(false)}
+        bookTitle={book.title}
+        onSubmit={handleReviewSubmit}
+        userReadingStatus={book.userReadingStatus as ReadingStatusType | null}
       />
     </ScrollView>
   );
