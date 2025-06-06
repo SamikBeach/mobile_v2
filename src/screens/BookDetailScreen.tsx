@@ -436,7 +436,6 @@ export const BookDetailScreen: React.FC = () => {
         <Suspense fallback={<BookDetailSkeleton />}>
           <BookDetailContent isbn={isbn} />
         </Suspense>
-        <TabSection isbn={isbn} />
       </ScrollView>
       <ReadingStatusModal
         isVisible={false}
