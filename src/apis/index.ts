@@ -28,4 +28,10 @@ export type {
   BookPreview,
   HomeLibraryPreview,
   HomePopularLibrariesResponse,
+  CreateLibraryDto,
+  CreateLibraryResponse,
+  UserLibrary,
+  UserLibrariesResponse,
+  AddBookToLibraryDto,
+  AddBookToLibraryResponse,
 } from './library/types';

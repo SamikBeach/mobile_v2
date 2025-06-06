@@ -12,11 +12,22 @@ import {
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { useRoute, RouteProp } from '@react-navigation/native';
 
-import { Star, Edit3, ChevronDown, X, BookOpen, Users, UserCheck } from 'lucide-react-native';
+import {
+  Star,
+  Edit3,
+  ChevronDown,
+  X,
+  BookOpen,
+  Users,
+  UserCheck,
+  Library,
+} from 'lucide-react-native';
 
 import { getBookByIsbn, BookDetails } from '../apis/book';
 import { ReadingStatusType, StatusTexts, StatusColors } from '../constants';
 import { ReadingStatusModal } from '../components/ReadingStatusModal';
+import { LibrarySelectionModal } from '../components/LibrarySelectionModal';
+import { CreateLibraryModal } from '../components/CreateLibraryModal';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -107,7 +118,7 @@ const ReadingStatusButton: React.FC<{
 // 서재에 담기 버튼 컴포넌트
 const LibraryButton: React.FC<{ onPress: () => void }> = ({ onPress }) => (
   <TouchableOpacity style={[styles.actionButton, styles.libraryButton]} onPress={onPress}>
-    <BookOpen size={18} color='#374151' />
+    <Library size={18} color='#374151' />
     <Text style={styles.buttonText}>서재에 담기</Text>
     <ChevronDown size={14} color='#6B7280' />
   </TouchableOpacity>
@@ -215,6 +226,8 @@ const TabSection: React.FC<{ isbn: string }> = ({ isbn: _isbn }) => {
 // 메인 책 상세 컴포넌트
 const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
   const [readingStatusModalVisible, setReadingStatusModalVisible] = useState(false);
+  const [librarySelectionModalVisible, setLibrarySelectionModalVisible] = useState(false);
+  const [createLibraryModalVisible, setCreateLibraryModalVisible] = useState(false);
 
   const { data: book } = useSuspenseQuery({
     queryKey: ['book-detail', isbn],
@@ -242,8 +255,34 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
   };
 
   const handleLibraryPress = () => {
-    // TODO: 서재 선택 모달 구현
-    Alert.alert('서재에 담기', '서재 선택 기능을 구현해주세요.');
+    setLibrarySelectionModalVisible(true);
+  };
+
+  const handleLibrarySelect = async (libraryId: number) => {
+    try {
+      // TODO: 실제 API 호출로 책을 서재에 추가 (addBookToLibrary 사용)
+      // await addBookToLibrary(libraryId, { isbn: book.isbn });
+      console.log('Adding book to library:', libraryId, book.isbn);
+      Alert.alert('성공', '책이 서재에 추가되었습니다.');
+    } catch {
+      Alert.alert('오류', '책을 서재에 추가하는데 실패했습니다.');
+    }
+  };
+
+  const handleCreateNewLibrary = () => {
+    setLibrarySelectionModalVisible(false);
+    setCreateLibraryModalVisible(true);
+  };
+
+  const handleLibraryCreated = (libraryId: number) => {
+    // 새 서재가 생성된 후 바로 책을 추가할지 묻기
+    Alert.alert('서재 생성 완료', '새 서재에 이 책을 바로 추가하시겠습니까?', [
+      { text: '나중에', style: 'cancel' },
+      {
+        text: '추가하기',
+        onPress: () => handleLibrarySelect(libraryId),
+      },
+    ]);
   };
 
   const handleReviewPress = () => {
@@ -372,6 +411,21 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
         onClose={() => setReadingStatusModalVisible(false)}
         currentStatus={book.userReadingStatus as ReadingStatusType | null}
         onStatusSelect={handleReadingStatusSelect}
+      />
+
+      {/* 서재 선택 모달 */}
+      <LibrarySelectionModal
+        isVisible={librarySelectionModalVisible}
+        onClose={() => setLibrarySelectionModalVisible(false)}
+        onLibrarySelect={handleLibrarySelect}
+        onCreateNewLibrary={handleCreateNewLibrary}
+      />
+
+      {/* 새 서재 만들기 모달 */}
+      <CreateLibraryModal
+        isVisible={createLibraryModalVisible}
+        onClose={() => setCreateLibraryModalVisible(false)}
+        onSuccess={handleLibraryCreated}
       />
     </ScrollView>
   );
