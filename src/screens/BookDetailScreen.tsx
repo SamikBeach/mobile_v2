@@ -25,9 +25,9 @@ import {
 
 import { getBookByIsbn, BookDetails } from '../apis/book';
 import { ReadingStatusType, StatusTexts, StatusColors } from '../constants';
-import { ReadingStatusModal } from '../components/ReadingStatusModal';
-import { LibrarySelectionModal } from '../components/LibrarySelectionModal';
-import { CreateLibraryModal } from '../components/CreateLibraryModal';
+import { ReadingStatusBottomSheet } from '../components/ReadingStatusBottomSheet';
+import { LibrarySelectionBottomSheet } from '../components/LibrarySelectionBottomSheet';
+import { CreateLibraryBottomSheet } from '../components/CreateLibraryBottomSheet';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -225,9 +225,10 @@ const TabSection: React.FC<{ isbn: string }> = ({ isbn: _isbn }) => {
 
 // 메인 책 상세 컴포넌트
 const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
-  const [readingStatusModalVisible, setReadingStatusModalVisible] = useState(false);
-  const [librarySelectionModalVisible, setLibrarySelectionModalVisible] = useState(false);
-  const [createLibraryModalVisible, setCreateLibraryModalVisible] = useState(false);
+  const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
+  const [librarySelectionBottomSheetVisible, setLibrarySelectionBottomSheetVisible] =
+    useState(false);
+  const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
 
   const { data: book } = useSuspenseQuery({
     queryKey: ['book-detail', isbn],
@@ -242,7 +243,7 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
   };
 
   const handleReadingStatusPress = () => {
-    setReadingStatusModalVisible(true);
+    setReadingStatusBottomSheetVisible(true);
   };
 
   const handleReadingStatusSelect = (status: ReadingStatusType | null) => {
@@ -255,7 +256,7 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
   };
 
   const handleLibraryPress = () => {
-    setLibrarySelectionModalVisible(true);
+    setLibrarySelectionBottomSheetVisible(true);
   };
 
   const handleLibrarySelect = async (libraryId: number) => {
@@ -270,8 +271,8 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
   };
 
   const handleCreateNewLibrary = () => {
-    setLibrarySelectionModalVisible(false);
-    setCreateLibraryModalVisible(true);
+    setLibrarySelectionBottomSheetVisible(false);
+    setCreateLibraryBottomSheetVisible(true);
   };
 
   const handleLibraryCreated = (libraryId: number) => {
@@ -405,26 +406,26 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
         <TabSection isbn={isbn} />
       </View>
 
-      {/* 읽기 상태 선택 모달 */}
-      <ReadingStatusModal
-        isVisible={readingStatusModalVisible}
-        onClose={() => setReadingStatusModalVisible(false)}
+      {/* 읽기 상태 선택 바텀시트 */}
+      <ReadingStatusBottomSheet
+        isVisible={readingStatusBottomSheetVisible}
+        onClose={() => setReadingStatusBottomSheetVisible(false)}
         currentStatus={book.userReadingStatus as ReadingStatusType | null}
         onStatusSelect={handleReadingStatusSelect}
       />
 
-      {/* 서재 선택 모달 */}
-      <LibrarySelectionModal
-        isVisible={librarySelectionModalVisible}
-        onClose={() => setLibrarySelectionModalVisible(false)}
+      {/* 서재 선택 바텀시트 */}
+      <LibrarySelectionBottomSheet
+        isVisible={librarySelectionBottomSheetVisible}
+        onClose={() => setLibrarySelectionBottomSheetVisible(false)}
         onLibrarySelect={handleLibrarySelect}
         onCreateNewLibrary={handleCreateNewLibrary}
       />
 
-      {/* 새 서재 만들기 모달 */}
-      <CreateLibraryModal
-        isVisible={createLibraryModalVisible}
-        onClose={() => setCreateLibraryModalVisible(false)}
+      {/* 새 서재 만들기 바텀시트 */}
+      <CreateLibraryBottomSheet
+        isVisible={createLibraryBottomSheetVisible}
+        onClose={() => setCreateLibraryBottomSheetVisible(false)}
         onSuccess={handleLibraryCreated}
       />
     </ScrollView>
@@ -491,12 +492,6 @@ export const BookDetailScreen: React.FC = () => {
           <BookDetailContent isbn={isbn} />
         </Suspense>
       </ScrollView>
-      <ReadingStatusModal
-        isVisible={false}
-        onClose={() => {}}
-        currentStatus={null}
-        onStatusSelect={() => {}}
-      />
     </View>
   );
 };

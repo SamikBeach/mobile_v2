@@ -11,6 +11,6 @@ export * from './Library';
 export * from './Common';
 
 export * from './Header/Header';
-export * from './ReadingStatusModal';
-export * from './LibrarySelectionModal';
-export * from './CreateLibraryModal';
+export * from './ReadingStatusBottomSheet';
+export * from './LibrarySelectionBottomSheet';
+export * from './CreateLibraryBottomSheet';

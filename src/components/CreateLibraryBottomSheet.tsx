@@ -15,13 +15,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createLibrary, CreateLibraryDto, getPopularLibraryTags } from '../apis';
 import { getTagColor } from '../utils/tags';
 
-interface CreateLibraryModalProps {
+interface CreateLibraryBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
   onSuccess?: (libraryId: number) => void;
 }
 
-export const CreateLibraryModal: React.FC<CreateLibraryModalProps> = ({
+export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> = ({
   isVisible,
   onClose,
   onSuccess,

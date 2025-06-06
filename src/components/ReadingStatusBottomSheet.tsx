@@ -4,14 +4,14 @@ import { Check } from 'lucide-react-native';
 import { ReadingStatusType, StatusTexts } from '../constants';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 
-interface ReadingStatusModalProps {
+interface ReadingStatusBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
   currentStatus: ReadingStatusType | null;
   onStatusSelect: (status: ReadingStatusType | null) => void;
 }
 
-export const ReadingStatusModal: React.FC<ReadingStatusModalProps> = ({
+export const ReadingStatusBottomSheet: React.FC<ReadingStatusBottomSheetProps> = ({
   isVisible,
   onClose,
   currentStatus,

@@ -5,14 +5,14 @@ import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/
 import { useQuery } from '@tanstack/react-query';
 import { getUserLibraries, UserLibrary } from '../apis';
 
-interface LibrarySelectionModalProps {
+interface LibrarySelectionBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
   onLibrarySelect: (libraryId: number) => void;
   onCreateNewLibrary: () => void;
 }
 
-export const LibrarySelectionModal: React.FC<LibrarySelectionModalProps> = ({
+export const LibrarySelectionBottomSheet: React.FC<LibrarySelectionBottomSheetProps> = ({
   isVisible,
   onClose,
   onLibrarySelect,
