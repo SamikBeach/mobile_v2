@@ -264,9 +264,11 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
     >
       <View style={styles.container}>
         {/* 책 표지 */}
-        <TouchableOpacity onPress={handleAladinPress} style={styles.coverContainer}>
-          <Image source={{ uri: book.coverImage }} style={styles.coverImage} resizeMode='contain' />
-        </TouchableOpacity>
+        <View style={styles.coverShadowContainer}>
+          <TouchableOpacity onPress={handleAladinPress} style={styles.coverContainer}>
+            <Image source={{ uri: book.coverImage }} style={styles.coverImage} resizeMode='cover' />
+          </TouchableOpacity>
+        </View>
 
         {/* 책 정보 */}
         <View style={styles.bookInfoContainer}>
@@ -380,7 +382,9 @@ const BookDetailSkeleton: React.FC = () => (
   <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
     <View style={styles.container}>
       {/* 책 표지 스켈레톤 */}
-      <View style={[styles.coverContainer, styles.skeleton]} />
+      <View style={styles.coverShadowContainer}>
+        <View style={[styles.coverContainer, styles.skeleton]} />
+      </View>
 
       {/* 책 정보 스켈레톤 */}
       <View style={styles.bookInfoContainer}>
@@ -454,30 +458,33 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingTop: 80, // Header space
     paddingHorizontal: 12, // 웹 버전의 p-3 (12px)에 맞춤
     paddingBottom: 20,
+    paddingTop: 12, // 헤더 여백 최소화
     gap: 24, // 웹 버전의 space-y-6 (24px)에 맞춤
   },
-  coverContainer: {
+  coverShadowContainer: {
+    width: 240,
     alignSelf: 'center',
-    width: 176, // 웹 버전의 w-44 (176px)에 맞춤
-    height: 264, // 비율에 맞게 조정 (176 * 1.5)
-    borderRadius: 16, // 웹 버전의 rounded-2xl (16px)에 맞춤
-    backgroundColor: '#F9FAFB',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 12,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  coverContainer: {
+    width: '100%',
+    aspectRatio: 2 / 3,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F9FAFB',
   },
   coverImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 16, // 웹 버전에 맞춤
   },
   bookInfoContainer: {
     alignItems: 'center',
