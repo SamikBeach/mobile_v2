@@ -59,18 +59,24 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 };
 
 export const BookCardSkeleton: React.FC = () => {
+  console.log('[BookCardSkeleton] Rendering BookCardSkeleton');
+
   return (
     <View style={styles.bookCardContainer}>
       <View style={styles.bookImageContainer}>
-        <Skeleton style={styles.bookCoverSkeleton} />
+        <View style={styles.bookCoverSkeletonContainer}>
+          <Skeleton
+            style={[styles.bookCoverSkeleton, { width: '100%', height: '100%', borderRadius: 6 }]}
+          />
+        </View>
       </View>
       <View style={styles.bookContentSkeleton}>
-        <Skeleton width='100%' height={20} style={{ marginBottom: 2 }} />
-        <Skeleton width='100%' height={20} style={{ marginBottom: 2 }} />
-        <Skeleton width='70%' height={18} style={{ marginBottom: 4 }} />
+        <Skeleton width='100%' height={15} style={{ marginBottom: 2 }} />
+        <Skeleton width='80%' height={15} style={{ marginBottom: 2 }} />
+        <Skeleton width='70%' height={13} style={{ marginBottom: 4 }} />
         <View style={styles.bookRatingSkeleton}>
           <View style={styles.bookRatingItem}>
-            <Skeleton width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+            <Skeleton width={14} height={14} borderRadius={7} style={{ marginRight: 4 }} />
             <Skeleton width={25} height={13} />
           </View>
           <View style={styles.bookRatingItem}>
@@ -124,7 +130,11 @@ export const ReviewCardSkeleton: React.FC = () => {
           </View>
         </View>
       </View>
-      <Skeleton width='100%' height={60} style={{ marginBottom: 12 }} />
+      <View style={{ marginBottom: 12 }}>
+        <Skeleton width='100%' height={14} style={{ marginBottom: 4 }} />
+        <Skeleton width='100%' height={14} style={{ marginBottom: 4 }} />
+        <Skeleton width='80%' height={14} />
+      </View>
       <View style={styles.reviewBookSkeleton}>
         <Skeleton width={40} height={60} borderRadius={4} style={{ marginRight: 12 }} />
         <View style={{ flex: 1 }}>
@@ -133,8 +143,14 @@ export const ReviewCardSkeleton: React.FC = () => {
         </View>
       </View>
       <View style={styles.reviewStatsSkeleton}>
-        <Skeleton width={40} height={12} />
-        <Skeleton width={40} height={12} />
+        <View style={styles.bookRatingItem}>
+          <Skeleton width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+          <Skeleton width={20} height={13} />
+        </View>
+        <View style={styles.bookRatingItem}>
+          <Skeleton width={14} height={14} borderRadius={2} style={{ marginRight: 4 }} />
+          <Skeleton width={20} height={13} />
+        </View>
       </View>
     </View>
   );
@@ -156,11 +172,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     overflow: 'hidden',
     width: '100%',
+    flexDirection: 'column',
+  },
+  bookImageContainer: {
+    backgroundColor: 'white',
+    width: '100%',
+    height: 280,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   bookCoverSkeleton: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 6,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
@@ -241,13 +262,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
   },
-  bookImageContainer: {
-    backgroundColor: 'white',
-    width: '100%',
-    height: 280,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   bookRatingSkeleton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -258,5 +272,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  bookCoverSkeletonContainer: {
+    width: '100%',
+    aspectRatio: 3 / 4.5,
+    maxHeight: '100%',
   },
 });

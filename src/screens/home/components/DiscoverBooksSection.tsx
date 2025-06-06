@@ -171,7 +171,8 @@ const styles = StyleSheet.create({
     // paddingHorizontal: 0으로 제거
   },
   row: {
-    justifyContent: 'space-between',
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
     alignItems: 'flex-start',
     marginBottom: 8,
   },
