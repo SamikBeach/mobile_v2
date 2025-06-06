@@ -428,9 +428,18 @@ export const BookDetailScreen: React.FC = () => {
 
   return (
     <View style={styles.safeArea}>
-      <Suspense fallback={<BookDetailSkeleton />}>
-        <BookDetailContent isbn={isbn} />
-      </Suspense>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} bounces={true}>
+        <Suspense fallback={<BookDetailSkeleton />}>
+          <BookDetailContent isbn={isbn} />
+        </Suspense>
+        <TabSection isbn={isbn} />
+      </ScrollView>
+      <ReadingStatusModal
+        isVisible={false}
+        onClose={() => {}}
+        currentStatus={null}
+        onStatusSelect={() => {}}
+      />
     </View>
   );
 };

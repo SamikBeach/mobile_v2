@@ -1,61 +1,20 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Flame, Compass, Users, Library, User } from 'lucide-react-native';
 import { HomeScreenWrapper } from '../screens/HomeScreenWrapper';
-import { Header } from '../components/Header/Header';
-import { useHeaderTabBarVisibility } from '../hooks/useTabBarVisibility';
 import { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// Updated placeholder screens with headers and scroll support
+// Basic placeholder screens
 const PlaceholderScreen = ({ title }: { title: string }) => {
-  const { handleScroll, headerStyle, headerHeight } = useHeaderTabBarVisibility();
-
-  const handleSearchPress = () => {
-    console.log('Search pressed');
-  };
-
-  const handleSendPress = () => {
-    console.log('Send pressed');
-  };
-
-  const handleNotificationPress = () => {
-    console.log('Notification pressed');
-  };
-
-  const handleSettingsPress = () => {
-    console.log('Settings pressed');
-  };
-
   return (
     <View style={styles.container}>
-      {/* Absolute Positioned Header */}
-      <View style={[styles.headerContainer, headerStyle]}>
-        <Header
-          onSearchPress={handleSearchPress}
-          onSendPress={handleSendPress}
-          onNotificationPress={handleNotificationPress}
-          onSettingsPress={handleSettingsPress}
-        />
+      <View style={styles.placeholder}>
+        <Text style={styles.placeholderText}>{title}</Text>
       </View>
-
-      {/* Scrollable Content with fixed padding */}
-      <ScrollView
-        style={[styles.scrollView, { paddingTop: headerHeight }]} // 고정된 paddingTop
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        decelerationRate='normal'
-        bouncesZoom={false}
-      >
-        <View style={styles.placeholder}>
-          <Text style={styles.placeholderText}>{title}</Text>
-        </View>
-      </ScrollView>
     </View>
   );
 };
@@ -103,16 +62,14 @@ export const BottomTabNavigator: React.FC = () => {
         },
         tabBarActiveTintColor: '#166534', // green-800
         tabBarInactiveTintColor: '#6B7280', // gray-500
-        tabBarHideOnKeyboard: true, // 키보드가 올라올 때 숨김
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: 'white',
           borderTopWidth: 1,
-          borderTopColor: '#F3F4F6', // border-gray-100
-          height: 64 + insets.bottom,
-          paddingBottom: insets.bottom,
+          borderTopColor: '#F3F4F6',
+          height: 60 + insets.bottom, // Safe Area 고려
+          paddingBottom: insets.bottom, // Safe Area 만큼 패딩
           paddingTop: 8,
-          elevation: 0, // Remove shadow on Android
-          shadowOpacity: 0, // Remove shadow on iOS
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -180,23 +137,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  headerContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    backgroundColor: 'white',
-  },
-  scrollView: {
-    flex: 1,
-  },
   placeholder: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
-    minHeight: 600, // 스크롤이 가능하도록 충분한 높이 제공
   },
   placeholderText: {
     fontSize: 18,

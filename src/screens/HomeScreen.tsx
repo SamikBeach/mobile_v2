@@ -12,7 +12,6 @@ import {
 } from './home/components';
 import { HomeBookPreview, HomeReviewPreview, HomeLibraryPreview } from '../apis';
 import { Header } from '../components/Header/Header';
-import { useHeaderTabBarVisibility } from '../hooks/useTabBarVisibility';
 
 interface HomeScreenProps {
   onBookPress?: (book: HomeBookPreview) => void;
@@ -33,8 +32,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onReviewsMorePress,
   onLibrariesMorePress,
 }) => {
-  const { handleScroll, headerStyle, headerHeight } = useHeaderTabBarVisibility();
-
   const handleSearchPress = () => {
     console.log('Search pressed');
   };
@@ -53,8 +50,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* Absolute Positioned Header */}
-      <View style={[styles.headerContainer, headerStyle]}>
+      {/* Fixed Header */}
+      <View style={styles.headerContainer}>
         <Header
           onSearchPress={handleSearchPress}
           onSendPress={handleSendPress}
@@ -63,16 +60,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         />
       </View>
 
-      {/* Scrollable Content with fixed padding */}
+      {/* Scrollable Content */}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        style={[styles.scrollView, { paddingTop: headerHeight }]} // 고정된 paddingTop
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         bounces={true}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        decelerationRate='normal'
-        bouncesZoom={false}
       >
         {/* Content */}
         <View style={styles.content}>
@@ -113,12 +106,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   headerContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
     backgroundColor: 'white',
+    zIndex: 1000,
   },
   scrollView: {
     flex: 1,

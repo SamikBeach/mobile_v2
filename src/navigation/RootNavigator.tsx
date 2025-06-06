@@ -20,14 +20,10 @@ export const RootNavigator: React.FC = () => {
         options={({ route }) => ({
           headerShown: true,
           headerTitle: route.params?.title || '책 상세',
-          headerBackTitle: '뒤로',
+          headerBackTitle: '',
           headerTitleStyle: {
             fontSize: 16,
             fontWeight: '600',
-          },
-          headerTransparent: true,
-          headerStyle: {
-            backgroundColor: 'transparent',
           },
           headerTintColor: '#111827',
         })}
