@@ -1,5 +1,7 @@
 import React from 'react';
+import { TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { ChevronLeft } from 'lucide-react-native';
 import { BottomTabNavigator } from './BottomTabNavigator';
 import { BookDetailScreen } from '../screens';
 import { RootStackParamList } from './types';
@@ -17,10 +19,15 @@ export const RootNavigator: React.FC = () => {
       <Stack.Screen
         name='BookDetail'
         component={BookDetailScreen}
-        options={({ route }) => ({
+        options={({ navigation }) => ({
           headerShown: true,
-          headerTitle: route.params?.title || '책 상세',
+          headerTitle: '책 상세',
           headerBackTitle: '',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: -8 }}>
+              <ChevronLeft size={24} color='#111827' />
+            </TouchableOpacity>
+          ),
           headerTitleStyle: {
             fontSize: 16,
             fontWeight: '600',

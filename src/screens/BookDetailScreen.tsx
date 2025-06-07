@@ -10,7 +10,7 @@ import {
   Linking,
 } from 'react-native';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
 
 import {
   Star,
@@ -226,6 +226,7 @@ const TabSection: React.FC<{ isbn: string }> = ({ isbn: _isbn }) => {
 
 // 메인 책 상세 컴포넌트
 const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
+  const navigation = useNavigation();
   const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
   const [librarySelectionBottomSheetVisible, setLibrarySelectionBottomSheetVisible] =
     useState(false);
@@ -236,6 +237,15 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
     queryKey: ['book-detail', isbn],
     queryFn: () => getBookByIsbn(isbn),
   });
+
+  // Set header title when book data is loaded
+  React.useEffect(() => {
+    if (book?.title) {
+      navigation.setOptions({
+        headerTitle: book.title,
+      });
+    }
+  }, [book?.title, navigation]);
 
   const handleAladinPress = () => {
     const url = `https://www.aladin.co.kr/shop/wproduct.aspx?isbn=${isbn}`;

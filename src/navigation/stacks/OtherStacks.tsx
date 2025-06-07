@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HeaderLeft, HeaderRight } from '../components/HeaderComponents';
 import { PlaceholderScreen } from '../components/PlaceholderScreen';
 import { commonScreenOptions } from '../config/screenOptions';
+import { DiscoverScreen } from '../../screens';
 
 const DiscoverStack = createNativeStackNavigator();
 const CommunityStack = createNativeStackNavigator();
@@ -13,7 +14,7 @@ export const DiscoverStackNavigator = () => (
   <DiscoverStack.Navigator screenOptions={commonScreenOptions}>
     <DiscoverStack.Screen
       name='DiscoverMain'
-      component={() => <PlaceholderScreen title='발견하기' />}
+      component={DiscoverScreen}
       options={{
         headerLeft: () => <HeaderLeft />,
         headerTitle: '',
