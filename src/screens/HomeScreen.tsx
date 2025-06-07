@@ -12,12 +12,12 @@ import {
 } from './home/components';
 import { HomeBookPreview } from '@/apis/book';
 import { HomeReviewPreview } from '@/apis/review';
-import { HomeLibraryPreview } from '@/apis/library';
+import { LibraryListItem } from '@/apis/library';
 
 interface HomeScreenProps {
   onBookPress?: (book: HomeBookPreview) => void;
   onReviewPress?: (review: HomeReviewPreview) => void;
-  onLibraryPress?: (library: HomeLibraryPreview) => void;
+  onLibraryPress?: (library: LibraryListItem) => void;
   onPopularBooksMorePress?: () => void;
   onDiscoverBooksMorePress?: () => void;
   onReviewsMorePress?: () => void;
@@ -64,6 +64,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20,
-    gap: 4,
+    gap: 2,
   },
 });

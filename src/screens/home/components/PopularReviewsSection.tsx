@@ -92,14 +92,14 @@ export const PopularReviewsSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 12,
     backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -117,10 +117,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   reviewsList: {
-    gap: 16,
+    gap: 8,
   },
   reviewItemSpacing: {
-    marginTop: 16,
+    marginTop: 8,
   },
   emptyContainer: {
     height: 200,

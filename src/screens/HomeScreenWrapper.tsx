@@ -2,8 +2,10 @@ import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeScreen } from './HomeScreen';
-import { HomeBookPreview, HomeReviewPreview, HomeLibraryPreview } from '../apis';
 import { RootStackParamList } from '../navigation/types';
+import { HomeBookPreview } from '@/apis/book';
+import { HomeReviewPreview } from '@/apis/review';
+import { LibraryListItem } from '@/apis/library';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MainTabs'>;
 
@@ -19,7 +21,7 @@ export const HomeScreenWrapper: React.FC = () => {
     console.log('Review pressed:', review);
   };
 
-  const handleLibraryPress = (library: HomeLibraryPreview) => {
+  const handleLibraryPress = (library: LibraryListItem) => {
     // TODO: 서재 상세 화면으로 네비게이션
     console.log('Library pressed:', library);
   };

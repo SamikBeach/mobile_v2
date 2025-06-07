@@ -120,8 +120,8 @@ export const PopularBooksSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: 'white',
   },
   header: {
@@ -149,8 +149,8 @@ const styles = StyleSheet.create({
 
   bookItem: {
     flex: 1,
-    marginHorizontal: 4, // gap-2와 비슷
-    marginVertical: 4,
+    marginHorizontal: 4,
+    marginVertical: 2, // 세로 간격 줄임
   },
   hiddenOnTablet: {
     // 태블릿에서는 숨김 처리 (필요시 구현)
@@ -177,6 +177,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
-    marginBottom: 8, // gap-2와 비슷
+    marginBottom: 4, // gap을 더 줄임
   },
 });

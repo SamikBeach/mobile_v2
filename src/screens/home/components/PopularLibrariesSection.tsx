@@ -3,10 +3,10 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { BookOpen } from 'lucide-react-native';
 import { LibraryCard, SkeletonLoader } from '../../../components';
 import { useHomePopularLibrariesQuery } from '../../../hooks/useHomeQueries';
-import { HomeLibraryPreview } from '../../../apis';
+import { LibraryListItem } from '@/apis/library';
 
 interface PopularLibrariesSectionProps {
-  onLibraryPress?: (library: HomeLibraryPreview) => void;
+  onLibraryPress?: (library: LibraryListItem) => void;
   onMorePress?: () => void;
 }
 
@@ -16,7 +16,7 @@ export const PopularLibrariesSection: React.FC<PopularLibrariesSectionProps> = (
 }) => {
   const { libraries, error } = useHomePopularLibrariesQuery(2);
 
-  const handleLibraryPress = (library: HomeLibraryPreview) => {
+  const handleLibraryPress = (library: LibraryListItem) => {
     if (onLibraryPress) {
       onLibraryPress(library);
     } else {
@@ -94,14 +94,14 @@ export const PopularLibrariesSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 12,
     backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -119,10 +119,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   librariesList: {
-    gap: 16,
+    gap: 2,
   },
   libraryItemSpacing: {
-    marginTop: 16,
+    marginTop: 2,
   },
   emptyContainer: {
     height: 200,
