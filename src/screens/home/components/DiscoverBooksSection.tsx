@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react
 import { Compass } from 'lucide-react-native';
 import { BookCard, SkeletonLoader } from '../../../components';
 import { useHomeDiscoverBooksQuery } from '../../../hooks/useHomeQueries';
-import { HomeBookPreview } from '../../../apis';
+import { HomeBookPreview } from '@/apis/book';
 
 interface DiscoverBooksSectionProps {
   onBookPress?: (book: HomeBookPreview) => void;
@@ -16,8 +16,8 @@ export const DiscoverBooksSection: React.FC<DiscoverBooksSectionProps> = ({
 }) => {
   const { discoverBooks, error } = useHomeDiscoverBooksQuery(4);
 
-  // discoverBooks.books 배열에서 최대 4개만 표시
-  const displayBooks = discoverBooks?.books?.slice(0, 4) || [];
+  // discoverBooks는 배열이므로 첫 번째 카테고리의 books를 사용
+  const displayBooks = discoverBooks?.[0]?.books?.slice(0, 4) || [];
 
   // 디버깅 로그 추가
   console.log('[DiscoverBooksSection] discoverBooks:', discoverBooks);
@@ -118,14 +118,15 @@ export const DiscoverBooksSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 4,
   },
   titleContainer: {
     flexDirection: 'row',

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Plus, Library } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { useQuery } from '@tanstack/react-query';
-import { getUserLibraries, UserLibrary } from '../apis';
+import { getMyLibraries, Library as UserLibrary } from '@/apis/library';
 
 interface LibrarySelectionBottomSheetProps {
   isVisible: boolean;
@@ -26,12 +26,12 @@ export const LibrarySelectionBottomSheet: React.FC<LibrarySelectionBottomSheetPr
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['user-libraries'],
-    queryFn: getUserLibraries,
+    queryKey: ['my-libraries'],
+    queryFn: getMyLibraries,
     enabled: isVisible,
   });
 
-  const libraries = librariesResponse?.data || [];
+  const libraries = librariesResponse || [];
 
   // Handle bottom sheet changes
   const handleSheetChanges = useCallback(

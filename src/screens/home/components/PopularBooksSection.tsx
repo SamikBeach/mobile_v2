@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react
 import { TrendingUp } from 'lucide-react-native';
 import { BookCard, SkeletonLoader } from '../../../components';
 import { useHomePopularBooksQuery } from '../../../hooks/useHomeQueries';
-import { HomeBookPreview } from '../../../apis';
+import { HomeBookPreview } from '@/apis/book';
 
 interface PopularBooksSectionProps {
   onBookPress?: (book: HomeBookPreview) => void;
@@ -120,14 +120,15 @@ export const PopularBooksSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 4,
   },
   titleContainer: {
     flexDirection: 'row',

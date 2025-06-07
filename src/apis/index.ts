@@ -1,37 +1,15 @@
-// Axios 인스턴스 및 유틸리티
-export { default as api, authUtils } from './axios';
-
-// 각 모듈별 API 함수들
-export * from './book/book';
-export * from './review/review';
-export * from './library/library';
-
-// 타입들은 각 모듈에서 직접 가져오기
-export type {
-  Book,
-  HomeBookPreview,
-  BookSearchResponse,
-  HomeDiscoverBooksResponse,
-} from './book/types';
-
-export type {
-  ReviewType,
-  ReviewUser,
-  ReviewBook,
-  ReviewImage,
-  HomeReviewPreview,
-  HomePopularReviewsResponse,
-} from './review/types';
-
-export type {
-  UserInfo,
-  BookPreview,
-  HomeLibraryPreview,
-  HomePopularLibrariesResponse,
-  CreateLibraryDto,
-  CreateLibraryResponse,
-  UserLibrary,
-  UserLibrariesResponse,
-  AddBookToLibraryDto,
-  AddBookToLibraryResponse,
-} from './library/types';
+export * as authApi from './auth';
+export * as bookApi from './book';
+export * as categoryApi from './category';
+export * as userApi from './user';
+export * as ratingApi from './rating';
+export * as readingStatusApi from './reading-status';
+export * as libraryApi from './library';
+export * as reviewApi from './review';
+export * as searchApi from './search';
+export * as notificationApi from './notification';
+export * as youtubeApi from './youtube';
+export * as discoverCategoryApi from './discover-category';
+export * as chatApi from './chat';
+export * as feedbackApi from './feedback';
+export * as postApi from './post';

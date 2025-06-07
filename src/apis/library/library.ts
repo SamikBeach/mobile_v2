@@ -1,13 +1,19 @@
 import axios from '../axios';
 import {
-  HomePopularLibrariesResponse,
-  CreateLibraryDto,
-  CreateLibraryResponse,
-  UserLibrariesResponse,
+  AddBookResponse,
+  AddBooksToLibraryDto,
   AddBookToLibraryDto,
-  AddBookToLibraryResponse,
-  LibraryTagResponseDto,
-  LibraryTagListResponseDto,
+  AddTagToLibraryDto,
+  CreateLibraryDto,
+  Library,
+  LibraryBook,
+  LibrarySortOption,
+  LibraryTag,
+  PaginatedLibraryResponse,
+  TimeRangeOptions,
+  UpdateHistoryItem,
+  UpdateLibraryDto,
+  UserInfo,
 } from './types';
 
 /**
@@ -15,64 +21,34 @@ import {
  */
 export const getPopularLibrariesForHome = async (
   limit: number = 3
-): Promise<HomePopularLibrariesResponse> => {
-  console.log('[API REQUEST] getPopularLibrariesForHome:', { limit });
-
-  const response = await axios.get<HomePopularLibrariesResponse>('/library/popular/home', {
+): Promise<PaginatedLibraryResponse> => {
+  const response = await axios.get<PaginatedLibraryResponse>('/library/popular/home', {
     params: { limit },
   });
-
-  console.log('[API RESPONSE] getPopularLibrariesForHome:', response.data);
   return response.data;
 };
 
 /**
- * 특정 사용자의 서재 목록 조회
+ * 사용자 서재 목록 조회
  */
-export const getLibrariesByUser = async (
-  userId: number,
-  requestingUserId?: number
-): Promise<UserLibrariesResponse> => {
-  console.log('[API REQUEST] getLibrariesByUser:', { userId, requestingUserId });
-
-  const params: Record<string, string> = {};
-  if (requestingUserId) {
-    params.requestingUserId = requestingUserId.toString();
-  }
-
-  const response = await axios.get<UserLibrariesResponse>(`/library/user/${userId}`, {
-    params,
-  });
-
-  console.log('[API RESPONSE] getLibrariesByUser:', response.data);
+export const getUserLibraries = async (userId: number): Promise<Library[]> => {
+  const response = await axios.get<Library[]>(`/users/${userId}/libraries`);
   return response.data;
 };
 
 /**
- * 현재 로그인한 사용자의 서재 목록 조회
- * 임시로 하드코딩된 사용자 ID 사용 (TODO: 실제 사용자 정보 API에서 가져오기)
+ * 현재 사용자의 서재 목록 조회
  */
-export const getUserLibraries = async (): Promise<UserLibrariesResponse> => {
-  console.log('[API REQUEST] getUserLibraries (current user)');
-
-  // TODO: 실제 구현에서는 현재 로그인한 사용자 정보를 가져와서 사용자 ID 추출
-  const currentUserId = 1; // 임시 하드코딩
-
-  const response = await getLibrariesByUser(currentUserId);
-
-  console.log('[API RESPONSE] getUserLibraries:', response);
-  return response;
+export const getMyLibraries = async (): Promise<Library[]> => {
+  const response = await axios.get<Library[]>('/library/my');
+  return response.data;
 };
 
 /**
- * 새 서재 생성
+ * 서재 생성
  */
-export const createLibrary = async (data: CreateLibraryDto): Promise<CreateLibraryResponse> => {
-  console.log('[API REQUEST] createLibrary:', data);
-
-  const response = await axios.post<CreateLibraryResponse>('/library', data);
-
-  console.log('[API RESPONSE] createLibrary:', response.data);
+export const createLibrary = async (data: CreateLibraryDto): Promise<Library> => {
+  const response = await axios.post<Library>('/library', data);
   return response.data;
 };
 
@@ -82,47 +58,212 @@ export const createLibrary = async (data: CreateLibraryDto): Promise<CreateLibra
 export const addBookToLibrary = async (
   libraryId: number,
   data: AddBookToLibraryDto
-): Promise<AddBookToLibraryResponse> => {
-  console.log('[API REQUEST] addBookToLibrary:', { libraryId, data });
-
-  const response = await axios.post<AddBookToLibraryResponse>(`/library/${libraryId}/books`, data);
-
-  console.log('[API RESPONSE] addBookToLibrary:', response.data);
+): Promise<LibraryBook> => {
+  const response = await axios.post<LibraryBook>(`/library/${libraryId}/books`, data);
   return response.data;
 };
 
 /**
- * 모든 라이브러리 태그 조회
+ * 모든 서재 목록 조회 (공개된 서재만) - 페이지네이션, 검색, 정렬, 태그 필터링 지원
  */
-export const getAllLibraryTags = async (
-  page?: number,
-  limit?: number,
-  search?: string
-): Promise<LibraryTagListResponseDto> => {
-  console.log('[API REQUEST] getAllLibraryTags:', { page, limit, search });
-
+export const getAllLibraries = async (
+  page: number = 1,
+  limit: number = 10,
+  sort?: LibrarySortOption,
+  query?: string,
+  tagId?: number,
+  timeRange?: TimeRangeOptions
+): Promise<PaginatedLibraryResponse> => {
   const params: Record<string, string> = {};
+
   if (page) params.page = page.toString();
   if (limit) params.limit = limit.toString();
-  if (search) params.search = search;
+  if (sort) params.sort = sort;
+  if (query && query.trim() !== '') params.query = query;
+  if (tagId) params.tagId = tagId.toString();
+  if (timeRange) params.timeRange = timeRange;
 
-  const response = await axios.get<LibraryTagListResponseDto>('/library-tag', {
+  const response = await axios.get<PaginatedLibraryResponse>('/library', {
     params,
   });
-
-  console.log('[API RESPONSE] getAllLibraryTags:', response.data);
   return response.data;
 };
 
 /**
- * 인기 라이브러리 태그 조회
+ * 특정 사용자의 서재 목록 조회
  */
-export const getPopularLibraryTags = async (limit?: number): Promise<LibraryTagResponseDto[]> => {
-  console.log('[API REQUEST] getPopularLibraryTags:', { limit });
+export const getLibrariesByUser = async (
+  userId: number,
+  requestingUserId?: number,
+  sort?: LibrarySortOption,
+  timeRange?: TimeRangeOptions
+): Promise<Library[]> => {
+  const params: Record<string, string> = {};
 
+  if (requestingUserId) params.requestingUserId = requestingUserId.toString();
+  if (sort) params.sort = sort;
+  if (timeRange) params.timeRange = timeRange;
+
+  const response = await axios.get<Library[]>(`/library/user/${userId}`, {
+    params,
+  });
+  return response.data;
+};
+
+/**
+ * 사용자가 구독한 서재 목록 조회
+ */
+export const getSubscribedLibraries = async (sort?: LibrarySortOption): Promise<Library[]> => {
+  const params: Record<string, string> = {};
+
+  if (sort) params.sort = sort;
+
+  const response = await axios.get<Library[]>('/library/subscribed', {
+    params,
+  });
+  return response.data;
+};
+
+/**
+ * 특정 서재 상세 조회
+ */
+export const getLibraryById = async (id: number): Promise<Library> => {
+  const response = await axios.get<Library>(`/library/${id}`);
+  return response.data;
+};
+
+/**
+ * 서재 수정
+ */
+export const updateLibrary = async (
+  id: number,
+  updateLibraryDto: UpdateLibraryDto
+): Promise<Library> => {
+  const response = await axios.patch<Library>(`/library/${id}`, updateLibraryDto);
+  return response.data;
+};
+
+/**
+ * 서재 삭제
+ */
+export const deleteLibrary = async (id: number): Promise<void> => {
+  await axios.delete(`/library/${id}`);
+};
+
+/**
+ * 서재에서 책 제거
+ */
+export const removeBookFromLibrary = async (libraryId: number, bookId: number): Promise<void> => {
+  await axios.delete(`/library/${libraryId}/book/${bookId}`);
+};
+
+/**
+ * 서재에 태그 추가
+ */
+export const addTagToLibrary = async (
+  libraryId: number,
+  addTagToLibraryDto: AddTagToLibraryDto
+): Promise<LibraryTag> => {
+  const response = await axios.post<LibraryTag>(`/library/${libraryId}/tag`, addTagToLibraryDto);
+  return response.data;
+};
+
+/**
+ * 서재에서 태그 제거
+ */
+export const removeTagFromLibrary = async (libraryId: number, tagId: number): Promise<void> => {
+  await axios.delete(`/library/${libraryId}/tag/${tagId}`);
+};
+
+/**
+ * 서재 구독하기
+ */
+export const subscribeToLibrary = async (libraryId: number): Promise<void> => {
+  await axios.post(`/library/${libraryId}/subscribe`);
+};
+
+/**
+ * 서재 구독 취소하기
+ */
+export const unsubscribeFromLibrary = async (libraryId: number): Promise<void> => {
+  await axios.delete(`/library/${libraryId}/subscribe`);
+};
+
+/**
+ * 서재의 구독자 목록 조회
+ */
+export const getLibrarySubscribers = async (libraryId: number): Promise<UserInfo[]> => {
+  const response = await axios.get<UserInfo[]>(`/library/${libraryId}/subscribers`);
+  return response.data;
+};
+
+/**
+ * 서재의 최근 업데이트 이력 조회
+ */
+export const getLibraryUpdates = async (
+  libraryId: number,
+  limit?: number
+): Promise<UpdateHistoryItem[]> => {
   const params = limit ? { limit: limit.toString() } : undefined;
-  const response = await axios.get<LibraryTagResponseDto[]>('/library-tag/popular', { params });
+  const response = await axios.get<UpdateHistoryItem[]>(`/library/${libraryId}/updates`, {
+    params,
+  });
+  return response.data;
+};
 
-  console.log('[API RESPONSE] getPopularLibraryTags:', response.data);
+/**
+ * 서재에 책 추가 (ISBN 사용)
+ */
+export const addBookToLibraryWithIsbn = async ({
+  libraryId,
+  bookId,
+  isbn,
+}: {
+  libraryId: number;
+  bookId: number;
+  isbn: string;
+}): Promise<LibraryBook> => {
+  const response = await axios.post<LibraryBook>(`/library/${libraryId}/books/isbn`, {
+    bookId,
+    isbn,
+  });
+  return response.data;
+};
+
+/**
+ * 특정 책을 담은 서재 목록 조회
+ */
+export const getLibrariesByBookId = async (
+  bookId: number,
+  page: number = 1,
+  limit: number = 10,
+  isbn?: string,
+  sort?: LibrarySortOption,
+  timeRange?: TimeRangeOptions
+): Promise<PaginatedLibraryResponse> => {
+  const params: Record<string, string> = {
+    page: page.toString(),
+    limit: limit.toString(),
+  };
+
+  if (isbn) params.isbn = isbn;
+  if (sort) params.sort = sort;
+  if (timeRange) params.timeRange = timeRange;
+
+  const response = await axios.get<PaginatedLibraryResponse>(`/library/book/${bookId}`, { params });
+  return response.data;
+};
+
+/**
+ * 서재에 여러 책 추가
+ */
+export const addBooksToLibrary = async (
+  libraryId: number,
+  addBooksToLibraryDto: AddBooksToLibraryDto
+): Promise<AddBookResponse> => {
+  const response = await axios.post<AddBookResponse>(
+    `/library/${libraryId}/books/batch`,
+    addBooksToLibraryDto
+  );
   return response.data;
 };

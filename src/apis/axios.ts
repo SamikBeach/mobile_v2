@@ -8,14 +8,15 @@
 
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ENV } from '../constants/env';
+
+const API_URL = process.env.EXPO_PUBLIC_SERVER_URL;
 
 // AsyncStorage에서 토큰을 가져오는 헬퍼 함수
 const getAccessToken = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem('accessToken');
   } catch (error) {
-    console.error('Failed to get access token:', error);
+    console.error('Error getting access token:', error);
     return null;
   }
 };
@@ -24,7 +25,7 @@ const getRefreshToken = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem('refreshToken');
   } catch (error) {
-    console.error('Failed to get refresh token:', error);
+    console.error('Error getting refresh token:', error);
     return null;
   }
 };
@@ -32,27 +33,27 @@ const getRefreshToken = async (): Promise<string | null> => {
 // 토큰을 AsyncStorage에 저장하는 헬퍼 함수
 const setTokens = async (accessToken: string, refreshToken: string): Promise<void> => {
   try {
-    await AsyncStorage.multiSet([
-      ['accessToken', accessToken],
-      ['refreshToken', refreshToken],
-    ]);
+    await AsyncStorage.setItem('accessToken', accessToken);
+    await AsyncStorage.setItem('refreshToken', refreshToken);
   } catch (error) {
-    console.error('Failed to set tokens:', error);
+    console.error('Error setting tokens:', error);
   }
 };
 
 // 토큰을 AsyncStorage에서 제거하는 헬퍼 함수
 const removeTokens = async (): Promise<void> => {
   try {
-    await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+    await AsyncStorage.removeItem('accessToken');
+    await AsyncStorage.removeItem('refreshToken');
   } catch (error) {
-    console.error('Failed to remove tokens:', error);
+    console.error('Error removing tokens:', error);
   }
 };
 
 // axios 인스턴스 생성
 export const api: AxiosInstance = axios.create({
-  baseURL: ENV.SERVER_URL,
+  baseURL: API_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept-Version': 'v2',
@@ -86,50 +87,19 @@ const processQueue = (error: any, token: string | null = null) => {
 // 요청 인터셉터 - 토큰이 있으면 헤더에 추가
 api.interceptors.request.use(
   async config => {
-    console.log('[AXIOS REQUEST]', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      baseURL: config.baseURL,
-      params: config.params,
-      data: config.data,
-      headers: {
-        ...config.headers,
-        Authorization: config.headers?.Authorization ? '[HIDDEN]' : undefined,
-      },
-    });
-
     const token = await getAccessToken();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  error => {
-    console.error('[AXIOS REQUEST ERROR]', error);
-    return Promise.reject(error);
-  }
+  error => Promise.reject(error)
 );
 
 // 응답 인터셉터 - 401 에러 발생 시 토큰 갱신 시도
 api.interceptors.response.use(
-  response => {
-    console.log('[AXIOS RESPONSE]', {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.config.url,
-      data: response.data,
-    });
-    return response;
-  },
+  response => response,
   async (error: AxiosError) => {
-    console.error('[AXIOS RESPONSE ERROR]', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      message: error.message,
-      data: error.response?.data,
-    });
-
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
     };
@@ -161,7 +131,7 @@ api.interceptors.response.use(
         }
 
         const { data } = await axios.post(
-          `${ENV.SERVER_URL}/auth/refresh-token`,
+          `${API_URL}/auth/refresh-token`,
           { refreshToken },
           { headers: { 'Content-Type': 'application/json' } }
         );

@@ -1,29 +1,18 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Flame, Compass, Users, Library, User } from 'lucide-react-native';
-import { HomeScreenWrapper } from '../screens/HomeScreenWrapper';
 import { MainTabParamList } from './types';
+import {
+  HomeStackNavigator,
+  PopularStackNavigator,
+  DiscoverStackNavigator,
+  CommunityStackNavigator,
+  LibrariesStackNavigator,
+  MyStackNavigator,
+} from './stacks';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
-
-// Basic placeholder screens
-const PlaceholderScreen = ({ title }: { title: string }) => {
-  return (
-    <View style={styles.container}>
-      <View style={styles.placeholder}>
-        <Text style={styles.placeholderText}>{title}</Text>
-      </View>
-    </View>
-  );
-};
-
-const PopularScreen = () => <PlaceholderScreen title='분야별 인기' />;
-const DiscoverScreen = () => <PlaceholderScreen title='발견하기' />;
-const CommunityScreen = () => <PlaceholderScreen title='커뮤니티' />;
-const LibrariesScreen = () => <PlaceholderScreen title='서재' />;
-const MyScreen = () => <PlaceholderScreen title='My' />;
 
 export const BottomTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -69,20 +58,20 @@ export const BottomTabNavigator: React.FC = () => {
           borderTopColor: '#F3F4F6',
           height: 60 + insets.bottom, // Safe Area 고려
           paddingBottom: insets.bottom, // Safe Area 만큼 패딩
-          paddingTop: 8,
+          paddingTop: 2,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
         },
         tabBarItemStyle: {
-          paddingVertical: 4,
+          paddingVertical: 2,
         },
       })}
     >
       <Tab.Screen
         name='Home'
-        component={HomeScreenWrapper}
+        component={HomeStackNavigator}
         options={{
           title: '홈',
           tabBarLabel: '홈',
@@ -90,7 +79,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name='Popular'
-        component={PopularScreen}
+        component={PopularStackNavigator}
         options={{
           title: '분야별 인기',
           tabBarLabel: '분야별 인기',
@@ -98,7 +87,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name='Discover'
-        component={DiscoverScreen}
+        component={DiscoverStackNavigator}
         options={{
           title: '발견하기',
           tabBarLabel: '발견하기',
@@ -106,7 +95,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name='Community'
-        component={CommunityScreen}
+        component={CommunityStackNavigator}
         options={{
           title: '커뮤니티',
           tabBarLabel: '커뮤니티',
@@ -114,7 +103,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name='Libraries'
-        component={LibrariesScreen}
+        component={LibrariesStackNavigator}
         options={{
           title: '서재',
           tabBarLabel: '서재',
@@ -122,7 +111,7 @@ export const BottomTabNavigator: React.FC = () => {
       />
       <Tab.Screen
         name='My'
-        component={MyScreen}
+        component={MyStackNavigator}
         options={{
           title: 'My',
           tabBarLabel: 'My',
@@ -131,21 +120,3 @@ export const BottomTabNavigator: React.FC = () => {
     </Tab.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'white',
-  },
-  placeholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-  },
-  placeholderText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#374151',
-  },
-});

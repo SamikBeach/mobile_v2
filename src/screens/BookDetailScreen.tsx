@@ -374,7 +374,9 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
               </View>
               <View style={styles.statTextContainer}>
                 <Text style={styles.statLabel}>읽고 싶어요</Text>
-                <Text style={styles.statNumber}>{book.readingStats?.wantToRead || 0}</Text>
+                <Text style={styles.statNumber}>
+                  {book.readingStats?.readingStatusCounts.WANT_TO_READ || 0}
+                </Text>
               </View>
             </View>
             <View style={styles.statItem}>
@@ -383,7 +385,9 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
               </View>
               <View style={styles.statTextContainer}>
                 <Text style={styles.statLabel}>읽는 중</Text>
-                <Text style={styles.statNumber}>{book.readingStats?.reading || 0}</Text>
+                <Text style={styles.statNumber}>
+                  {book.readingStats?.readingStatusCounts.READING || 0}
+                </Text>
               </View>
             </View>
             <View style={styles.statItem}>
@@ -392,7 +396,9 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
               </View>
               <View style={styles.statTextContainer}>
                 <Text style={styles.statLabel}>읽었어요</Text>
-                <Text style={styles.statNumber}>{book.readingStats?.read || 1}</Text>
+                <Text style={styles.statNumber}>
+                  {book.readingStats?.readingStatusCounts.READ || 1}
+                </Text>
               </View>
             </View>
           </View>
