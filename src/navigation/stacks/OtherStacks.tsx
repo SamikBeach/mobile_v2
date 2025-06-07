@@ -4,6 +4,7 @@ import { HeaderLeft, HeaderRight } from '../components/HeaderComponents';
 import { PlaceholderScreen } from '../components/PlaceholderScreen';
 import { commonScreenOptions } from '../config/screenOptions';
 import { DiscoverScreen } from '../../screens';
+import { CommunityScreen } from '../../screens/community/CommunityScreen';
 
 const DiscoverStack = createNativeStackNavigator();
 const CommunityStack = createNativeStackNavigator();
@@ -28,7 +29,7 @@ export const CommunityStackNavigator = () => (
   <CommunityStack.Navigator screenOptions={commonScreenOptions}>
     <CommunityStack.Screen
       name='CommunityMain'
-      component={() => <PlaceholderScreen title='커뮤니티' />}
+      component={CommunityScreen}
       options={{
         headerLeft: () => <HeaderLeft />,
         headerTitle: '',

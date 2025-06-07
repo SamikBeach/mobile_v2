@@ -16,3 +16,4 @@ export * from './ReadingStatusBottomSheet';
 export * from './LibrarySelectionBottomSheet';
 export * from './CreateLibraryBottomSheet';
 export * from './ReviewBottomSheet';
+export * from './CommentBottomSheet';
