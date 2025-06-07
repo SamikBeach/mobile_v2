@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Users } from 'lucide-react-native';
 import { ReviewCard, SkeletonLoader } from '../../../components';
 import { useHomePopularReviewsQuery } from '../../../hooks/useHomeQueries';
-import { HomeReviewPreview } from '../../../apis';
+import { HomeReviewPreview } from '../../../apis/review/types';
 
 interface PopularReviewsSectionProps {
   onReviewPress?: (review: HomeReviewPreview) => void;
