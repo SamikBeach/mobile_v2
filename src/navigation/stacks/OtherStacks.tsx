@@ -6,6 +6,7 @@ import { commonScreenOptions } from '../config/screenOptions';
 import { DiscoverScreen } from '../../screens';
 import { CommunityScreen } from '../../screens/community/CommunityScreen';
 import { LibrariesScreen } from '../../screens/libraries/LibrariesScreen';
+import { MyScreen } from '../../screens/my/MyScreen';
 
 const DiscoverStack = createNativeStackNavigator();
 const CommunityStack = createNativeStackNavigator();
@@ -58,7 +59,7 @@ export const MyStackNavigator = () => (
   <MyStack.Navigator screenOptions={commonScreenOptions}>
     <MyStack.Screen
       name='MyMain'
-      component={() => <PlaceholderScreen title='My' />}
+      component={MyScreen}
       options={{
         headerLeft: () => <HeaderLeft />,
         headerTitle: '',

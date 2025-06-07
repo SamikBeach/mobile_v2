@@ -12,7 +12,7 @@ import {
 import { X } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createLibrary, CreateLibraryDto, getPopularLibraryTags } from '../apis';
+import { createLibrary, CreateLibraryDto, getLibraryTags } from '../apis/library';
 import { getTagColor } from '../utils/tags';
 
 interface CreateLibraryModalProps {
@@ -40,7 +40,7 @@ export const CreateLibraryModal: React.FC<CreateLibraryModalProps> = ({
   // 인기 태그 조회
   const { data: popularTags, isLoading: isLoadingTags } = useQuery({
     queryKey: ['popular-library-tags'],
-    queryFn: () => getPopularLibraryTags(20),
+    queryFn: () => getLibraryTags(20),
     enabled: isVisible,
   });
 
