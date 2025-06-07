@@ -9,6 +9,7 @@ import {
   LibraryBook,
   LibrarySortOption,
   LibraryTag,
+  LibraryTagResponseDto,
   PaginatedLibraryResponse,
   TimeRangeOptions,
   UpdateHistoryItem,
@@ -26,6 +27,47 @@ export const getPopularLibrariesForHome = async (
     params: { limit },
   });
   return response.data;
+};
+
+/**
+ * 서재 목록 조회 (필터링, 정렬, 검색 지원)
+ */
+export const getLibraries = async (params: {
+  page?: number;
+  limit?: number;
+  tagFilter?: string;
+  sort?: string;
+  timeRange?: string;
+  search?: string;
+}): Promise<PaginatedLibraryResponse> => {
+  console.log('[Library API] Fetching libraries with params:', params);
+  try {
+    const response = await axios.get<PaginatedLibraryResponse>('/library', {
+      params,
+    });
+    console.log('[Library API] Libraries fetched successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('[Library API] Error fetching libraries:', error);
+    throw error;
+  }
+};
+
+/**
+ * 서재 태그 목록 조회
+ */
+export const getLibraryTags = async (limit?: number): Promise<LibraryTagResponseDto[]> => {
+  console.log('[Library API] Fetching library tags...');
+  try {
+    const response = await axios.get<LibraryTagResponseDto[]>('/library/tags', {
+      params: limit ? { limit } : {},
+    });
+    console.log('[Library API] Tags fetched successfully:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('[Library API] Error fetching tags:', error);
+    throw error;
+  }
 };
 
 /**
