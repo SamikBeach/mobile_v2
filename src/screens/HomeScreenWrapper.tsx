@@ -22,8 +22,7 @@ export const HomeScreenWrapper: React.FC = () => {
   };
 
   const handleLibraryPress = (library: LibraryListItem) => {
-    // TODO: 서재 상세 화면으로 네비게이션
-    console.log('Library pressed:', library);
+    navigation.navigate('LibraryDetail', { libraryId: library.id });
   };
 
   const handlePopularBooksMorePress = () => {

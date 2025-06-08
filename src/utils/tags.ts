@@ -11,13 +11,23 @@ export const TAG_COLORS = [
 ];
 
 /**
- * 태그 인덱스에 따른 색상 반환
- * @param index 태그 인덱스
- * @returns 색상 코드
+ * 태그 인덱스에 따른 색상을 반환합니다.
+ * 웹 버전과 동일한 색상 팔레트를 사용합니다.
  */
-export function getTagColor(index: number): string {
-  return TAG_COLORS[index % TAG_COLORS.length];
-}
+export const getTagColor = (index: number): string => {
+  const colors = [
+    '#F1F5F9', // slate-100
+    '#FECACA', // red-200
+    '#FEF3C7', // yellow-200
+    '#D1FAE5', // green-200
+    '#DBEAFE', // blue-200
+    '#E0E7FF', // indigo-200
+    '#E9D5FF', // purple-200
+    '#FECDD3', // rose-200
+  ];
+
+  return colors[index % colors.length];
+};
 
 /**
  * 태그 인터페이스
