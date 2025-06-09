@@ -36,6 +36,7 @@ import { ReviewsSection as ReviewsSectionComponent } from './components/ReviewsS
 import { LibrariesSection as LibrariesSectionComponent } from './components/LibrariesSection';
 import { CommunitySection as CommunitySectionComponent } from './components/CommunitySection';
 import SubscribedLibrariesSection from './components/SubscribedLibrariesSection';
+import { FollowBottomSheet } from './components/FollowBottomSheet';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -183,6 +184,19 @@ const ProfileHeader: React.FC<{ userId: number }> = ({ userId }) => {
         onClose={() => setIsEditDialogOpen(false)}
         profileData={profileData}
       />
+
+      {/* 팔로우/팔로워 BottomSheet */}
+      {followDialogType && (
+        <Suspense fallback={null}>
+          <FollowBottomSheet
+            isVisible={!!followDialogType}
+            onClose={() => setFollowDialogType(null)}
+            userId={userId}
+            type={followDialogType}
+            username={user.username || user.email?.split('@')[0] || ''}
+          />
+        </Suspense>
+      )}
     </View>
   );
 };
