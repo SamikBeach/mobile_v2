@@ -33,12 +33,14 @@ const getRefreshToken = async (): Promise<string | null> => {
 // 토큰을 AsyncStorage에 저장하는 헬퍼 함수
 const setTokens = async (accessToken: string, refreshToken: string): Promise<void> => {
   try {
+    console.log('[authUtils] 토큰 저장 시작...');
     await Promise.all([
       AsyncStorage.setItem('accessToken', accessToken),
       AsyncStorage.setItem('refreshToken', refreshToken),
     ]);
+    console.log('[authUtils] 토큰 저장 완료');
   } catch (error) {
-    console.error('Error setting tokens:', error);
+    console.error('[authUtils] 토큰 저장 중 오류:', error);
     throw error;
   }
 };
@@ -46,12 +48,14 @@ const setTokens = async (accessToken: string, refreshToken: string): Promise<voi
 // 토큰을 AsyncStorage에서 제거하는 헬퍼 함수
 const removeTokens = async (): Promise<void> => {
   try {
+    console.log('[authUtils] 토큰 제거 시작...');
     await Promise.all([
       AsyncStorage.removeItem('accessToken'),
       AsyncStorage.removeItem('refreshToken'),
     ]);
+    console.log('[authUtils] 토큰 제거 완료');
   } catch (error) {
-    console.error('Error removing tokens:', error);
+    console.error('[authUtils] 토큰 제거 중 오류:', error);
   }
 };
 
@@ -170,7 +174,23 @@ export const authUtils = {
   getRefreshToken,
   setTokens,
   removeTokens,
-  isAuthenticated: async () => !!(await getAccessToken()),
+  isAuthenticated: async (): Promise<boolean> => {
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        console.log('[authUtils] 액세스 토큰이 없음');
+        return false;
+      }
+
+      // 토큰이 있으면 true 반환
+      // 실제 토큰 유효성은 API 호출시 인터셉터에서 처리
+      console.log('[authUtils] 액세스 토큰 존재 확인');
+      return true;
+    } catch (error) {
+      console.error('[authUtils] 토큰 확인 중 오류:', error);
+      return false;
+    }
+  },
 };
 
 export default api;
