@@ -34,6 +34,7 @@ import { ProfileEditBottomSheet } from '../my/components/ProfileEditBottomSheet'
 import { ReadBooksSection } from './components/ReadBooksSection';
 import { ReviewsSection as ReviewsSectionComponent } from './components/ReviewsSection';
 import { LibrariesSection as LibrariesSectionComponent } from './components/LibrariesSection';
+import { CommunitySection as CommunitySectionComponent } from './components/CommunitySection';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -322,13 +323,6 @@ const ProfileSummary: React.FC<{
 
 // Section Content Components (placeholders)
 
-const CommunitySection: React.FC = () => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>커뮤니티 활동</Text>
-    <Text style={styles.sectionPlaceholder}>커뮤니티 활동이 여기에 표시됩니다.</Text>
-  </View>
-);
-
 const SubscriptionsSection: React.FC = () => (
   <View style={styles.sectionContainer}>
     <Text style={styles.sectionTitle}>구독한 서재</Text>
@@ -413,7 +407,7 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
       case 'community':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <CommunitySection />
+            <CommunitySectionComponent userId={userId} />
           </Suspense>
         );
       case 'subscriptions':
