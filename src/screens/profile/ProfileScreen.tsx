@@ -31,6 +31,7 @@ import { useUserProfile } from '../../hooks/useUserProfile';
 import { useIsMyProfile } from '../../hooks/useIsMyProfile';
 import { useUserFollow } from '../../hooks/useUserFollow';
 import { ProfileEditBottomSheet } from '../my/components/ProfileEditBottomSheet';
+import { ReadBooksSection } from './components/ReadBooksSection';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -318,12 +319,6 @@ const ProfileSummary: React.FC<{
 };
 
 // Section Content Components (placeholders)
-const ReadBooksSection: React.FC = () => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>읽은 책</Text>
-    <Text style={styles.sectionPlaceholder}>읽은 책 목록이 여기에 표시됩니다.</Text>
-  </View>
-);
 
 const ReviewsSection: React.FC = () => (
   <View style={styles.sectionContainer}>
@@ -412,7 +407,7 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
       case 'read':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <ReadBooksSection />
+            <ReadBooksSection userId={userId} />
           </Suspense>
         );
       case 'reviews':
@@ -448,7 +443,7 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
       default:
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <ReadBooksSection />
+            <ReadBooksSection userId={userId} />
           </Suspense>
         );
     }
