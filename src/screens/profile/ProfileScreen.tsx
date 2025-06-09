@@ -32,6 +32,7 @@ import { useIsMyProfile } from '../../hooks/useIsMyProfile';
 import { useUserFollow } from '../../hooks/useUserFollow';
 import { ProfileEditBottomSheet } from '../my/components/ProfileEditBottomSheet';
 import { ReadBooksSection } from './components/ReadBooksSection';
+import { ReviewsSection as ReviewsSectionComponent } from './components/ReviewsSection';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -320,13 +321,6 @@ const ProfileSummary: React.FC<{
 
 // Section Content Components (placeholders)
 
-const ReviewsSection: React.FC = () => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>리뷰와 별점</Text>
-    <Text style={styles.sectionPlaceholder}>리뷰와 별점이 여기에 표시됩니다.</Text>
-  </View>
-);
-
 const LibrariesSection: React.FC = () => (
   <View style={styles.sectionContainer}>
     <Text style={styles.sectionTitle}>서재</Text>
@@ -413,7 +407,7 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
       case 'reviews':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <ReviewsSection />
+            <ReviewsSectionComponent userId={userId} />
           </Suspense>
         );
       case 'libraries':
@@ -688,7 +682,7 @@ const styles = StyleSheet.create({
   },
   summaryContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 24,
+    paddingVertical: 16,
   },
   summaryGrid: {
     flexDirection: 'row',

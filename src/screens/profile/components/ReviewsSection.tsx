@@ -10,28 +10,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import {
-  Star,
-  Users,
-  Bookmark,
-  Clock,
-  Calendar,
-  ArrowDownAZ,
-  ChevronDown,
-  CalendarClock,
-} from 'lucide-react-native';
-import { ReadingStatusType } from '../../../apis/reading-status/types';
-import { UserBooksSortOptions, TimeRangeOptions } from '../../../apis/user/types';
-import { getUserBooks, getUserReadingStatusCounts } from '../../../apis/user/user';
-import { RootStackParamList } from '../../../navigation/types';
+import { Star, Users, Clock, Calendar, ChevronDown, CalendarClock } from 'lucide-react-native';
+import { getUserReviews, getUserReviewTypeCounts } from '../../../apis/user/user';
+import { ReviewCard } from '../../../components/Review/ReviewCard';
 
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import { BookCard } from '../../../components/BookCard';
-
-// Navigation type
-type ProfileNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Lucide 아이콘들을 컴포넌트로 래핑
 const StarIcon = ({ size = 14, color = '#6B7280' }) => <Star size={size} color={color} />;
@@ -41,55 +24,55 @@ const ChevronDownIcon = ({ size = 12, color = '#6B7280' }) => (
 const CalendarIcon = ({ size = 14, color = '#6B7280' }) => <Calendar size={size} color={color} />;
 const ClockIcon = ({ size = 14, color = '#6B7280' }) => <Clock size={size} color={color} />;
 const UsersIcon = ({ size = 14, color = '#6B7280' }) => <Users size={size} color={color} />;
-const BookmarkIcon = ({ size = 14, color = '#6B7280' }) => <Bookmark size={size} color={color} />;
-const ArrowDownAZIcon = ({ size = 14, color = '#6B7280' }) => (
-  <ArrowDownAZ size={size} color={color} />
-);
+
 const CalendarClockIcon = ({ size = 14, color = '#6B7280' }) => (
   <CalendarClock size={size} color={color} />
 );
 
-// 정렬 옵션 정의 (src_frontend와 동일)
-const userBooksSortOptions = [
+// 정렬 옵션 정의 (리뷰용)
+enum ReviewSortOptions {
+  RECENT = 'recent',
+  POPULAR = 'popular',
+  OLDEST = 'oldest',
+  RATING_DESC = 'rating_desc',
+}
+
+// 시간 범위 옵션 정의
+enum TimeRangeOptions {
+  ALL = 'all',
+  TODAY = 'today',
+  WEEK = 'week',
+  MONTH = 'month',
+  YEAR = 'year',
+}
+
+// 정렬 옵션 정의 (리뷰용)
+const reviewSortOptions = [
   {
-    id: UserBooksSortOptions.RATING_DESC,
-    label: '평점 높은순',
-    icon: (isActive: boolean) => <StarIcon size={14} color={isActive ? '#2563EB' : '#FFAB00'} />,
-    supportsTimeRange: true,
-  },
-  {
-    id: UserBooksSortOptions.REVIEWS_DESC,
-    label: '리뷰 많은순',
-    icon: (isActive: boolean) => <UsersIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />,
-    supportsTimeRange: true,
-  },
-  {
-    id: UserBooksSortOptions.LIBRARY_COUNT_DESC,
-    label: '서재에 많이 담긴 순',
-    icon: (isActive: boolean) => (
-      <BookmarkIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />
-    ),
-    supportsTimeRange: true,
-  },
-  {
-    id: UserBooksSortOptions.CREATED_AT_DESC,
-    label: '최근 읽은 순',
+    id: ReviewSortOptions.RECENT,
+    label: '최신순',
     icon: (isActive: boolean) => <ClockIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />,
     supportsTimeRange: true,
   },
   {
-    id: UserBooksSortOptions.PUBLISH_DATE_DESC,
-    label: '출간일 최신순',
+    id: ReviewSortOptions.POPULAR,
+    label: '인기순',
+    icon: (isActive: boolean) => <UsersIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />,
+    supportsTimeRange: true,
+  },
+  {
+    id: ReviewSortOptions.RATING_DESC,
+    label: '별점 높은순',
+    icon: (isActive: boolean) => <StarIcon size={14} color={isActive ? '#2563EB' : '#FFAB00'} />,
+    supportsTimeRange: true,
+  },
+  {
+    id: ReviewSortOptions.OLDEST,
+    label: '오래된순',
     icon: (isActive: boolean) => (
       <CalendarIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />
     ),
-  },
-  {
-    id: UserBooksSortOptions.TITLE_ASC,
-    label: '제목 가나다순',
-    icon: (isActive: boolean) => (
-      <ArrowDownAZIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />
-    ),
+    supportsTimeRange: false,
   },
 ];
 
@@ -128,29 +111,16 @@ const timeRangeOptions = [
   },
 ];
 
-// 독서 상태 필터 (src_frontend와 동일한 순서)
-const readingStatusFilters = [
+// 리뷰 필터 (src_frontend와 동일한 순서)
+const reviewFilters = [
   { id: 'ALL', name: '전체', type: undefined },
-  {
-    id: 'WANT_TO_READ',
-    name: '읽고 싶어요',
-    type: ReadingStatusType.WANT_TO_READ,
-  },
-  {
-    id: 'READING',
-    name: '읽는중',
-    type: ReadingStatusType.READING,
-  },
-  {
-    id: 'READ',
-    name: '읽었어요',
-    type: ReadingStatusType.READ,
-  },
+  { id: 'REVIEW', name: '리뷰', type: 'review' },
+  { id: 'RATING', name: '별점만', type: 'rating' },
 ];
 
 // 기본값 정의 (src_frontend와 동일)
-const DEFAULT_STATUS = undefined;
-const DEFAULT_SORT = UserBooksSortOptions.RATING_DESC;
+const DEFAULT_FILTER = undefined;
+const DEFAULT_SORT = ReviewSortOptions.RECENT;
 const DEFAULT_TIME_RANGE = TimeRangeOptions.ALL;
 
 // LoadingSpinner 컴포넌트 (스타일 정의 전에 간단하게 정의)
@@ -160,71 +130,53 @@ const LoadingSpinner: React.FC = () => (
   </View>
 );
 
-// 읽기 상태 카운트 조회 Hook
-const useReadingStatusCounts = (userId: number) => {
+// 리뷰 타입별 카운트 조회 Hook
+const useReviewTypeCounts = (userId: number) => {
   const { data, isLoading } = useSuspenseQuery({
-    queryKey: ['user-reading-status-counts', userId],
-    queryFn: () => getUserReadingStatusCounts(userId),
+    queryKey: ['user-review-type-counts', userId],
+    queryFn: () => getUserReviewTypeCounts(userId),
   });
 
   return {
-    statusCounts: data || {
-      WANT_TO_READ: 0,
-      READING: 0,
-      read: 0,
+    typeCounts: data || {
+      general: 0,
+      discussion: 0,
+      review: 0,
+      question: 0,
+      meetup: 0,
       total: 0,
     },
     isLoading,
   };
 };
 
-// 사용자 책 목록 조회 Hook (무한 스크롤)
-const useUserBooks = (
+// 사용자 리뷰 조회 Hook (무한 스크롤)
+const useUserReviewsInfinite = (
   userId: number,
-  status?: ReadingStatusType,
+  filter: string | undefined,
   sort: string = DEFAULT_SORT,
   timeRange: string = DEFAULT_TIME_RANGE
 ) => {
   const PAGE_SIZE = 12;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useSuspenseInfiniteQuery({
-    queryKey: ['user-books', userId, status, sort, timeRange],
+    queryKey: ['user-reviews', userId, filter, sort, timeRange],
     queryFn: async ({ pageParam = 1 }) => {
-      return getUserBooks(userId, status, pageParam, PAGE_SIZE);
+      return getUserReviews(userId, pageParam, PAGE_SIZE);
     },
     getNextPageParam: lastPage => {
-      return lastPage.hasNextPage ? lastPage.page + 1 : undefined;
+      return lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined;
     },
     initialPageParam: 1,
   });
 
-  // 모든 페이지의 책 목록을 하나의 배열로 병합
-  const books =
-    data?.pages.flatMap(page =>
-      page.items.map(item => ({
-        id: item.book.id,
-        title: item.book.title,
-        author: item.book.author,
-        coverImage: item.book.coverImage,
-        isbn: item.book.isbn,
-        isbn13: item.book.isbn13,
-        publisher: item.book.publisher,
-        rating: item.book.rating || 0,
-        reviews: item.book.reviews || 0,
-        totalRatings: item.book.totalRatings,
-        description: item.book.description || '',
-        status: item.status,
-        currentPage: item.currentPage,
-        startDate: item.startDate,
-        finishDate: item.finishDate,
-        createdAt: item.createdAt,
-      }))
-    ) || [];
+  // 모든 페이지의 리뷰 목록을 하나의 배열로 병합
+  const reviews = data?.pages.flatMap(page => page.reviews || []) || [];
 
   const total = data?.pages[0]?.total || 0;
 
   return {
-    books,
+    reviews,
     fetchNextPage,
     hasNextPage: !!hasNextPage,
     isFetchingNextPage,
@@ -255,7 +207,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({
   const sortBottomSheetRef = useRef<BottomSheetModal>(null);
   const timeBottomSheetRef = useRef<BottomSheetModal>(null);
 
-  const selectedSortOption = userBooksSortOptions.find(opt => opt.id === selectedSort);
+  const selectedSortOption = reviewSortOptions.find(opt => opt.id === selectedSort);
   const selectedTimeOption = timeRangeOptions.find(opt => opt.id === selectedTimeRange);
 
   const isSortActive = selectedSort !== DEFAULT_SORT;
@@ -373,7 +325,7 @@ const SortDropdown: React.FC<SortDropdownProps> = ({
         }}
       >
         <BottomSheetView style={[styles.bottomSheetContent, { paddingBottom: insets.bottom + 16 }]}>
-          {userBooksSortOptions.map(option => {
+          {reviewSortOptions.map(option => {
             const isActive = option.id === selectedSort;
             return (
               <TouchableOpacity
@@ -438,44 +390,45 @@ const SortDropdown: React.FC<SortDropdownProps> = ({
   );
 };
 
-// FilterMenu 컴포넌트 (PopularScreen 스타일로 완전히 재작성)
+// FilterMenu 컴포넌트 (ReadBooksSection과 완전히 동일)
 interface FilterMenuProps {
   userId: number;
-  selectedStatus: ReadingStatusType | undefined;
+  selectedFilter: string | undefined;
   selectedSort: string;
   selectedTimeRange: string;
-  onStatusChange: (status: ReadingStatusType | undefined) => void;
+  onFilterChange: (filter: string | undefined) => void;
   onSortChange: (sort: string) => void;
   onTimeRangeChange: (range: string) => void;
 }
 
 const FilterMenu: React.FC<FilterMenuProps> = ({
   userId,
-  selectedStatus,
+  selectedFilter,
   selectedSort,
   selectedTimeRange,
-  onStatusChange,
+  onFilterChange,
   onSortChange,
   onTimeRangeChange,
 }) => {
-  const { statusCounts } = useReadingStatusCounts(userId);
+  const { typeCounts } = useReviewTypeCounts(userId);
 
-  const getCountForStatus = (statusType: ReadingStatusType | undefined) => {
-    if (!statusCounts) return 0;
-    if (!statusType) return statusCounts.total || 0;
-    return statusCounts[statusType] || 0;
+  const getCountForFilter = (filterType: string | undefined) => {
+    if (!typeCounts) return 0;
+    if (!filterType) return typeCounts.total || 0;
+    if (filterType === 'review') return typeCounts.review || 0;
+    if (filterType === 'rating') return 0; // 별점만 카운트는 별도 API 필요
+    return 0;
   };
 
   const showTimeRangeFilter = [
-    UserBooksSortOptions.RATING_DESC,
-    UserBooksSortOptions.REVIEWS_DESC,
-    UserBooksSortOptions.LIBRARY_COUNT_DESC,
-    UserBooksSortOptions.CREATED_AT_DESC,
-  ].includes(selectedSort as UserBooksSortOptions);
+    ReviewSortOptions.RECENT,
+    ReviewSortOptions.POPULAR,
+    ReviewSortOptions.RATING_DESC,
+  ].includes(selectedSort as ReviewSortOptions);
 
   return (
     <View style={styles.filterContainer}>
-      {/* 독서 상태 필터 */}
+      {/* 리뷰 타입 필터 */}
       <View style={styles.statusContainer}>
         <ScrollView
           horizontal
@@ -483,25 +436,25 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
           style={styles.statusScrollView}
           contentContainerStyle={styles.statusScrollContent}
         >
-          {readingStatusFilters.map(filter => (
+          {reviewFilters.map(filter => (
             <TouchableOpacity
               key={filter.id}
               style={[
                 styles.statusFilterButton,
-                selectedStatus === filter.type && styles.statusFilterButtonActive,
+                selectedFilter === filter.type && styles.statusFilterButtonActive,
               ]}
-              onPress={() => onStatusChange(filter.type)}
+              onPress={() => onFilterChange(filter.type)}
             >
               <Text
                 style={[
                   styles.statusFilterText,
-                  selectedStatus === filter.type && styles.statusFilterTextActive,
+                  selectedFilter === filter.type && styles.statusFilterTextActive,
                 ]}
               >
                 {filter.name}
               </Text>
               <View style={styles.statusFilterBadge}>
-                <Text style={styles.statusFilterBadgeText}>{getCountForStatus(filter.type)}</Text>
+                <Text style={styles.statusFilterBadgeText}>{getCountForFilter(filter.type)}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -523,46 +476,48 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
 // 빈 상태 컴포넌트
 const EmptyState: React.FC = () => (
   <View style={styles.emptyContainer}>
-    <Text style={styles.emptyText}>책 목록이 없습니다</Text>
-    <Text style={styles.emptyDescription}>아직 등록된 책이 없습니다. 책을 추가해보세요.</Text>
+    <Text style={styles.emptyText}>리뷰가 없습니다</Text>
+    <Text style={styles.emptyDescription}>
+      아직 작성한 리뷰가 없습니다. 첫 리뷰를 작성해보세요.
+    </Text>
   </View>
 );
 
-// 책 목록 컴포넌트 (PopularScreen과 동일한 horizontal 레이아웃)
-interface BooksListProps {
+// 리뷰 목록 컴포넌트
+interface ReviewsListProps {
   userId: number;
-  status: ReadingStatusType | undefined;
+  filter: string | undefined;
   sort: string;
   timeRange: string;
 }
 
-const BooksList: React.FC<BooksListProps> = ({ userId, status, sort, timeRange }) => {
-  const navigation = useNavigation<ProfileNavigationProp>();
+const ReviewsList: React.FC<ReviewsListProps> = ({ userId, filter, sort, timeRange }) => {
   const flatListRef = useRef<FlatList>(null);
-  const previousStatusRef = useRef<ReadingStatusType | undefined>(status);
+  const previousFilterRef = useRef<string | undefined>(filter);
 
-  const { books, fetchNextPage, hasNextPage, isFetchingNextPage } = useUserBooks(
+  const { reviews, fetchNextPage, hasNextPage, isFetchingNextPage } = useUserReviewsInfinite(
     userId,
-    status,
+    filter,
     sort,
     timeRange
   );
 
-  // 상태가 변경될 때만 스크롤을 맨 위로 이동
+  // 필터가 변경될 때만 스크롤을 맨 위로 이동
   React.useEffect(() => {
-    if (previousStatusRef.current !== status) {
-      if (previousStatusRef.current !== undefined) {
-        // 상태가 변경된 경우에만 맨 위로 스크롤
+    if (previousFilterRef.current !== filter) {
+      if (previousFilterRef.current !== undefined) {
+        // 필터가 변경된 경우에만 맨 위로 스크롤
         setTimeout(() => {
           flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
         }, 50);
       }
-      previousStatusRef.current = status;
+      previousFilterRef.current = filter;
     }
-  }, [status]);
+  }, [filter]);
 
-  const handleBookSelect = (book: any) => {
-    navigation.navigate('BookDetail', { isbn: book.isbn, title: book.title });
+  const handleReviewPress = (review: any) => {
+    // TODO: 리뷰 상세 페이지 네비게이션
+    console.log('Review pressed:', review);
   };
 
   // 자동으로 모든 페이지 로드
@@ -572,26 +527,27 @@ const BooksList: React.FC<BooksListProps> = ({ userId, status, sort, timeRange }
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // PopularScreen과 동일한 renderBookItem
-  const renderBookItem = ({ item: book }: { item: any }) => (
-    <BookCard book={book} onPress={() => handleBookSelect(book)} horizontal={true} />
+  const renderReviewItem = ({ item: review }: { item: any }) => (
+    <View style={styles.reviewItemContainer}>
+      <ReviewCard review={review} onPress={() => handleReviewPress(review)} />
+    </View>
   );
 
-  if (books.length === 0) {
+  if (reviews.length === 0) {
     return <EmptyState />;
   }
 
   return (
     <FlatList
       ref={flatListRef}
-      data={books}
-      renderItem={renderBookItem}
+      data={reviews}
+      renderItem={renderReviewItem}
       keyExtractor={item => item.id.toString()}
       numColumns={1}
       showsVerticalScrollIndicator={false}
       scrollEnabled={false}
       nestedScrollEnabled={true}
-      contentContainerStyle={styles.booksContainer}
+      contentContainerStyle={styles.reviewsContainer}
       ListFooterComponent={isFetchingNextPage ? <LoadingSpinner /> : null}
       removeClippedSubviews={false}
       maintainVisibleContentPosition={{
@@ -602,15 +558,13 @@ const BooksList: React.FC<BooksListProps> = ({ userId, status, sort, timeRange }
   );
 };
 
-// 메인 ReadBooks 컴포넌트
-interface ReadBooksSectionProps {
+// 메인 ReviewsSection 컴포넌트
+interface ReviewsSectionProps {
   userId: number;
 }
 
-export const ReadBooksSection: React.FC<ReadBooksSectionProps> = ({ userId }) => {
-  const [selectedStatus, setSelectedStatus] = useState<ReadingStatusType | undefined>(
-    DEFAULT_STATUS
-  );
+export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ userId }) => {
+  const [selectedFilter, setSelectedFilter] = useState<string | undefined>(DEFAULT_FILTER);
   const [selectedSort, setSelectedSort] = useState<string>(DEFAULT_SORT);
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>(DEFAULT_TIME_RANGE);
 
@@ -620,21 +574,21 @@ export const ReadBooksSection: React.FC<ReadBooksSectionProps> = ({ userId }) =>
       <Suspense fallback={<LoadingSpinner />}>
         <FilterMenu
           userId={userId}
-          selectedStatus={selectedStatus}
+          selectedFilter={selectedFilter}
           selectedSort={selectedSort}
           selectedTimeRange={selectedTimeRange}
-          onStatusChange={setSelectedStatus}
+          onFilterChange={setSelectedFilter}
           onSortChange={setSelectedSort}
           onTimeRangeChange={setSelectedTimeRange}
         />
       </Suspense>
 
-      {/* 책 목록 */}
+      {/* 리뷰 목록 */}
       <Suspense fallback={<LoadingSpinner />}>
-        <BooksList
-          key={`${selectedStatus || 'undefined'}_${selectedSort}_${selectedTimeRange}`}
+        <ReviewsList
+          key={`${selectedFilter || 'undefined'}_${selectedSort}_${selectedTimeRange}`}
           userId={userId}
-          status={selectedStatus}
+          filter={selectedFilter}
           sort={selectedSort}
           timeRange={selectedTimeRange}
         />
@@ -649,7 +603,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
 
-  // FilterMenu 스타일 (PopularScreen과 동일)
+  // FilterMenu 스타일 (ReadBooksSection과 완전히 동일)
   filterContainer: {
     backgroundColor: 'white',
     paddingTop: 2,
@@ -667,7 +621,7 @@ const styles = StyleSheet.create({
   statusFilterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 32, // PopularScreen의 subcategoryButton과 동일
+    height: 32, // ReadBooksSection과 동일
     paddingHorizontal: 12,
     borderRadius: 16,
     borderWidth: 1,
@@ -681,7 +635,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
   statusFilterText: {
-    fontSize: 14, // PopularScreen과 동일
+    fontSize: 14, // ReadBooksSection과 동일
     fontWeight: '500',
     color: '#6B7280',
   },
@@ -703,7 +657,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
 
-  // SortDropdown 스타일 (PopularScreen과 동일)
+  // SortDropdown 스타일 (ReadBooksSection과 완전히 동일)
   sortContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -774,10 +728,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // 책 목록 스타일 (PopularScreen과 동일)
-  booksContainer: {
+  // 리뷰 목록 스타일 (ReadBooksSection과 동일)
+  reviewsContainer: {
     paddingVertical: 8,
+    paddingHorizontal: 16,
     flexGrow: 1,
+  },
+  reviewItemContainer: {
+    marginBottom: 16,
   },
   emptyContainer: {
     alignItems: 'center',
