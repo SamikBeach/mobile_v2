@@ -25,12 +25,26 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.miyukbooks.app"
+      "package": "com.miyukbooks.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "miyuk-books",
+              "host": "auth"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "scheme": "miyuk-books",
+    "platforms": ["ios", "android", "web"],
     "extra": {
       "eas": {
         "projectId": "5e6bb0cc-2956-487a-ad08-309c5a6362ca"

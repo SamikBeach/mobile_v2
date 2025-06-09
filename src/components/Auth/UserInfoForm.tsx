@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 import { register } from '../../apis/auth';
 
 interface UserInfoFormProps {
@@ -34,10 +35,26 @@ export const UserInfoForm: React.FC<UserInfoFormProps> = ({ email, onSuccess }) 
         marketingConsent: false,
       }),
     onSuccess: () => {
+      Toast.show({
+        type: 'success',
+        text1: '회원 정보 등록 완료',
+        text2: '이메일 인증을 진행해주세요.',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       onSuccess();
     },
     onError: (error: any) => {
-      setError(error.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해주세요.');
+      const errorMessage =
+        error.response?.data?.message || '회원가입에 실패했습니다. 다시 시도해주세요.';
+      setError(errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: '회원 정보 등록 실패',
+        text2: errorMessage,
+        position: 'top',
+        visibilityTime: 4000,
+      });
     },
   });
 

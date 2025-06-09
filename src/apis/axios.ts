@@ -33,18 +33,23 @@ const getRefreshToken = async (): Promise<string | null> => {
 // 토큰을 AsyncStorage에 저장하는 헬퍼 함수
 const setTokens = async (accessToken: string, refreshToken: string): Promise<void> => {
   try {
-    await AsyncStorage.setItem('accessToken', accessToken);
-    await AsyncStorage.setItem('refreshToken', refreshToken);
+    await Promise.all([
+      AsyncStorage.setItem('accessToken', accessToken),
+      AsyncStorage.setItem('refreshToken', refreshToken),
+    ]);
   } catch (error) {
     console.error('Error setting tokens:', error);
+    throw error;
   }
 };
 
 // 토큰을 AsyncStorage에서 제거하는 헬퍼 함수
 const removeTokens = async (): Promise<void> => {
   try {
-    await AsyncStorage.removeItem('accessToken');
-    await AsyncStorage.removeItem('refreshToken');
+    await Promise.all([
+      AsyncStorage.removeItem('accessToken'),
+      AsyncStorage.removeItem('refreshToken'),
+    ]);
   } catch (error) {
     console.error('Error removing tokens:', error);
   }

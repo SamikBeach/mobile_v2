@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Flame, Compass, Users, Library, User } from 'lucide-react-native';
+import { useAtomValue } from 'jotai';
 import { AuthBottomSheet } from '../components/Auth';
+import { userAtom } from '../atoms/user';
 import { MainTabParamList } from './types';
 import {
   HomeStackNavigator,
@@ -15,15 +17,10 @@ import {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// 임시 인증 상태 훅 (실제로는 전역 상태 관리에서 가져와야 함)
-const useAuth = () => {
-  const [isAuthenticated] = useState(false); // 임시로 false로 설정
-  return { isAuthenticated };
-};
-
 export const BottomTabNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { isAuthenticated } = useAuth();
+  const user = useAtomValue(userAtom);
+  const isAuthenticated = !!user;
   const [showAuthBottomSheet, setShowAuthBottomSheet] = useState(false);
 
   const handleMyTabPress = (e: any) => {

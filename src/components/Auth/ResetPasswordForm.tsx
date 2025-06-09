@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 import { requestPasswordReset } from '../../apis/auth';
 
 interface ResetPasswordFormProps {
@@ -24,11 +25,25 @@ export const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({ onSuccess,
     mutationFn: () => requestPasswordReset({ email }),
     onSuccess: () => {
       setIsEmailSent(true);
+      Toast.show({
+        type: 'success',
+        text1: '이메일 전송 완료',
+        text2: '비밀번호 재설정 링크를 전송했습니다.',
+        position: 'top',
+        visibilityTime: 3000,
+      });
     },
     onError: (error: any) => {
-      setError(
-        error.response?.data?.message || '비밀번호 재설정 요청에 실패했습니다. 다시 시도해주세요.'
-      );
+      const errorMessage =
+        error.response?.data?.message || '비밀번호 재설정 요청에 실패했습니다. 다시 시도해주세요.';
+      setError(errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: '전송 실패',
+        text2: errorMessage,
+        position: 'top',
+        visibilityTime: 4000,
+      });
     },
   });
 
