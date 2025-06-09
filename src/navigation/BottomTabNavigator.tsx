@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, Flame, Compass, Users, Library, User } from 'lucide-react-native';
@@ -30,6 +30,13 @@ export const BottomTabNavigator: React.FC = () => {
       setShowAuthBottomSheet(true);
     }
   };
+
+  // 사용자가 로그인하면 AuthBottomSheet 자동으로 닫기
+  useEffect(() => {
+    if (isAuthenticated && showAuthBottomSheet) {
+      setShowAuthBottomSheet(false);
+    }
+  }, [isAuthenticated, showAuthBottomSheet]);
 
   return (
     <>

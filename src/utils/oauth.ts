@@ -42,7 +42,7 @@ export const openSocialLoginPopup = async (provider: AuthProvider): Promise<void
     const params = new URLSearchParams({
       platform: 'app',
       redirect_uri: redirectUri,
-      client_type: 'react-native',
+      client_type: 'mobile',
       app_scheme: 'miyuk-books',
     });
 
@@ -60,8 +60,21 @@ export const openSocialLoginPopup = async (provider: AuthProvider): Promise<void
 
     console.log('OAuth 브라우저 결과:', result);
 
-    // 결과 처리는 useDeepLink 훅에서 담당
-    if (result.type === 'cancel') {
+    // WebBrowser 결과에서 URL이 반환된 경우 수동으로 Deep Link 처리
+    if (result.type === 'success' && result.url) {
+      console.log('📱 WebBrowser에서 반환된 URL, 수동으로 Deep Link 이벤트 발생:', result.url);
+
+      // DeviceEventEmitter를 사용하여 URL 이벤트 발생
+      setTimeout(() => {
+        const { DeviceEventEmitter } = require('react-native');
+        const eventData = { url: result.url };
+
+        // URL 이벤트 발생
+        DeviceEventEmitter.emit('url', eventData);
+
+        console.log('🚀 수동 Deep Link 이벤트 발생 완료');
+      }, 100);
+    } else if (result.type === 'cancel') {
       throw new Error('로그인이 취소되었습니다.');
     }
   } catch (error) {

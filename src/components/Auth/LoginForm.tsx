@@ -118,23 +118,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setError(null);
 
     try {
-      const { accessToken, refreshToken, user } = await openSocialLoginPopup(AuthProvider.GOOGLE);
+      // 브라우저에서 OAuth 프로세스 시작
+      // 결과는 Deep Link를 통해 처리됩니다
+      await openSocialLoginPopup(AuthProvider.GOOGLE);
 
-      // 토큰 및 사용자 정보 저장
-      await authUtils.setTokens(accessToken, refreshToken);
-      setUser(user);
-
-      // 성공 Toast 메시지
-      Toast.show({
-        type: 'success',
-        text1: '로그인 성공',
-        text2: `${user.username}님, 환영합니다!`,
-        position: 'top',
-        visibilityTime: 3000,
-      });
-
-      // 성공 콜백
-      onSuccess?.();
+      // 성공 콜백 (브라우저가 열리는 것만 확인)
+      console.log('구글 로그인 브라우저 열림');
     } catch (err) {
       console.error('구글 로그인 오류:', err);
       const errorMessage = err instanceof Error ? err.message : '구글 로그인에 실패했습니다.';
@@ -155,23 +144,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setError(null);
 
     try {
-      const { accessToken, refreshToken, user } = await openSocialLoginPopup(AuthProvider.APPLE);
+      // 브라우저에서 OAuth 프로세스 시작
+      // 결과는 Deep Link를 통해 처리됩니다
+      await openSocialLoginPopup(AuthProvider.APPLE);
 
-      // 토큰 및 사용자 정보 저장
-      await authUtils.setTokens(accessToken, refreshToken);
-      setUser(user);
-
-      // 성공 Toast 메시지
-      Toast.show({
-        type: 'success',
-        text1: '로그인 성공',
-        text2: `${user.username}님, 환영합니다!`,
-        position: 'top',
-        visibilityTime: 3000,
-      });
-
-      // 성공 콜백
-      onSuccess?.();
+      // 성공 콜백 (브라우저가 열리는 것만 확인)
+      console.log('애플 로그인 브라우저 열림');
     } catch (err) {
       console.error('애플 로그인 오류:', err);
       const errorMessage = err instanceof Error ? err.message : '애플 로그인에 실패했습니다.';
@@ -192,23 +170,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setError(null);
 
     try {
-      const { accessToken, refreshToken, user } = await openSocialLoginPopup(AuthProvider.NAVER);
+      // 브라우저에서 OAuth 프로세스 시작
+      // 결과는 Deep Link를 통해 처리됩니다
+      await openSocialLoginPopup(AuthProvider.NAVER);
 
-      // 토큰 및 사용자 정보 저장
-      await authUtils.setTokens(accessToken, refreshToken);
-      setUser(user);
-
-      // 성공 Toast 메시지
-      Toast.show({
-        type: 'success',
-        text1: '로그인 성공',
-        text2: `${user.username}님, 환영합니다!`,
-        position: 'top',
-        visibilityTime: 3000,
-      });
-
-      // 성공 콜백
-      onSuccess?.();
+      // 성공 콜백 (브라우저가 열리는 것만 확인)
+      console.log('네이버 로그인 브라우저 열림');
     } catch (err) {
       console.error('네이버 로그인 오류:', err);
       const errorMessage = err instanceof Error ? err.message : '네이버 로그인에 실패했습니다.';
@@ -229,23 +196,12 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setError(null);
 
     try {
-      const { accessToken, refreshToken, user } = await openSocialLoginPopup(AuthProvider.KAKAO);
+      // 브라우저에서 OAuth 프로세스 시작
+      // 결과는 Deep Link를 통해 처리됩니다
+      await openSocialLoginPopup(AuthProvider.KAKAO);
 
-      // 토큰 및 사용자 정보 저장
-      await authUtils.setTokens(accessToken, refreshToken);
-      setUser(user);
-
-      // 성공 Toast 메시지
-      Toast.show({
-        type: 'success',
-        text1: '로그인 성공',
-        text2: `${user.username}님, 환영합니다!`,
-        position: 'top',
-        visibilityTime: 3000,
-      });
-
-      // 성공 콜백
-      onSuccess?.();
+      // 성공 콜백 (브라우저가 열리는 것만 확인)
+      console.log('카카오 로그인 브라우저 열림');
     } catch (err) {
       console.error('카카오 로그인 오류:', err);
       const errorMessage = err instanceof Error ? err.message : '카카오 로그인에 실패했습니다.';
