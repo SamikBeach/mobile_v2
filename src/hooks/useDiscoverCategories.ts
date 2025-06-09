@@ -24,8 +24,22 @@ export function useDiscoverCategories(options: UseDiscoverCategoriesOptions = {}
     ? categories
     : categories.filter(category => category.isActive);
 
+  // PopularScreen의 useCategories()와 동일하게 "전체" 카테고리를 추가하여 반환
+  const categoriesWithAll: DiscoverCategory[] = [
+    {
+      id: 0,
+      name: '전체',
+      subCategories: [],
+      isActive: true,
+      order: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    ...filteredCategories,
+  ];
+
   return {
-    categories: filteredCategories,
+    categories: categoriesWithAll,
     error,
     isLoading,
   };

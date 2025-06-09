@@ -94,7 +94,8 @@ export const PopularLibrariesSkeleton: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 16,
     backgroundColor: 'white',
   },
   header: {

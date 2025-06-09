@@ -7,9 +7,6 @@ import {
   TouchableOpacity,
   FlatList,
   Animated,
-  LayoutChangeEvent,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
 } from 'react-native';
 import { Calendar, Star, ChevronRight } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -18,7 +15,7 @@ import { TimeRangeBottomSheet } from '../popular/TimeRangeBottomSheet';
 import { BookCard, LoadingSpinner } from '../../components';
 import { useDiscoverBooks, useDiscoverCategories } from '../../hooks';
 import { DiscoverCategory, DiscoverSubCategory } from '../../apis/discover-category/types';
-import { HomeBookPreview, PopularBooksSortOptions, TimeRangeOptions } from '../../apis/book/types';
+import { HomeBookPreview } from '../../apis/book/types';
 
 // Sort options
 const sortOptions = [
@@ -97,17 +94,13 @@ const DiscoverBreadcrumb = ({
 
 export const DiscoverScreen = () => {
   // Navigation
-  const navigation = useNavigation<{
-    navigate: (screen: string, params?: any) => void;
-  }>();
+  const navigation = useNavigation();
 
   // State
   const [selectedCategoryId, setSelectedCategoryId] = useState<number>(0); // 0은 "전체"
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<number>(0); // 0은 "전체"
-  const [sortOption, setSortOption] = useState<PopularBooksSortOptions>(
-    PopularBooksSortOptions.RATING_DESC
-  );
-  const [timeRange, setTimeRange] = useState<TimeRangeOptions>(TimeRangeOptions.ALL);
+  const [sortOption, setSortOption] = useState('rating-desc');
+  const [timeRange, setTimeRange] = useState('all');
   const [showSortBottomSheet, setShowSortBottomSheet] = useState(false);
   const [showTimeRangeBottomSheet, setShowTimeRangeBottomSheet] = useState(false);
 
@@ -130,16 +123,13 @@ export const DiscoverScreen = () => {
   } = useDiscoverBooks({
     discoverCategoryId: selectedCategoryId === 0 ? undefined : selectedCategoryId,
     discoverSubCategoryId: selectedSubcategoryId === 0 ? undefined : selectedSubcategoryId,
-    sort: sortOption,
-    timeRange: timeRange,
+    sort: sortOption as any,
+    timeRange: timeRange as any,
   });
 
   // Get current category object
   const selectedCategoryObj = categories.find(category => category.id === selectedCategoryId);
-  const subcategories = useMemo(
-    () => selectedCategoryObj?.subCategories || [],
-    [selectedCategoryObj]
-  );
+  const subcategories = selectedCategoryObj?.subCategories || [];
 
   // Check if subcategories are active
   const hasActiveSubcategories = useMemo(() => {
@@ -159,7 +149,7 @@ export const DiscoverScreen = () => {
 
   const handleBookPress = (book: HomeBookPreview) => {
     // Navigate to book detail
-    navigation.navigate('BookDetail', { isbn: book.isbn });
+    (navigation as any).navigate('BookDetail', { isbn: book.isbn });
   };
 
   const handleSortPress = () => {
@@ -171,11 +161,11 @@ export const DiscoverScreen = () => {
   };
 
   const handleSortChange = (sort: string) => {
-    setSortOption(sort as PopularBooksSortOptions);
+    setSortOption(sort);
   };
 
   const handleTimeRangeChange = (range: string) => {
-    setTimeRange(range as TimeRangeOptions);
+    setTimeRange(range);
   };
 
   const handleResetFilters = () => {
@@ -184,7 +174,7 @@ export const DiscoverScreen = () => {
   };
 
   // Header height measurement
-  const onHeaderLayout = (event: LayoutChangeEvent) => {
+  const onHeaderLayout = (event: any) => {
     const { height } = event.nativeEvent.layout;
     setHeaderHeight(height);
   };
@@ -192,7 +182,7 @@ export const DiscoverScreen = () => {
   // Scroll handler for filter visibility
   const handleScroll = Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
     useNativeDriver: false,
-    listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    listener: (event: any) => {
       const currentScrollY = event.nativeEvent.contentOffset.y;
       const diff = currentScrollY - lastScrollY.current;
 
@@ -251,11 +241,11 @@ export const DiscoverScreen = () => {
     // 이미지에 맞는 정확한 파스텔 색상
     const colors = [
       '#F1F5F9', // 전체 - 연한 회색
-      '#E0F2FE', // 신규도서 - 연한 스카이
-      '#F0F9FF', // 화제의책 - 연한 블루
-      '#ECFDF5', // 테마별 - 연한 그린
-      '#FEF3C7', // 장르별 - 연한 노란색
-      '#FECACA', // 기타 - 연한 핑크
+      '#FECACA', // 소설/시/희곡 - 연한 핑크
+      '#FEF3C7', // 인문학 - 연한 노란색
+      '#D1FAE5', // 경제경영 - 연한 초록색
+      '#DBEAFE', // 컴퓨터/IT - 연한 파란색
+      '#E0E7FF', // 기타 - 연한 보라색
     ];
 
     return {
@@ -321,21 +311,11 @@ export const DiscoverScreen = () => {
   );
 
   // Loading state
-  if (categoriesLoading) {
+  if (categoriesLoading && !categories.length) {
     return (
-      <View style={[styles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={styles.container}>
         <LoadingSpinner />
         <Text style={styles.loadingText}>카테고리를 불러오는 중...</Text>
-      </View>
-    );
-  }
-
-  // Error state for categories
-  if (!categoriesLoading && !categories.length) {
-    return (
-      <View style={[styles.container, { flex: 1, justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={styles.emptyTitle}>카테고리를 불러올 수 없습니다</Text>
-        <Text style={styles.emptySubtitle}>잠시 후 다시 시도해주세요</Text>
       </View>
     );
   }
@@ -371,22 +351,6 @@ export const DiscoverScreen = () => {
               style={styles.categoryScrollView}
               contentContainerStyle={styles.categoryScrollContent}
             >
-              {/* 전체 버튼 */}
-              <TouchableOpacity
-                style={[styles.categoryButton, getCategoryButtonStyle(0, -1)]}
-                onPress={() => handleCategoryPress(0)}
-              >
-                <Text
-                  style={[
-                    styles.categoryButtonText,
-                    {
-                      color: selectedCategoryId === 0 ? 'white' : '#374151',
-                    },
-                  ]}
-                >
-                  전체
-                </Text>
-              </TouchableOpacity>
               {categories.map((category, index) => renderCategoryButton(category, index))}
             </ScrollView>
           </View>
@@ -530,7 +494,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: '#6B7280',
-    textAlign: 'center',
   },
   filterContainer: {
     backgroundColor: 'white',

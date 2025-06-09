@@ -119,7 +119,7 @@ export const DiscoverBooksSkeleton: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 16,
     backgroundColor: 'white',
   },
   header: {
