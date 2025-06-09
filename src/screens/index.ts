@@ -5,3 +5,4 @@ export * from './LibraryDetailScreen';
 export * from './popular';
 export * from './discover';
 export { LibrariesScreen } from './libraries/LibrariesScreen';
+export { ProfileScreen } from './profile/ProfileScreen';

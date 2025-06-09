@@ -57,6 +57,14 @@ export const getUserById = async (userId: number): Promise<UserDetailResponseDto
 };
 
 /**
+ * 사용자 프로필 정보 조회 (프론트엔드와 동일한 경로)
+ */
+export const getUserProfile = async (userId: number): Promise<UserDetailResponseDto> => {
+  const response = await axios.get(`/user/${userId}/profile`);
+  return response.data;
+};
+
+/**
  * 사용자 서재 목록 조회
  */
 export const getUserLibraries = async (
