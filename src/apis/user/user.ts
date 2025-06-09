@@ -27,7 +27,7 @@ export const getCurrentUser = async (): Promise<UserDetailResponseDto> => {
 };
 
 /**
- * 사용자 정보 업데이트
+ * 사용자 정보 업데이트 (텍스트만)
  */
 export const updateUserInfo = async (
   data: UpdateUserInfoRequest
@@ -41,6 +41,46 @@ export const updateUserInfo = async (
  */
 export const uploadProfileImage = async (file: FormData): Promise<UploadProfileImageResponse> => {
   const response = await axios.post('/user/me/profile-image', file, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+/**
+ * 프로필 업데이트 (이미지 포함) - src_frontend와 완전히 동일한 방식
+ */
+export const updateUserInfoWithImage = async (
+  data: UpdateUserInfoRequest & { removeProfileImage?: boolean },
+  file?: { uri: string; type: string; name: string }
+): Promise<UpdateUserInfoResponse> => {
+  // FormData 생성 (src_frontend와 동일한 방식)
+  const formData = new FormData();
+
+  // 텍스트 데이터 추가
+  if (data.username) formData.append('username', data.username);
+  if (data.bio !== undefined) formData.append('bio', data.bio);
+
+  // 프로필 이미지 처리 (src_frontend와 정확히 동일)
+  if (data.removeProfileImage) {
+    // 프로필 이미지 제거 요청
+    formData.append('removeProfileImage', 'true');
+    formData.append('profileImage', ''); // 빈 문자열로 profileImage 필드 명시
+  } else if (file) {
+    // 새 이미지 업로드
+    formData.append('profileImage', {
+      uri: file.uri,
+      type: file.type,
+      name: file.name,
+    } as any);
+  } else {
+    // 변경 없음 - profileImage 필드를 빈 문자열로 명시 (백엔드에서 무시)
+    formData.append('profileImage', '');
+  }
+
+  // src_frontend와 동일한 엔드포인트와 방식 사용
+  const response = await axios.put('/user/profile', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
     },

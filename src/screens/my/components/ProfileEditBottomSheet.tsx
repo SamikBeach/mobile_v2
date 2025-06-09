@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,28 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  Image,
+  Platform,
 } from 'react-native';
 import { X, Camera } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { User } from '../../../apis/user/types';
+import * as ImagePicker from 'expo-image-picker';
+import Toast from 'react-native-toast-message';
+import { UserDetailResponseDto, UpdateUserInfoRequest } from '../../../apis/user/types';
+import { updateUserInfoWithImage } from '../../../apis/user/user';
 
 interface ProfileEditBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
-  profileData: User;
+  profileData: UserDetailResponseDto;
+}
+
+interface ProfileFormData {
+  username: string;
+  bio: string;
+  profileImage?: { uri: string; type: string; name: string } | null;
+  removeProfileImage?: boolean;
 }
 
 export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
@@ -27,9 +39,56 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const queryClient = useQueryClient();
 
-  const [formData, setFormData] = useState({
-    username: profileData.username || '',
-    bio: profileData.bio || '',
+  const { user } = profileData;
+  const displayName = user.username || user.email?.split('@')[0] || '';
+
+  const [formData, setFormData] = useState<ProfileFormData>({
+    username: displayName,
+    bio: user.bio || '',
+    profileImage: undefined,
+    removeProfileImage: false,
+  });
+
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    user.profileImage && user.profileImage.length > 0 ? user.profileImage : null
+  );
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 프로필 업데이트 mutation (src_frontend와 완전히 동일한 방식)
+  const { mutateAsync: updateProfile } = useMutation({
+    mutationFn: async ({
+      userData,
+      file,
+    }: {
+      userData: UpdateUserInfoRequest & { removeProfileImage?: boolean };
+      file?: { uri: string; type: string; name: string };
+    }) => {
+      return updateUserInfoWithImage(userData, file);
+    },
+    onSuccess: () => {
+      // 프로필 정보 업데이트
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['user-libraries'] });
+      queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+
+      handleClose();
+      Toast.show({
+        type: 'success',
+        text1: '프로필이 성공적으로 업데이트되었습니다.',
+      });
+    },
+    onError: (error: any) => {
+      console.error('프로필 업데이트 오류:', error);
+      Toast.show({
+        type: 'error',
+        text1: '프로필 업데이트에 실패했습니다.',
+      });
+    },
+    onSettled: () => {
+      setIsSubmitting(false);
+    },
   });
 
   // Handle bottom sheet changes
@@ -43,7 +102,7 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
   );
 
   // Present modal when isVisible becomes true
-  React.useEffect(() => {
+  useEffect(() => {
     if (isVisible) {
       bottomSheetModalRef.current?.present();
     } else {
@@ -51,23 +110,123 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
     }
   }, [isVisible]);
 
-  const handleClose = () => {
+  // 프로필 데이터가 변경되면 폼 데이터 업데이트
+  useEffect(() => {
+    const displayName = user.username || user.email?.split('@')[0] || '';
     setFormData({
-      username: profileData.username || '',
-      bio: profileData.bio || '',
+      username: displayName,
+      bio: user.bio || '',
+      profileImage: undefined,
+      removeProfileImage: false,
     });
+    setImagePreview(user.profileImage && user.profileImage.length > 0 ? user.profileImage : null);
+  }, [user]);
+
+  const handleClose = () => {
+    const displayName = user.username || user.email?.split('@')[0] || '';
+    setFormData({
+      username: displayName,
+      bio: user.bio || '',
+      profileImage: undefined,
+      removeProfileImage: false,
+    });
+    setImagePreview(user.profileImage && user.profileImage.length > 0 ? user.profileImage : null);
     bottomSheetModalRef.current?.dismiss();
   };
 
-  const handleSave = () => {
-    // TODO: API 호출로 프로필 업데이트
-    Alert.alert('성공', '프로필이 업데이트되었습니다.');
-    handleClose();
+  // src_frontend와 완전히 동일한 handleSubmit 함수
+  const handleSubmit = async (formData: ProfileFormData) => {
+    try {
+      setIsSubmitting(true);
+
+      // 프로필 정보 및 이미지 업데이트 (src_frontend와 완전히 동일)
+      await updateProfile({
+        userData: {
+          username: formData.username,
+          bio: formData.bio,
+          // formData.removeProfileImage가 true인 경우에만 이미지 삭제 요청
+          ...(formData.removeProfileImage && { removeProfileImage: true }),
+        },
+        // 파일이 제공된 경우에만 전달 (undefined는 기존 이미지 유지)
+        file: formData.profileImage instanceof Object ? formData.profileImage : undefined,
+      });
+    } catch (error) {
+      console.error('프로필 업데이트 오류:', error);
+      setIsSubmitting(false);
+    }
   };
 
-  const handleProfileImageChange = () => {
-    // TODO: 이미지 선택 및 업로드 기능
-    Alert.alert('준비 중', '프로필 이미지 변경 기능은 준비 중입니다.');
+  const handleSave = () => {
+    handleSubmit(formData);
+  };
+
+  const handleProfileImageChange = async () => {
+    try {
+      // 권한 요청
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (permissionResult.granted === false) {
+        Alert.alert('권한 필요', '사진 라이브러리에 접근하려면 권한이 필요합니다.');
+        return;
+      }
+
+      // 이미지 선택 옵션
+      Alert.alert('프로필 사진 변경', '옵션을 선택하세요', [
+        {
+          text: '사진 선택',
+          onPress: async () => {
+            const result = await ImagePicker.launchImageLibraryAsync({
+              mediaTypes: ImagePicker.MediaTypeOptions.Images,
+              allowsEditing: true,
+              aspect: [1, 1],
+              quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+              const asset = result.assets[0];
+              const imageData = {
+                uri: asset.uri,
+                type: asset.mimeType || 'image/jpeg',
+                name: `profile_${Date.now()}.jpg`,
+              };
+
+              setFormData(prev => ({
+                ...prev,
+                profileImage: imageData,
+                removeProfileImage: false,
+              }));
+              setImagePreview(asset.uri);
+            }
+          },
+        },
+        ...(imagePreview
+          ? [
+              {
+                text: '사진 삭제',
+                style: 'destructive' as const,
+                onPress: () => {
+                  setFormData(prev => ({
+                    ...prev,
+                    profileImage: null,
+                    removeProfileImage: true,
+                  }));
+                  setImagePreview(null);
+                },
+              },
+            ]
+          : []),
+        {
+          text: '취소',
+          style: 'cancel' as const,
+        },
+      ]);
+    } catch (error) {
+      console.error('이미지 선택 오류:', error);
+      Toast.show({
+        type: 'error',
+        text1: '이미지 선택에 실패했습니다.',
+      });
+    }
   };
 
   // Backdrop component
@@ -88,8 +247,8 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
     <BottomSheetView style={styles.contentContainer}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.title}>프로필 편집</Text>
-        <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
+        <Text style={styles.title}>프로필 수정</Text>
+        <TouchableOpacity onPress={handleClose} style={styles.closeButton} disabled={isSubmitting}>
           <X size={24} color='#6B7280' />
         </TouchableOpacity>
       </View>
@@ -97,30 +256,36 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
       {/* 프로필 이미지 */}
       <View style={styles.imageSection}>
         <View style={styles.imageContainer}>
-          <View style={styles.defaultImage}>
-            <Text style={styles.imageText}>
-              {(formData.username || profileData.email?.split('@')[0] || '')
-                .charAt(0)
-                .toUpperCase()}
-            </Text>
-          </View>
-          <TouchableOpacity style={styles.cameraButton} onPress={handleProfileImageChange}>
+          {imagePreview ? (
+            <Image source={{ uri: imagePreview }} style={styles.profileImage} />
+          ) : (
+            <View style={styles.defaultImage}>
+              <Text style={styles.imageText}>{formData.username.charAt(0).toUpperCase()}</Text>
+            </View>
+          )}
+          <TouchableOpacity
+            style={styles.cameraButton}
+            onPress={handleProfileImageChange}
+            disabled={isSubmitting}
+          >
             <Camera size={16} color='white' />
           </TouchableOpacity>
         </View>
+        <Text style={styles.imageHint}>20MB 이하의 이미지 파일만 업로드 가능합니다</Text>
       </View>
 
       {/* 폼 */}
       <View style={styles.formContainer}>
-        {/* 사용자명 */}
+        {/* 닉네임 */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>사용자명</Text>
+          <Text style={styles.label}>닉네임</Text>
           <TextInput
-            style={styles.textInput}
+            style={[styles.textInput, isSubmitting && styles.disabledInput]}
             value={formData.username}
             onChangeText={text => setFormData(prev => ({ ...prev, username: text }))}
-            placeholder='사용자명을 입력하세요'
+            placeholder='변경할 닉네임을 입력하세요'
             maxLength={30}
+            editable={!isSubmitting}
           />
         </View>
 
@@ -128,26 +293,42 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
         <View style={styles.inputGroup}>
           <Text style={styles.label}>자기소개</Text>
           <TextInput
-            style={[styles.textInput, styles.textArea]}
+            style={[styles.textInput, styles.textArea, isSubmitting && styles.disabledInput]}
             value={formData.bio}
             onChangeText={text => setFormData(prev => ({ ...prev, bio: text }))}
-            placeholder='자기소개를 입력하세요'
+            placeholder='자기소개를 입력하세요 (최대 200자)'
             multiline
             numberOfLines={4}
             textAlignVertical='top'
-            maxLength={150}
+            maxLength={200}
+            editable={!isSubmitting}
           />
+          <View style={styles.charCount}>
+            <Text style={styles.charCountText}>{formData.bio.length}/200</Text>
+          </View>
         </View>
       </View>
 
       {/* 버튼 */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={handleClose}>
+        <TouchableOpacity
+          style={[styles.button, styles.cancelButton]}
+          onPress={handleClose}
+          disabled={isSubmitting}
+        >
           <Text style={styles.cancelButtonText}>취소</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.button, styles.saveButton]} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>저장</Text>
+        <TouchableOpacity
+          style={[styles.button, styles.saveButton, isSubmitting && styles.disabledButton]}
+          onPress={handleSave}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size='small' color='#FFFFFF' />
+          ) : (
+            <Text style={styles.saveButtonText}>저장</Text>
+          )}
         </TouchableOpacity>
       </View>
     </BottomSheetView>
@@ -213,6 +394,13 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     position: 'relative',
+    marginBottom: 8,
+  },
+  profileImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#E5E7EB',
   },
   defaultImage: {
     width: 80,
@@ -240,6 +428,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'white',
   },
+  imageHint: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
   formContainer: {
     gap: 20,
   },
@@ -262,7 +455,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   textArea: {
-    height: 100,
+    height: 120,
+    paddingTop: 12,
+  },
+  charCount: {
+    alignItems: 'flex-end',
+  },
+  charCountText: {
+    fontSize: 12,
+    color: '#6B7280',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -275,6 +476,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 44,
   },
   cancelButton: {
     backgroundColor: '#F9FAFB',
@@ -293,5 +495,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#FFFFFF',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  disabledInput: {
+    backgroundColor: '#F9FAFB',
+    color: '#9CA3AF',
   },
 });

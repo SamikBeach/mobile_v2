@@ -30,6 +30,7 @@ import { LoadingSpinner } from '../../components';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useIsMyProfile } from '../../hooks/useIsMyProfile';
 import { useUserFollow } from '../../hooks/useUserFollow';
+import { ProfileEditBottomSheet } from '../my/components/ProfileEditBottomSheet';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -170,6 +171,13 @@ const ProfileHeader: React.FC<{ userId: number }> = ({ userId }) => {
           </View>
         </View>
       </View>
+
+      {/* 프로필 편집 BottomSheet */}
+      <ProfileEditBottomSheet
+        isVisible={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        profileData={profileData}
+      />
     </View>
   );
 };
