@@ -6,6 +6,7 @@ import {
   AccountActionResponse,
   UserDetailResponseDto,
   UserLibrariesResponseDto,
+  UserSubscribedLibrariesResponseDto,
   UserReviewsResponseDto,
   FollowersListResponseDto,
   FollowingListResponseDto,
@@ -113,6 +114,20 @@ export const getUserLibraries = async (
   limit: number = 10
 ): Promise<UserLibrariesResponseDto> => {
   const response = await axios.get(`/user/${userId}/libraries`, {
+    params: { page, limit },
+  });
+  return response.data;
+};
+
+/**
+ * 사용자 구독한 서재 목록 조회
+ */
+export const getUserSubscribedLibraries = async (
+  userId: number,
+  page: number = 1,
+  limit: number = 10
+): Promise<UserSubscribedLibrariesResponseDto> => {
+  const response = await axios.get(`/user/${userId}/libraries/subscribed`, {
     params: { page, limit },
   });
   return response.data;

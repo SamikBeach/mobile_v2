@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
 
-  // 필터 메뉴 스타일 (ReviewsSection과 동일)
+  // 필터 메뉴 스타일 (ReadBooksSection과 동일)
   filterContainer: {
     backgroundColor: 'white',
     paddingTop: 2,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: 20,
-    paddingVertical: 4,
+    paddingBottom: 8,
     gap: 8,
   },
   filterButton: {

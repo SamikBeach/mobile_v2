@@ -197,6 +197,16 @@ export interface UserReviewsResponseDto {
 }
 
 /**
+ * 사용자 구독한 서재 목록 응답
+ */
+export interface UserSubscribedLibrariesResponseDto {
+  libraries: LibraryPreviewDto[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+/**
  * 팔로워/팔로잉 사용자 응답 DTO
  */
 export interface FollowerResponseDto {

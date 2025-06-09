@@ -35,6 +35,7 @@ import { ReadBooksSection } from './components/ReadBooksSection';
 import { ReviewsSection as ReviewsSectionComponent } from './components/ReviewsSection';
 import { LibrariesSection as LibrariesSectionComponent } from './components/LibrariesSection';
 import { CommunitySection as CommunitySectionComponent } from './components/CommunitySection';
+import SubscribedLibrariesSection from './components/SubscribedLibrariesSection';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -323,13 +324,6 @@ const ProfileSummary: React.FC<{
 
 // Section Content Components (placeholders)
 
-const SubscriptionsSection: React.FC = () => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>구독한 서재</Text>
-    <Text style={styles.sectionPlaceholder}>구독한 서재가 여기에 표시됩니다.</Text>
-  </View>
-);
-
 const StatsSection: React.FC = () => (
   <View style={styles.sectionContainer}>
     <Text style={styles.sectionTitle}>통계</Text>
@@ -378,6 +372,8 @@ const SummarySkeleton: React.FC = () => (
 // Profile Content Component with Error Boundary
 const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
   const [selectedSection, setSelectedSection] = useState('read');
+  const { profileData } = useUserProfile(userId);
+  const isMyProfile = useIsMyProfile(userId);
 
   // userId가 유효하지 않은 경우 처리
   if (!userId || isNaN(userId)) {
@@ -413,7 +409,7 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
       case 'subscriptions':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <SubscriptionsSection />
+            <SubscribedLibrariesSection userId={userId} isMyProfile={isMyProfile} />
           </Suspense>
         );
       case 'stats':
