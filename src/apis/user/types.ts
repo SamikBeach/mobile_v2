@@ -182,6 +182,8 @@ export interface UserDetailResponseDto {
 export interface UserLibrariesResponseDto {
   items: LibraryPreviewDto[];
   total: number;
+  page: number;
+  totalPages: number;
 }
 
 /**
