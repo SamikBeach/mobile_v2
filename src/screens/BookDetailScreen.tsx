@@ -224,14 +224,22 @@ const TabSection: React.FC<{ isbn: string }> = ({ isbn: _isbn }) => {
   );
 };
 
+// BookDetailContent props 타입 정의
+interface BookDetailContentProps {
+  isbn: string;
+  onReadingStatusPress: () => void;
+  onLibraryPress: () => void;
+  onReviewPress: () => void;
+}
+
 // 메인 책 상세 컴포넌트
-const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
+const BookDetailContent: React.FC<BookDetailContentProps> = ({
+  isbn,
+  onReadingStatusPress,
+  onLibraryPress,
+  onReviewPress,
+}) => {
   const navigation = useNavigation();
-  const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
-  const [librarySelectionBottomSheetVisible, setLibrarySelectionBottomSheetVisible] =
-    useState(false);
-  const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
-  const [reviewBottomSheetVisible, setReviewBottomSheetVisible] = useState(false);
 
   const { data: book } = useSuspenseQuery({
     queryKey: ['book-detail', isbn],
@@ -254,65 +262,6 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
     });
   };
 
-  const handleReadingStatusPress = () => {
-    setReadingStatusBottomSheetVisible(true);
-  };
-
-  const handleReadingStatusSelect = (status: ReadingStatusType | null) => {
-    // TODO: API 호출로 읽기 상태 업데이트
-    console.log('Selected reading status:', status);
-    Alert.alert(
-      '읽기 상태 변경',
-      `읽기 상태가 "${status ? StatusTexts[status] : StatusTexts['NONE']}"로 변경되었습니다.`
-    );
-  };
-
-  const handleLibraryPress = () => {
-    setLibrarySelectionBottomSheetVisible(true);
-  };
-
-  const handleLibrarySelect = async (libraryId: number) => {
-    try {
-      // TODO: 실제 API 호출로 책을 서재에 추가 (addBookToLibrary 사용)
-      // await addBookToLibrary(libraryId, { isbn: book.isbn });
-      console.log('Adding book to library:', libraryId, book.isbn);
-      Alert.alert('성공', '책이 서재에 추가되었습니다.');
-    } catch {
-      Alert.alert('오류', '책을 서재에 추가하는데 실패했습니다.');
-    }
-  };
-
-  const handleCreateNewLibrary = () => {
-    setLibrarySelectionBottomSheetVisible(false);
-    setCreateLibraryBottomSheetVisible(true);
-  };
-
-  const handleLibraryCreated = (libraryId: number) => {
-    // 새 서재가 생성된 후 바로 책을 추가할지 묻기
-    Alert.alert('서재 생성 완료', '새 서재에 이 책을 바로 추가하시겠습니까?', [
-      { text: '나중에', style: 'cancel' },
-      {
-        text: '추가하기',
-        onPress: () => handleLibrarySelect(libraryId),
-      },
-    ]);
-  };
-
-  const handleReviewPress = () => {
-    setReviewBottomSheetVisible(true);
-  };
-
-  const handleReviewSubmit = (
-    rating: number,
-    content: string,
-    readingStatus?: ReadingStatusType | null
-  ) => {
-    // TODO: 실제 API 호출로 리뷰 제출
-    console.log('Review submitted:', { rating, content, readingStatus });
-    Alert.alert('성공', '리뷰가 등록되었습니다.');
-    setReviewBottomSheetVisible(false);
-  };
-
   if (!book) return null;
 
   const displayRating = typeof book.rating === 'string' ? book.rating : book.rating.toFixed(1);
@@ -323,6 +272,10 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
       style={styles.scrollView}
       showsVerticalScrollIndicator={false}
       contentInsetAdjustmentBehavior='automatic'
+      bounces={true}
+      alwaysBounceVertical={true}
+      scrollEventThrottle={16}
+      nestedScrollEnabled={true}
     >
       <View style={styles.container}>
         {/* 책 표지 */}
@@ -368,7 +321,7 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
                 <X size={16} color='#6B7280' />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity style={styles.reviewButton} onPress={handleReviewPress}>
+            <TouchableOpacity style={styles.reviewButton} onPress={onReviewPress}>
               <Edit3 size={12} color='#374151' />
               <Text style={styles.reviewButtonText}>리뷰 쓰기</Text>
             </TouchableOpacity>
@@ -419,9 +372,9 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
           <View style={styles.actionButtonsRow}>
             <ReadingStatusButton
               status={book.userReadingStatus as ReadingStatusType | null}
-              onPress={handleReadingStatusPress}
+              onPress={onReadingStatusPress}
             />
-            <LibraryButton onPress={handleLibraryPress} />
+            <LibraryButton onPress={onLibraryPress} />
           </View>
         </View>
 
@@ -433,45 +386,20 @@ const BookDetailContent: React.FC<{ isbn: string }> = ({ isbn }) => {
         {/* 탭 섹션 */}
         <TabSection isbn={isbn} />
       </View>
-
-      {/* 읽기 상태 선택 바텀시트 */}
-      <ReadingStatusBottomSheet
-        isVisible={readingStatusBottomSheetVisible}
-        onClose={() => setReadingStatusBottomSheetVisible(false)}
-        currentStatus={book.userReadingStatus as ReadingStatusType | null}
-        onStatusSelect={handleReadingStatusSelect}
-      />
-
-      {/* 서재 선택 바텀시트 */}
-      <LibrarySelectionBottomSheet
-        isVisible={librarySelectionBottomSheetVisible}
-        onClose={() => setLibrarySelectionBottomSheetVisible(false)}
-        onLibrarySelect={handleLibrarySelect}
-        onCreateNewLibrary={handleCreateNewLibrary}
-      />
-
-      {/* 새 서재 만들기 바텀시트 */}
-      <CreateLibraryBottomSheet
-        isVisible={createLibraryBottomSheetVisible}
-        onClose={() => setCreateLibraryBottomSheetVisible(false)}
-        onSuccess={handleLibraryCreated}
-      />
-
-      {/* 리뷰 작성 바텀시트 */}
-      <ReviewBottomSheet
-        isVisible={reviewBottomSheetVisible}
-        onClose={() => setReviewBottomSheetVisible(false)}
-        bookTitle={book.title}
-        onSubmit={handleReviewSubmit}
-        userReadingStatus={book.userReadingStatus as ReadingStatusType | null}
-      />
     </ScrollView>
   );
 };
 
 // 로딩 스켈레톤
 const BookDetailSkeleton: React.FC = () => (
-  <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+  <ScrollView
+    style={styles.scrollView}
+    showsVerticalScrollIndicator={false}
+    bounces={true}
+    alwaysBounceVertical={true}
+    scrollEventThrottle={16}
+    nestedScrollEnabled={true}
+  >
     <View style={styles.container}>
       {/* 책 표지 스켈레톤 */}
       <View style={styles.coverShadowContainer}>
@@ -522,14 +450,109 @@ export const BookDetailScreen: React.FC = () => {
   const route = useRoute<BookDetailRouteProp>();
   const { isbn } = route.params;
 
+  // 바텀시트 상태들
+  const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
+  const [librarySelectionBottomSheetVisible, setLibrarySelectionBottomSheetVisible] =
+    useState(false);
+  const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
+  const [reviewBottomSheetVisible, setReviewBottomSheetVisible] = useState(false);
+
+  const handleReadingStatusPress = () => {
+    setReadingStatusBottomSheetVisible(true);
+  };
+
+  const handleReadingStatusSelect = (status: ReadingStatusType | null) => {
+    // TODO: 실제 API 호출로 읽기 상태 업데이트
+    console.log('Reading status selected:', status);
+    setReadingStatusBottomSheetVisible(false);
+  };
+
+  const handleLibraryPress = () => {
+    setLibrarySelectionBottomSheetVisible(true);
+  };
+
+  const handleLibrarySelect = async (libraryId: number) => {
+    try {
+      // TODO: 실제 API 호출로 서재에 책 추가
+      console.log('Book added to library:', libraryId);
+      Alert.alert('성공', '서재에 책이 추가되었습니다.');
+      setLibrarySelectionBottomSheetVisible(false);
+    } catch {
+      Alert.alert('오류', '서재에 책을 추가하는데 실패했습니다.');
+    }
+  };
+
+  const handleCreateNewLibrary = () => {
+    setLibrarySelectionBottomSheetVisible(false);
+    setCreateLibraryBottomSheetVisible(true);
+  };
+
+  const handleLibraryCreated = (libraryId: number) => {
+    setCreateLibraryBottomSheetVisible(false);
+    // 새로 만든 서재에 바로 책 추가
+    handleLibrarySelect(libraryId);
+  };
+
+  const handleReviewPress = () => {
+    setReviewBottomSheetVisible(true);
+  };
+
+  const handleReviewSubmit = (
+    rating: number,
+    content: string,
+    readingStatus?: ReadingStatusType | null
+  ) => {
+    // TODO: 실제 API 호출로 리뷰 제출
+    console.log('Review submitted:', { rating, content, readingStatus });
+    Alert.alert('성공', '리뷰가 등록되었습니다.');
+    setReviewBottomSheetVisible(false);
+  };
+
   return (
-    <View style={styles.safeArea}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} bounces={true}>
+    <>
+      <View style={styles.safeArea}>
         <Suspense fallback={<BookDetailSkeleton />}>
-          <BookDetailContent isbn={isbn} />
+          <BookDetailContent
+            isbn={isbn}
+            onReadingStatusPress={handleReadingStatusPress}
+            onLibraryPress={handleLibraryPress}
+            onReviewPress={handleReviewPress}
+          />
         </Suspense>
-      </ScrollView>
-    </View>
+      </View>
+
+      {/* 읽기 상태 선택 바텀시트 */}
+      <ReadingStatusBottomSheet
+        isVisible={readingStatusBottomSheetVisible}
+        onClose={() => setReadingStatusBottomSheetVisible(false)}
+        currentStatus={null} // TODO: 실제 책 데이터에서 가져와야 함
+        onStatusSelect={handleReadingStatusSelect}
+      />
+
+      {/* 서재 선택 바텀시트 */}
+      <LibrarySelectionBottomSheet
+        isVisible={librarySelectionBottomSheetVisible}
+        onClose={() => setLibrarySelectionBottomSheetVisible(false)}
+        onLibrarySelect={handleLibrarySelect}
+        onCreateNewLibrary={handleCreateNewLibrary}
+      />
+
+      {/* 새 서재 만들기 바텀시트 */}
+      <CreateLibraryBottomSheet
+        isVisible={createLibraryBottomSheetVisible}
+        onClose={() => setCreateLibraryBottomSheetVisible(false)}
+        onSuccess={handleLibraryCreated}
+      />
+
+      {/* 리뷰 작성 바텀시트 */}
+      <ReviewBottomSheet
+        isVisible={reviewBottomSheetVisible}
+        onClose={() => setReviewBottomSheetVisible(false)}
+        bookTitle='' // TODO: 실제 책 제목으로 변경해야 함
+        onSubmit={handleReviewSubmit}
+        userReadingStatus={null} // TODO: 실제 읽기 상태로 변경해야 함
+      />
+    </>
   );
 };
 
