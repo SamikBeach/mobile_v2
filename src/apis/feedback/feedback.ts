@@ -1,5 +1,11 @@
 import axios from '../axios';
-import { Feedback, CreateFeedbackDto, UpdateFeedbackDto } from './types';
+import {
+  Feedback,
+  CreateFeedbackDto,
+  UpdateFeedbackDto,
+  FeedbackDto,
+  FeedbackResponseDto,
+} from './types';
 
 /**
  * 피드백 목록 조회
@@ -30,4 +36,12 @@ export const updateFeedback = async (id: number, data: UpdateFeedbackDto): Promi
  */
 export const deleteFeedback = async (id: number): Promise<void> => {
   await axios.delete(`/feedback/${id}`);
+};
+
+/**
+ * 피드백을 제출하는 API 함수 (src_frontend 호환)
+ */
+export const submitFeedback = async (feedbackData: FeedbackDto): Promise<FeedbackResponseDto> => {
+  const response = await axios.post<FeedbackResponseDto>('/feedback', feedbackData);
+  return response.data;
 };

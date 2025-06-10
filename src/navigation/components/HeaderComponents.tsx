@@ -4,6 +4,7 @@ import { Search, Send, Settings } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Logo } from '../../components/Logo/Logo';
 import { NotificationBadge } from '../../components/notification/NotificationBadge';
+import { useFeedback } from '../../contexts/FeedbackContext';
 
 export const HeaderLeft = () => (
   <View style={styles.headerLeft}>
@@ -13,13 +14,14 @@ export const HeaderLeft = () => (
 
 export const HeaderRight = () => {
   const navigation = useNavigation();
+  const { openFeedback } = useFeedback();
 
   const handleSearchPress = () => {
     navigation.navigate('Search' as never);
   };
 
   const handleSendPress = () => {
-    console.log('Send pressed');
+    openFeedback();
   };
 
   const handleNotificationPress = () => {
