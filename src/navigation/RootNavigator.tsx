@@ -8,73 +8,75 @@ import {
   LibraryDetailScreen,
   SearchScreen,
   NotificationScreen,
+  FeedbackScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
-import { FeedbackProvider } from '../contexts/FeedbackContext';
-import { FeedbackBottomSheet } from '../components/FeedbackBottomSheet';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
   return (
-    <FeedbackProvider>
-      <Stack.Navigator
-        screenOptions={{
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name='MainTabs' component={BottomTabNavigator} />
+      <Stack.Screen
+        name='BookDetail'
+        component={BookDetailScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          headerTitle: '책 상세',
+          headerBackTitle: '',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: -8 }}>
+              <ChevronLeft size={24} color='#111827' />
+            </TouchableOpacity>
+          ),
+          headerTitleStyle: {
+            fontSize: 16,
+            fontWeight: '600',
+          },
+          headerTintColor: '#111827',
+        })}
+      />
+      <Stack.Screen
+        name='LibraryDetail'
+        component={LibraryDetailScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          headerTitle: '서재',
+          headerBackTitle: '',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: -8 }}>
+              <ChevronLeft size={24} color='#111827' />
+            </TouchableOpacity>
+          ),
+          headerTitleStyle: {
+            fontSize: 16,
+            fontWeight: '600',
+          },
+          headerTintColor: '#111827',
+        })}
+      />
+      <Stack.Screen name='Search' component={SearchScreen} />
+      <Stack.Screen
+        name='Notification'
+        component={NotificationScreen}
+        options={{
+          presentation: 'modal',
           headerShown: false,
         }}
-      >
-        <Stack.Screen name='MainTabs' component={BottomTabNavigator} />
-        <Stack.Screen
-          name='BookDetail'
-          component={BookDetailScreen}
-          options={({ navigation }) => ({
-            headerShown: true,
-            headerTitle: '책 상세',
-            headerBackTitle: '',
-            headerLeft: () => (
-              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: -8 }}>
-                <ChevronLeft size={24} color='#111827' />
-              </TouchableOpacity>
-            ),
-            headerTitleStyle: {
-              fontSize: 16,
-              fontWeight: '600',
-            },
-            headerTintColor: '#111827',
-          })}
-        />
-        <Stack.Screen
-          name='LibraryDetail'
-          component={LibraryDetailScreen}
-          options={({ navigation }) => ({
-            headerShown: true,
-            headerTitle: '서재',
-            headerBackTitle: '',
-            headerLeft: () => (
-              <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: -8 }}>
-                <ChevronLeft size={24} color='#111827' />
-              </TouchableOpacity>
-            ),
-            headerTitleStyle: {
-              fontSize: 16,
-              fontWeight: '600',
-            },
-            headerTintColor: '#111827',
-          })}
-        />
-        <Stack.Screen name='Search' component={SearchScreen} />
-        <Stack.Screen
-          name='Notification'
-          component={NotificationScreen}
-          options={{
-            presentation: 'modal',
-            headerShown: false,
-          }}
-        />
-      </Stack.Navigator>
-
-      {/* 전역 피드백 Bottom Sheet */}
-      <FeedbackBottomSheet />
-    </FeedbackProvider>
+      />
+      <Stack.Screen
+        name='Feedback'
+        component={FeedbackScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
+        }}
+      />
+    </Stack.Navigator>
   );
 };
