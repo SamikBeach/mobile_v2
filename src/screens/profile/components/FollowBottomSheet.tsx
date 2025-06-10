@@ -22,6 +22,7 @@ import { FollowerResponseDto } from '../../../apis/user/types';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '../../../atoms/user';
 import Toast from 'react-native-toast-message';
+import { LoadingSpinner } from '../../../components';
 
 interface FollowBottomSheetProps {
   isVisible: boolean;
@@ -252,7 +253,7 @@ export const FollowBottomSheet: React.FC<FollowBottomSheetProps> = ({
 
     return (
       <View style={styles.loadingFooter}>
-        <ActivityIndicator size='small' color='#007AFF' />
+        <LoadingSpinner />
       </View>
     );
   };

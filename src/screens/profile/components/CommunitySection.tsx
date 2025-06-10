@@ -1,16 +1,10 @@
 import React, { useState, Suspense, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { FileText, MessageCircle, HelpCircle, Calendar, Users } from 'lucide-react-native';
 import { getUserReviews, getUserReviewTypeCounts } from '../../../apis/user/user';
 import { ReviewCard } from '../../../components/Review/ReviewCard';
+import { LoadingSpinner } from '../../../components';
 import { ReviewType } from '../../../apis/review/types';
 import { UserReviewTypeCountsDto } from '../../../apis/user/types';
 
@@ -36,13 +30,6 @@ const reviewTypeFilters = [
 
 // 전체 리뷰 타입 배열 (src_frontend와 동일)
 const allReviewTypes = ['general', 'discussion', 'question', 'meetup'] as ReviewType[];
-
-// LoadingSpinner 컴포넌트
-const LoadingSpinner: React.FC = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-    <ActivityIndicator size='small' color='#2563EB' />
-  </View>
-);
 
 // 리뷰 타입별 카운트를 로드하는 훅
 const useTypeCountsLoader = (userId: number) => {
@@ -213,7 +200,6 @@ const ReviewList: React.FC<ReviewListProps> = ({ userId, selectedType }) => {
   const flatListRef = useRef<FlatList>(null);
 
   // 선택된 타입에 따라 API 호출에 전달할 타입 배열 생성
-  const reviewTypes = selectedType ? [selectedType] : allReviewTypes;
 
   const { reviews, fetchNextPage, hasNextPage, isFetchingNextPage } = useUserReviewsInfinite(
     userId,

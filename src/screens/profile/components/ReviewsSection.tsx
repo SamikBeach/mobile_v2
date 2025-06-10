@@ -1,18 +1,11 @@
 import React, { useState, Suspense, useRef, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { Star, Users, Clock, Calendar, ChevronDown, CalendarClock } from 'lucide-react-native';
 import { getUserReviews, getUserReviewTypeCounts } from '../../../apis/user/user';
 import { ReviewCard } from '../../../components/Review/ReviewCard';
+import { LoadingSpinner } from '../../../components';
 
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 
@@ -122,13 +115,6 @@ const reviewFilters = [
 const DEFAULT_FILTER = undefined;
 const DEFAULT_SORT = ReviewSortOptions.RECENT;
 const DEFAULT_TIME_RANGE = TimeRangeOptions.ALL;
-
-// LoadingSpinner 컴포넌트 (스타일 정의 전에 간단하게 정의)
-const LoadingSpinner: React.FC = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-    <ActivityIndicator size='small' color='#2563EB' />
-  </View>
-);
 
 // 리뷰 타입별 카운트 조회 Hook
 const useReviewTypeCounts = (userId: number) => {

@@ -1,17 +1,11 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { getUserSubscribedLibraries } from '../../../apis/user/user';
 import { LibraryPreviewDto } from '../../../apis/user/types';
 import { LibraryCard } from '../../../components/Library/LibraryCard';
+import { LoadingSpinner } from '../../../components';
 import { MaterialIcons } from '@expo/vector-icons';
 
 interface SubscribedLibrariesSectionProps {
@@ -66,7 +60,7 @@ const SubscribedLibrariesSection: React.FC<SubscribedLibrariesSectionProps> = ({
 
     return (
       <View style={styles.loadingFooter}>
-        <ActivityIndicator size='small' color='#007AFF' />
+        <LoadingSpinner />
       </View>
     );
   };

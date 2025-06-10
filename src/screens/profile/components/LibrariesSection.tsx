@@ -1,13 +1,5 @@
 import React, { Suspense } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +9,7 @@ import { LibraryPreviewDto } from '../../../apis/user/types';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '../../../atoms/user';
 import { LibraryCard } from '../../../components/Library/LibraryCard';
+import { LoadingSpinner } from '../../../components';
 import { RootStackParamList } from '../../../navigation/types';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -24,13 +17,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 // Lucide 아이콘들을 컴포넌트로 래핑
 const PlusIcon = ({ size = 16, color = '#374151' }) => <Plus size={size} color={color} />;
 const LibraryIcon = ({ size = 48, color = '#6B7280' }) => <Library size={size} color={color} />;
-
-// LoadingSpinner 컴포넌트
-const LoadingSpinner: React.FC = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-    <ActivityIndicator size='small' color='#2563EB' />
-  </View>
-);
 
 // 사용자 서재 조회 Hook (무한 스크롤)
 const useUserLibrariesInfinite = (userId: number) => {

@@ -1,13 +1,5 @@
 import React, { useState, Suspense, useRef, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  FlatList,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
@@ -29,6 +21,7 @@ import { RootStackParamList } from '../../../navigation/types';
 
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { BookCard } from '../../../components/BookCard';
+import { LoadingSpinner } from '../../../components';
 
 // Navigation type
 type ProfileNavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -152,13 +145,6 @@ const readingStatusFilters = [
 const DEFAULT_STATUS = undefined;
 const DEFAULT_SORT = UserBooksSortOptions.RATING_DESC;
 const DEFAULT_TIME_RANGE = TimeRangeOptions.ALL;
-
-// LoadingSpinner 컴포넌트 (스타일 정의 전에 간단하게 정의)
-const LoadingSpinner: React.FC = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-    <ActivityIndicator size='small' color='#2563EB' />
-  </View>
-);
 
 // 읽기 상태 카운트 조회 Hook
 const useReadingStatusCounts = (userId: number) => {
