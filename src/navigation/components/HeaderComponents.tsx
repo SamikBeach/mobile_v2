@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Search, Send, Bell, Settings } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Logo } from '../../components/Logo/Logo';
 
 export const HeaderLeft = () => (
@@ -10,8 +11,10 @@ export const HeaderLeft = () => (
 );
 
 export const HeaderRight = () => {
+  const navigation = useNavigation();
+
   const handleSearchPress = () => {
-    console.log('Search pressed');
+    navigation.navigate('Search' as never);
   };
 
   const handleSendPress = () => {

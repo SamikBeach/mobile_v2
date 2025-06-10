@@ -3,7 +3,7 @@ import { TouchableOpacity } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ChevronLeft } from 'lucide-react-native';
 import { BottomTabNavigator } from './BottomTabNavigator';
-import { BookDetailScreen, LibraryDetailScreen } from '../screens';
+import { BookDetailScreen, LibraryDetailScreen, SearchScreen } from '../screens';
 import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -54,6 +54,7 @@ export const RootNavigator: React.FC = () => {
           headerTintColor: '#111827',
         })}
       />
+      <Stack.Screen name='Search' component={SearchScreen} />
     </Stack.Navigator>
   );
 };

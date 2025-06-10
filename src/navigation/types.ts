@@ -11,4 +11,5 @@ export type RootStackParamList = {
   MainTabs: undefined;
   BookDetail: { isbn: string; title?: string };
   LibraryDetail: { libraryId: number };
+  Search: undefined;
 };
