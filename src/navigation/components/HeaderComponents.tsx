@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Search, Send, Bell, Settings } from 'lucide-react-native';
+import { Search, Send, Settings } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Logo } from '../../components/Logo/Logo';
+import { NotificationBadge } from '../../components/notification/NotificationBadge';
 
 export const HeaderLeft = () => (
   <View style={styles.headerLeft}>
@@ -22,7 +23,7 @@ export const HeaderRight = () => {
   };
 
   const handleNotificationPress = () => {
-    console.log('Notification pressed');
+    navigation.navigate('Notification' as never);
   };
 
   const handleSettingsPress = () => {
@@ -40,7 +41,7 @@ export const HeaderRight = () => {
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.iconButton} onPress={handleNotificationPress}>
-        <Bell size={20} color='#6B7280' />
+        <NotificationBadge />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.iconButton} onPress={handleSettingsPress}>

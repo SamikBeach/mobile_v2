@@ -12,4 +12,5 @@ export type RootStackParamList = {
   BookDetail: { isbn: string; title?: string };
   LibraryDetail: { libraryId: number };
   Search: undefined;
+  Notification: undefined;
 };

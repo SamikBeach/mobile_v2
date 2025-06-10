@@ -3,6 +3,7 @@ export * from './HomeScreenWrapper';
 export * from './BookDetailScreen';
 export * from './LibraryDetailScreen';
 export * from './SearchScreen';
+export * from './NotificationScreen';
 export * from './popular';
 export * from './discover';
 export { LibrariesScreen } from './libraries/LibrariesScreen';
