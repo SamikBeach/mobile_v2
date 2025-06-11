@@ -1,4 +1,4 @@
-import React, { Suspense, useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
   NativeScrollEvent,
   TextInput,
 } from 'react-native';
-import { useSuspenseQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { Plus, BookOpen, Users, Clock, Flame, Library, Calendar } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LoadingSpinner } from '../../components';
@@ -196,18 +196,17 @@ const LibrariesScreenSkeleton = () => (
         </View>
       </View>
     </View>
-    <View style={[styles.contentContainer, { paddingTop: 120 + 16 }]}>
+    <View style={styles.loadingContainer}>
       <LoadingSpinner />
-      <Text style={styles.loadingText}>서재를 불러오는 중...</Text>
     </View>
   </View>
 );
 
-// Libraries Content Component
-const LibrariesContent = ({ preloadedTags }: { preloadedTags: any[] }) => {
+// Main Libraries Screen Component
+export const LibrariesScreen = () => {
   const navigation = useNavigation();
 
-  // State
+  // State - 모든 hooks를 최상단에 위치
   const [selectedTag, setSelectedTag] = useState('all');
   const [selectedSort, setSelectedSort] = useState('popular');
   const [timeRange, setTimeRange] = useState('all');
@@ -215,23 +214,37 @@ const LibrariesContent = ({ preloadedTags }: { preloadedTags: any[] }) => {
   const [showSortBottomSheet, setShowSortBottomSheet] = useState(false);
   const [showTimeRangeBottomSheet, setShowTimeRangeBottomSheet] = useState(false);
   const [showCreateLibraryBottomSheet, setShowCreateLibraryBottomSheet] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(120);
 
   // Animation for filter visibility
   const scrollY = useRef(new Animated.Value(0)).current;
   const headerTranslateY = useRef(new Animated.Value(0)).current;
   const lastScrollY = useRef(0);
   const scrollDirection = useRef<'up' | 'down'>('up');
-  const [headerHeight, setHeaderHeight] = useState(120);
 
-  // Use preloaded tags
-  const tags = preloadedTags;
+  // Tags query
+  const {
+    data: tags = [],
+    isLoading: tagsLoading,
+    error: tagsError,
+  } = useQuery({
+    queryKey: ['library-tags'],
+    queryFn: async () => {
+      const result = await getLibraryTags(50);
+      return result || [];
+    },
+    retry: 2,
+    staleTime: 10 * 60 * 1000, // 10분
+    gcTime: 15 * 60 * 1000, // 15분
+  });
 
+  // Libraries query
   const {
     data,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading,
+    isLoading: librariesLoading,
     error: librariesError,
   } = useInfiniteQuery({
     queryKey: ['libraries', selectedTag, selectedSort, timeRange, searchQuery],
@@ -252,42 +265,6 @@ const LibrariesContent = ({ preloadedTags }: { preloadedTags: any[] }) => {
     },
     initialPageParam: 1,
   });
-
-  const libraries = data?.pages.flatMap(page => page.data) || [];
-
-  // Handlers
-  const handleTagPress = (tag: string) => {
-    setSelectedTag(tag);
-  };
-
-  const handleSortPress = () => {
-    setShowSortBottomSheet(true);
-  };
-
-  const handleTimeRangePress = () => {
-    setShowTimeRangeBottomSheet(true);
-  };
-
-  const handleSortChange = (sort: string) => {
-    setSelectedSort(sort);
-  };
-
-  const handleTimeRangeChange = (range: string) => {
-    setTimeRange(range);
-  };
-
-  const handleLibraryPress = (library: LibraryListItem) => {
-    (navigation as any).navigate('LibraryDetail', { libraryId: library.id });
-  };
-
-  const handleCreateLibrary = () => {
-    setShowCreateLibraryBottomSheet(true);
-  };
-
-  const handleLibraryCreated = (libraryId: number) => {
-    // 새 서재가 생성된 후 목록 새로고침
-    // TODO: Query 무효화나 리프레시 로직 추가
-  };
 
   // Header height measurement
   const onHeaderLayout = useCallback((event: LayoutChangeEvent) => {
@@ -334,17 +311,65 @@ const LibrariesContent = ({ preloadedTags }: { preloadedTags: any[] }) => {
     },
   });
 
+  // All handlers and logic from LibrariesContent
+  const handleTagPress = useCallback((tag: string) => {
+    setSelectedTag(tag);
+  }, []);
+
+  const handleSortPress = useCallback(() => {
+    setShowSortBottomSheet(true);
+  }, []);
+
+  const handleTimeRangePress = useCallback(() => {
+    setShowTimeRangeBottomSheet(true);
+  }, []);
+
+  const handleSortChange = useCallback((sort: string) => {
+    setSelectedSort(sort);
+  }, []);
+
+  const handleTimeRangeChange = useCallback((range: string) => {
+    setTimeRange(range);
+  }, []);
+
+  const handleLibraryPress = useCallback(
+    (library: LibraryListItem) => {
+      (navigation as any).navigate('LibraryDetail', { libraryId: library.id });
+    },
+    [navigation]
+  );
+
+  const handleCreateLibrary = useCallback(() => {
+    setShowCreateLibraryBottomSheet(true);
+  }, []);
+
+  const handleLibraryCreated = useCallback((libraryId: number) => {
+    // 새 서재가 생성된 후 목록 새로고침
+    // TODO: Query 무효화나 리프레시 로직 추가
+  }, []);
+
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const renderLibraryItem = ({ item }: { item: LibraryListItem }) => (
-    <View style={styles.libraryCardContainer}>
-      <LibraryCard library={item} onPress={() => handleLibraryPress(item)} />
-    </View>
+  const renderLibraryItem = useCallback(
+    ({ item }: { item: LibraryListItem }) => (
+      <View style={styles.libraryCardContainer}>
+        <LibraryCard library={item} onPress={() => handleLibraryPress(item)} />
+      </View>
+    ),
+    [handleLibraryPress]
   );
+
+  // 모든 데이터 계산도 hooks 이후에
+  const libraries = data?.pages.flatMap(page => page.data) || [];
+
+  // 모든 hooks 호출 후 조건부 렌더링
+  if (librariesLoading && !libraries.length) {
+    return <LibrariesScreenSkeleton />;
+  }
 
   return (
     <View style={styles.container}>
@@ -389,14 +414,9 @@ const LibrariesContent = ({ preloadedTags }: { preloadedTags: any[] }) => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListEmptyComponent={
-          isLoading ? (
+          librariesError ? (
             <View style={styles.emptyContainer}>
-              <LoadingSpinner />
-              <Text style={styles.loadingText}>서재를 불러오는 중...</Text>
-            </View>
-          ) : librariesError ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>⚠️</Text>
+              <Text style={styles.emptyText}>😔</Text>
               <Text style={styles.emptyTitle}>서재를 불러올 수 없습니다</Text>
               <Text style={styles.emptySubtitle}>잠시 후 다시 시도해주세요</Text>
             </View>
@@ -404,13 +424,7 @@ const LibrariesContent = ({ preloadedTags }: { preloadedTags: any[] }) => {
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>📚</Text>
               <Text style={styles.emptyTitle}>서재가 없습니다</Text>
-              <Text style={styles.emptySubtitle}>
-                {searchQuery
-                  ? '검색 결과가 없습니다.'
-                  : selectedTag !== 'all'
-                    ? '이 태그로 등록된 서재가 없습니다.'
-                    : '아직 등록된 서재가 없습니다.'}
-              </Text>
+              <Text style={styles.emptySubtitle}>첫 번째 서재를 만들어보세요!</Text>
             </View>
           )
         }
@@ -445,33 +459,6 @@ const LibrariesContent = ({ preloadedTags }: { preloadedTags: any[] }) => {
         onSuccess={handleLibraryCreated}
       />
     </View>
-  );
-};
-
-// Tag Content Component (with Suspense for tags only)
-const TagContentWrapper = ({ children }: { children: (tags: any[]) => React.ReactNode }) => {
-  const { data: tags = [] } = useSuspenseQuery({
-    queryKey: ['library-tags'],
-    queryFn: async () => {
-      try {
-        return await getLibraryTags();
-      } catch (error) {
-        console.error('[TagContentWrapper] Error fetching tags, using fallback:', error);
-        // Fallback empty array to prevent infinite loading
-        return [];
-      }
-    },
-  });
-
-  return <>{children(tags)}</>;
-};
-
-// Main Libraries Screen Component
-export const LibrariesScreen = () => {
-  return (
-    <Suspense fallback={<LibrariesScreenSkeleton />}>
-      <TagContentWrapper>{tags => <LibrariesContent preloadedTags={tags} />}</TagContentWrapper>
-    </Suspense>
   );
 };
 
@@ -578,6 +565,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 16, // px-2 md:px-4 similar to frontend
     paddingBottom: 100,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
     marginTop: 12,

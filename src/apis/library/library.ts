@@ -57,16 +57,22 @@ export const getLibraries = async (params: {
  * 서재 태그 목록 조회
  */
 export const getLibraryTags = async (limit?: number): Promise<LibraryTagResponseDto[]> => {
-  console.log('[Library API] Fetching library tags...');
-  try {
-    const response = await axios.get<LibraryTagResponseDto[]>('/library/tags', {
-      params: limit ? { limit } : {},
-    });
-    console.log('[Library API] Tags fetched successfully:', response.data);
+  const response = await axios.get('/library-tag', {
+    params: {
+      page: 1,
+      limit: limit || 50,
+    },
+  });
+
+  // API 응답이 배열인지 페이지네이션된 객체인지 확인
+  if (Array.isArray(response.data)) {
     return response.data;
-  } catch (error) {
-    console.error('[Library API] Error fetching tags:', error);
-    throw error;
+  } else if (response.data && response.data.tags) {
+    return response.data.tags;
+  } else if (response.data && response.data.data) {
+    return response.data.data;
+  } else {
+    return response.data || [];
   }
 };
 

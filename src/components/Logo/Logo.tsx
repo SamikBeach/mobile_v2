@@ -24,6 +24,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', style }) => {
 
 const styles = StyleSheet.create({
   container: {
+    minWidth: 100,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
