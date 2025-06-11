@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     backgroundColor: 'white',
-    paddingTop: 4,
+    paddingTop: 8,
     paddingBottom: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
@@ -512,17 +512,17 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   categoryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 22,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 18,
     marginRight: 8,
-    minHeight: 44,
+    minHeight: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
   categoryButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   subcategoryContainer: {
     paddingBottom: 8,
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
   subcategoryButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16, // 웹과 동일한 rounded-full
+    borderRadius: 16,
     borderWidth: 1,
     marginRight: 8,
     minHeight: 32,
@@ -544,7 +544,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   subcategoryButtonText: {
-    fontSize: 14, // 웹과 동일한 크기
+    fontSize: 14,
     fontWeight: '500',
   },
   sortContainer: {
@@ -560,8 +560,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB', // 기본 회색 테두리
-    backgroundColor: '#F8F9FA', // 연한 회색 배경
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F8F9FA',
     minHeight: 32,
   },
   sortButtonText: {
@@ -571,12 +571,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeSortButton: {
-    backgroundColor: '#EFF6FF', // 연한 파란색 배경
-    borderWidth: 1,
-    borderColor: '#BFDBFE', // 파란색 테두리
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
   },
   activeSortButtonText: {
-    color: '#1D4ED8', // 파란색 텍스트
+    color: '#1D4ED8',
   },
   booksContainer: {
     paddingVertical: 16,

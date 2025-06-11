@@ -160,33 +160,28 @@ const CreateReviewCard = () => (
 // Loading Skeleton Component
 const CommunityScreenSkeleton = () => (
   <View style={styles.container}>
+    {/* Header Container - 실제와 동일한 구조 */}
     <View style={styles.headerContainer}>
       <View style={styles.filterContainer}>
-        <View style={styles.categoryContainer}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoryScrollView}
-            contentContainerStyle={styles.categoryScrollContent}
-          >
-            {categoryOptions.map(category => (
-              <View
-                key={category.id}
-                style={[styles.categoryButton, { backgroundColor: category.color }]}
-              >
-                <Text style={styles.categoryButtonText}>{category.name}</Text>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
+        <CategoryFilter selectedCategory='all' onCategoryPress={() => {}} />
         <SortFilter selectedSort='recent' onSortPress={() => {}} />
       </View>
     </View>
-    <View style={[styles.contentContainer, { paddingTop: 120 + 16 }]}>
-      <CreateReviewCard />
+
+    {/* Content List - FlatList 구조를 모방 */}
+    <ScrollView
+      style={styles.flatListStyle}
+      contentContainerStyle={[styles.contentContainer, { paddingTop: 0 }]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ListHeaderComponent와 동일한 구조 */}
+      <View style={styles.createReviewWrapper}>
+        <CreateReviewCard />
+      </View>
+
+      {/* Loading 상태 */}
       <LoadingSpinner />
-      <Text style={styles.loadingText}>리뷰를 불러오는 중...</Text>
-    </View>
+    </ScrollView>
   </View>
 );
 
@@ -304,9 +299,13 @@ const CommunityContent = () => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        contentContainerStyle={[styles.contentContainer, { paddingTop: headerHeight + 16 }]}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: headerHeight - 6 }]}
         style={styles.flatListStyle}
-        ListHeaderComponent={<CreateReviewCard />}
+        ListHeaderComponent={
+          <View style={styles.createReviewWrapper}>
+            <CreateReviewCard />
+          </View>
+        }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.1}
         ListEmptyComponent={
@@ -416,6 +415,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 100,
     gap: 16,
+  },
+  createReviewWrapper: {
+    marginTop: 16,
+    marginBottom: -12,
   },
   loadingText: {
     marginTop: 12,
