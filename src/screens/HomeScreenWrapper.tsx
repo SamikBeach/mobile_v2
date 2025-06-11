@@ -1,13 +1,18 @@
 import React from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { CompositeNavigationProp } from '@react-navigation/native';
 import { HomeScreen } from './HomeScreen';
-import { RootStackParamList } from '../navigation/types';
+import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import { HomeBookPreview } from '@/apis/book';
 import { HomeReviewPreview } from '@/apis/review';
 import { LibraryListItem } from '@/apis/library';
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MainTabs'>;
+type HomeScreenNavigationProp = CompositeNavigationProp<
+  NativeStackNavigationProp<RootStackParamList, 'MainTabs'>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 export const HomeScreenWrapper: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -26,23 +31,19 @@ export const HomeScreenWrapper: React.FC = () => {
   };
 
   const handlePopularBooksMorePress = () => {
-    // TODO: 인기 책 전체 목록 화면으로 네비게이션
-    console.log('Popular books more pressed');
+    navigation.navigate('Popular');
   };
 
   const handleDiscoverBooksMorePress = () => {
-    // TODO: 발견 책 전체 목록 화면으로 네비게이션
-    console.log('Discover books more pressed');
+    navigation.navigate('Discover');
   };
 
   const handleReviewsMorePress = () => {
-    // TODO: 리뷰 전체 목록 화면으로 네비게이션
-    console.log('Reviews more pressed');
+    navigation.navigate('Community');
   };
 
   const handleLibrariesMorePress = () => {
-    // TODO: 서재 전체 목록 화면으로 네비게이션
-    console.log('Libraries more pressed');
+    navigation.navigate('Libraries');
   };
 
   return (

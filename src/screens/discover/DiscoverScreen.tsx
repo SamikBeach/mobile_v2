@@ -437,7 +437,7 @@ export const DiscoverScreen = () => {
         onEndReachedThreshold={0.1}
         ListEmptyComponent={
           booksLoading ? (
-            <View>
+            <View style={styles.loadingContainer}>
               <LoadingSpinner />
               <Text style={styles.loadingText}>도서를 불러오는 중...</Text>
             </View>
@@ -490,10 +490,18 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 200,
+    paddingBottom: 200,
+  },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
     color: '#6B7280',
+    textAlign: 'center',
   },
   filterContainer: {
     backgroundColor: 'white',
