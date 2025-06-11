@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { Search, Send, Settings } from 'lucide-react-native';
+import { Send, Search, Settings } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAtom } from 'jotai';
 import { Logo } from '../../components/Logo/Logo';
@@ -73,6 +73,7 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   iconButton: {
     width: 36,
