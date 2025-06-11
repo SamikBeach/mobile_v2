@@ -600,9 +600,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
+    height: 24,
+    paddingTop: 4,
     backgroundColor: 'white',
+    justifyContent: 'flex-start',
   },
   breadcrumbText: {
     fontSize: 14,
