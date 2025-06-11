@@ -39,19 +39,23 @@ export const HeaderRight = () => {
         <Search size={20} color='#6B7280' />
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.iconButton, styles.iconButtonSpacing]}
-        onPress={handleSendPress}
-      >
-        <Send size={20} color='#6B7280' />
-      </TouchableOpacity>
+      {user && (
+        <TouchableOpacity
+          style={[styles.iconButton, styles.iconButtonSpacing]}
+          onPress={handleSendPress}
+        >
+          <Send size={20} color='#6B7280' />
+        </TouchableOpacity>
+      )}
 
-      <TouchableOpacity
-        style={[styles.iconButton, styles.iconButtonSpacing]}
-        onPress={handleNotificationPress}
-      >
-        <NotificationBadge />
-      </TouchableOpacity>
+      {user && (
+        <TouchableOpacity
+          style={[styles.iconButton, styles.iconButtonSpacing]}
+          onPress={handleNotificationPress}
+        >
+          <NotificationBadge />
+        </TouchableOpacity>
+      )}
 
       {user && (
         <TouchableOpacity
@@ -71,6 +75,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   headerRight: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
