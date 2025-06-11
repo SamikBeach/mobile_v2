@@ -7,15 +7,19 @@ import {
   TouchableOpacity,
   FlatList,
   Animated,
-  TextInput,
   LayoutChangeEvent,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Image,
 } from 'react-native';
-import { Plus } from 'lucide-react-native';
+import { Plus, User } from 'lucide-react-native';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { useAtomValue } from 'jotai';
 import { ReviewType, ReviewResponseDto } from '../../apis/review/types';
 import { LoadingSpinner, ReviewCard } from '../../components';
+import { ReviewTypeBottomSheet } from '../../components/ReviewTypeBottomSheet';
 import { useCommunityReviews, SortOption } from '../../hooks';
+import { userAtom } from '../../atoms/user';
 
 interface CategoryOption {
   id: ReviewType | 'all';
@@ -120,40 +124,119 @@ const SortFilter = ({
   </View>
 );
 
+// 리뷰 타입별 색상과 이름 매핑
+const getTypeInfo = (type: ReviewType) => {
+  switch (type) {
+    case 'general':
+      return { name: '일반', color: '#F9FAFB' };
+    case 'discussion':
+      return { name: '토론', color: '#FEF3C7' };
+    case 'review':
+      return { name: '리뷰', color: '#F3E8FF' };
+    case 'question':
+      return { name: '질문', color: '#DBEAFE' };
+    case 'meetup':
+      return { name: '모임', color: '#E0E7FF' };
+    default:
+      return { name: '일반', color: '#F9FAFB' };
+  }
+};
+
 // CreateReviewCard Component
-const CreateReviewCard = () => (
-  <View style={styles.createReviewCard}>
-    <View style={styles.createReviewHeader}>
-      <View style={styles.createUserAvatar}>
-        <Text style={styles.createAvatarText}>b</Text>
-      </View>
-      <View style={styles.createReviewInput}>
-        <TextInput
-          style={styles.createTextInput}
-          placeholder='어떤 책에 대해 이야기하고 싶으신가요?'
-          placeholderTextColor='#9CA3AF'
-          multiline
-          editable={false}
-        />
-        <View style={styles.createReviewActions}>
-          <View style={styles.createLeftActions}>
-            <TouchableOpacity style={styles.categorySelector}>
-              <View style={styles.categoryDot} />
-              <Text style={styles.categorySelectorText}>일반</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.bookAddButton}>
-              <Plus size={12} color='#6B7280' />
-              <Text style={styles.bookAddButtonText}>책 추가</Text>
-            </TouchableOpacity>
+const CreateReviewCard = () => {
+  const user = useAtomValue(userAtom);
+  const [selectedType, setSelectedType] = useState<ReviewType>('general');
+  const reviewTypeBottomSheetRef = useRef<BottomSheetModal>(null as any);
+
+  // 사용자 정보 처리
+  const displayName = user?.username || user?.email?.split('@')[0] || '';
+  const initial = displayName.charAt(0);
+  const avatarUrl = user?.profileImage || user?.avatar || null;
+
+  // 리뷰 타입 정보
+  const typeInfo = getTypeInfo(selectedType);
+
+  // 리뷰 타입 선택 핸들러
+  const handleTypeSelect = (type: ReviewType) => {
+    setSelectedType(type);
+  };
+
+  // 리뷰 타입 선택 Bottom Sheet 열기
+  const handleOpenTypeSelector = () => {
+    reviewTypeBottomSheetRef.current?.present();
+  };
+
+  // TODO: 실제 리뷰 작성 모달 열기 (향후 구현)
+  const handleOpenCreateReview = () => {
+    console.log('리뷰 작성 모달 열기');
+  };
+
+  return (
+    <>
+      <View style={styles.createReviewCard}>
+        <View style={styles.createReviewHeader}>
+          <View style={styles.createUserAvatar}>
+            {user ? (
+              avatarUrl ? (
+                <Image
+                  source={{ uri: avatarUrl }}
+                  style={styles.createAvatarImage}
+                  resizeMode='cover'
+                />
+              ) : (
+                <Text style={styles.createAvatarText}>{initial}</Text>
+              )
+            ) : (
+              <User size={16} color='#6B7280' />
+            )}
           </View>
-          <TouchableOpacity style={styles.submitButton}>
-            <Text style={styles.submitButtonText}>제출하기</Text>
-          </TouchableOpacity>
+          <View style={styles.createReviewInput}>
+            <TouchableOpacity
+              style={styles.createTextInputTouchable}
+              onPress={handleOpenCreateReview}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.createTextInputPlaceholder}>
+                어떤 책에 대해 이야기하고 싶으신가요?
+              </Text>
+            </TouchableOpacity>
+            <View style={styles.createReviewActions}>
+              <View style={styles.createLeftActions}>
+                <TouchableOpacity
+                  style={styles.categorySelector}
+                  onPress={handleOpenTypeSelector}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.categoryDot, { backgroundColor: typeInfo.color }]} />
+                  <Text style={styles.categorySelectorText}>{typeInfo.name}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.bookAddButton} activeOpacity={0.7}>
+                  <Plus size={12} color='#6B7280' />
+                  <Text style={styles.bookAddButtonText}>책 추가</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleOpenCreateReview}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.submitButtonText}>제출하기</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </View>
-    </View>
-  </View>
-);
+
+      {/* 리뷰 타입 선택 Bottom Sheet */}
+      <ReviewTypeBottomSheet
+        bottomSheetRef={reviewTypeBottomSheetRef}
+        selectedType={selectedType}
+        onTypeSelect={handleTypeSelect}
+        originalType='general'
+      />
+    </>
+  );
+};
 
 // 이제 공통 ReviewCard 컴포넌트를 사용합니다
 
@@ -448,6 +531,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  createAvatarImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
   createAvatarText: {
     color: 'white',
     fontSize: 12,
@@ -474,18 +562,20 @@ const styles = StyleSheet.create({
   createReviewInput: {
     flex: 1,
   },
-  createTextInput: {
+  createTextInputTouchable: {
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     minHeight: 80,
-    textAlignVertical: 'top',
-    fontSize: 15,
-    color: '#374151',
+    justifyContent: 'flex-start',
     backgroundColor: '#F9FAFB',
     marginBottom: 12,
+  },
+  createTextInputPlaceholder: {
+    fontSize: 15,
+    color: '#9CA3AF',
   },
   createReviewActions: {
     flexDirection: 'row',
