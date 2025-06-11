@@ -95,7 +95,6 @@ export const BottomTabNavigator: React.FC = () => {
           name='Home'
           component={HomeStackNavigator}
           options={{
-            title: '홈',
             tabBarLabel: '홈',
           }}
         />
@@ -103,7 +102,6 @@ export const BottomTabNavigator: React.FC = () => {
           name='Popular'
           component={PopularStackNavigator}
           options={{
-            title: '분야별 인기',
             tabBarLabel: '분야별 인기',
           }}
         />
@@ -111,7 +109,6 @@ export const BottomTabNavigator: React.FC = () => {
           name='Discover'
           component={DiscoverStackNavigator}
           options={{
-            title: '발견하기',
             tabBarLabel: '발견하기',
           }}
         />
@@ -119,7 +116,6 @@ export const BottomTabNavigator: React.FC = () => {
           name='Community'
           component={CommunityStackNavigator}
           options={{
-            title: '커뮤니티',
             tabBarLabel: '커뮤니티',
           }}
         />
@@ -127,7 +123,6 @@ export const BottomTabNavigator: React.FC = () => {
           name='Libraries'
           component={LibrariesStackNavigator}
           options={{
-            title: '서재',
             tabBarLabel: '서재',
           }}
         />
@@ -135,7 +130,6 @@ export const BottomTabNavigator: React.FC = () => {
           name='My'
           component={MyStackNavigator}
           options={{
-            title: 'My',
             tabBarLabel: 'My',
           }}
           listeners={{

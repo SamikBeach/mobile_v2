@@ -1,7 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { HeaderLeft, HeaderRight } from '../components/HeaderComponents';
-import { PlaceholderScreen } from '../components/PlaceholderScreen';
 import { commonScreenOptions } from '../config/screenOptions';
 import { DiscoverScreen } from '../../screens';
 import { CommunityScreen } from '../../screens/community/CommunityScreen';

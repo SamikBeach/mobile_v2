@@ -182,6 +182,8 @@ export interface UserDetailResponseDto {
 export interface UserLibrariesResponseDto {
   items: LibraryPreviewDto[];
   total: number;
+  page: number;
+  totalPages: number;
 }
 
 /**
@@ -189,6 +191,16 @@ export interface UserLibrariesResponseDto {
  */
 export interface UserReviewsResponseDto {
   reviews: any[]; // Match actual server response
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+/**
+ * 사용자 구독한 서재 목록 응답
+ */
+export interface UserSubscribedLibrariesResponseDto {
+  libraries: LibraryPreviewDto[];
   total: number;
   page: number;
   totalPages: number;

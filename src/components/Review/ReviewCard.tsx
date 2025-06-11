@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ThumbsUp, MessageCircle, Star } from 'lucide-react-native';
 import { ReviewType, ReviewResponseDto, HomeReviewPreview } from '../../apis/review/types';
 import { CommentBottomSheet } from '../CommentBottomSheet';
 import { useReviewLike, useReviewComments } from '../../hooks';
+import { RootStackParamList } from '../../navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Union type for both review types
 type ReviewData = HomeReviewPreview | ReviewResponseDto;
@@ -21,6 +26,7 @@ const isReviewResponseDto = (review: ReviewData): review is ReviewResponseDto =>
 export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   const [showFullContent, setShowFullContent] = useState(false);
   const [showCommentsBottomSheet, setShowCommentsBottomSheet] = useState(false);
+  const navigation = useNavigation<NavigationProp>();
 
   // Hooks for like and comment functionality (only for detailed reviews)
   const { handleLikeToggle, isLoading: isLikeLoading } = useReviewLike();
@@ -215,6 +221,16 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     }
   };
 
+  // 책 클릭 핸들러
+  const handleBookPress = () => {
+    if (displayBook && displayBook.isbn) {
+      navigation.navigate('BookDetail', {
+        isbn: displayBook.isbn,
+        title: displayBook.title,
+      });
+    }
+  };
+
   return (
     <View style={styles.reviewCard}>
       {/* Header */}
@@ -278,7 +294,11 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
       {/* Book Section */}
       {displayBook && (
         <View style={styles.bookSection}>
-          <View style={styles.bookContainer}>
+          <TouchableOpacity
+            style={styles.bookContainer}
+            onPress={handleBookPress}
+            activeOpacity={0.7}
+          >
             <Image
               source={{ uri: displayBook.coverImage }}
               style={styles.bookCover}
@@ -303,7 +323,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
                 </View>
               </View>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
       )}
 
