@@ -14,4 +14,6 @@ export type RootStackParamList = {
   Search: undefined;
   Notification: undefined;
   Feedback: undefined;
+  User: undefined;
+  Profile: { userId?: number; section?: string };
 };

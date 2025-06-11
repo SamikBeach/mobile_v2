@@ -4,6 +4,8 @@ import { useAtom } from 'jotai';
 import { userAtom } from '../atoms/user';
 import { authUtils } from '../apis/axios';
 import Toast from 'react-native-toast-message';
+import { getCurrentUser } from '../apis/user';
+import { UserStatus } from '../apis/auth/types';
 
 export const useDeepLink = () => {
   const [, setUser] = useAtom(userAtom);
@@ -77,7 +79,6 @@ export const useDeepLink = () => {
         // 토큰 추출
         const accessToken = parsedUrl.searchParams.get('token');
         const refreshToken = parsedUrl.searchParams.get('refreshToken');
-        const userParam = parsedUrl.searchParams.get('user');
 
         if (!accessToken || !refreshToken) {
           throw new Error('인증 토큰을 받지 못했습니다.');
@@ -86,15 +87,26 @@ export const useDeepLink = () => {
         // 토큰 저장
         await authUtils.setTokens(accessToken, refreshToken);
 
-        // 사용자 정보 파싱 및 설정
-        if (userParam) {
-          try {
-            const user = JSON.parse(decodeURIComponent(userParam));
-            setUser(user);
-            console.log('사용자 정보 설정 완료:', user);
-          } catch (parseError) {
-            console.warn('사용자 정보 파싱 실패:', parseError);
-          }
+        // 사용자 정보 API 호출
+        try {
+          const userResponse = await getCurrentUser();
+          const userDetailDto = 'user' in userResponse ? userResponse.user : userResponse;
+
+          // UserDetailDto를 User 타입으로 변환
+          const userData = {
+            ...userDetailDto,
+            email: userDetailDto.email || '',
+            status: UserStatus.ACTIVE,
+            isEmailVerified: true,
+            marketingConsent: false,
+            updatedAt: new Date(),
+          };
+
+          setUser(userData);
+          console.log('사용자 정보 설정 완료:', userData);
+        } catch (getUserError) {
+          console.error('사용자 정보 조회 실패:', getUserError);
+          throw new Error('사용자 정보를 가져오는데 실패했습니다.');
         }
 
         Toast.show({

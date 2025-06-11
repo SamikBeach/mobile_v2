@@ -1,10 +1,11 @@
 export * from './HomeScreen';
 export * from './HomeScreenWrapper';
-export * from './BookDetailScreen';
-export * from './LibraryDetailScreen';
-export * from './SearchScreen';
-export * from './NotificationScreen';
-export * from './FeedbackScreen';
+export { BookDetailScreen } from './BookDetailScreen';
+export { LibraryDetailScreen } from './LibraryDetailScreen';
+export { SearchScreen } from './SearchScreen';
+export { NotificationScreen } from './NotificationScreen';
+export { FeedbackScreen } from './FeedbackScreen';
+export { UserScreen } from './UserScreen';
 export * from './popular';
 export * from './discover';
 export { LibrariesScreen } from './libraries/LibrariesScreen';

@@ -9,6 +9,8 @@ import {
   SearchScreen,
   NotificationScreen,
   FeedbackScreen,
+  UserScreen,
+  ProfileScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
 
@@ -76,6 +78,33 @@ export const RootNavigator: React.FC = () => {
           presentation: 'modal',
           headerShown: false,
         }}
+      />
+      <Stack.Screen
+        name='User'
+        component={UserScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name='Profile'
+        component={ProfileScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          headerTitle: '프로필',
+          headerBackTitle: '',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: -8 }}>
+              <ChevronLeft size={24} color='#111827' />
+            </TouchableOpacity>
+          ),
+          headerTitleStyle: {
+            fontSize: 16,
+            fontWeight: '600',
+          },
+          headerTintColor: '#111827',
+        })}
       />
     </Stack.Navigator>
   );

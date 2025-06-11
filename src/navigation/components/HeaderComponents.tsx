@@ -2,8 +2,10 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Search, Send, Settings } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useAtom } from 'jotai';
 import { Logo } from '../../components/Logo/Logo';
 import { NotificationBadge } from '../../components/notification/NotificationBadge';
+import { userAtom } from '../../atoms/user';
 
 export const HeaderLeft = () => (
   <View style={styles.headerLeft}>
@@ -13,6 +15,7 @@ export const HeaderLeft = () => (
 
 export const HeaderRight = () => {
   const navigation = useNavigation();
+  const [user] = useAtom(userAtom);
 
   const handleSearchPress = () => {
     navigation.navigate('Search' as never);
@@ -27,7 +30,7 @@ export const HeaderRight = () => {
   };
 
   const handleSettingsPress = () => {
-    console.log('Settings pressed');
+    navigation.navigate('User' as never);
   };
 
   return (
@@ -36,17 +39,28 @@ export const HeaderRight = () => {
         <Search size={20} color='#6B7280' />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.iconButton} onPress={handleSendPress}>
+      <TouchableOpacity
+        style={[styles.iconButton, styles.iconButtonSpacing]}
+        onPress={handleSendPress}
+      >
         <Send size={20} color='#6B7280' />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.iconButton} onPress={handleNotificationPress}>
+      <TouchableOpacity
+        style={[styles.iconButton, styles.iconButtonSpacing]}
+        onPress={handleNotificationPress}
+      >
         <NotificationBadge />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.iconButton} onPress={handleSettingsPress}>
-        <Settings size={20} color='#6B7280' />
-      </TouchableOpacity>
+      {user && (
+        <TouchableOpacity
+          style={[styles.iconButton, styles.iconButtonSpacing]}
+          onPress={handleSettingsPress}
+        >
+          <Settings size={20} color='#6B7280' />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -59,8 +73,6 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 8,
   },
   iconButton: {
     width: 36,
@@ -69,5 +81,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  iconButtonSpacing: {
+    marginLeft: 8,
   },
 });
