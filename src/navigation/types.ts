@@ -12,6 +12,7 @@ export type RootStackParamList = {
   BookDetail: { isbn: string; title?: string };
   LibraryDetail: { libraryId: number };
   Search: undefined;
+  AddBook: { libraryId?: number; onBookSelect?: (book: any) => void };
   Notification: undefined;
   Feedback: undefined;
   User: undefined;

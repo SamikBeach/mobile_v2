@@ -15,11 +15,16 @@ import {
 import { Plus, User } from 'lucide-react-native';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useAtomValue } from 'jotai';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ReviewType, ReviewResponseDto } from '../../apis/review/types';
 import { LoadingSpinner, ReviewCard } from '../../components';
 import { ReviewTypeBottomSheet } from '../../components/ReviewTypeBottomSheet';
 import { useCommunityReviews, SortOption } from '../../hooks';
 import { userAtom } from '../../atoms/user';
+import { RootStackParamList } from '../../navigation/types';
+
+type CommunityScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface CategoryOption {
   id: ReviewType | 'all';
@@ -145,6 +150,7 @@ const getTypeInfo = (type: ReviewType) => {
 // CreateReviewCard Component
 const CreateReviewCard = () => {
   const user = useAtomValue(userAtom);
+  const navigation = useNavigation<CommunityScreenNavigationProp>();
   const [selectedType, setSelectedType] = useState<ReviewType>('general');
   const reviewTypeBottomSheetRef = useRef<BottomSheetModal>(null as any);
 
@@ -164,6 +170,11 @@ const CreateReviewCard = () => {
   // 리뷰 타입 선택 Bottom Sheet 열기
   const handleOpenTypeSelector = () => {
     reviewTypeBottomSheetRef.current?.present();
+  };
+
+  // 책 추가 버튼 핸들러
+  const handleAddBook = () => {
+    navigation.navigate('AddBook', {});
   };
 
   // TODO: 실제 리뷰 작성 모달 열기 (향후 구현)
@@ -210,7 +221,11 @@ const CreateReviewCard = () => {
                   <View style={[styles.categoryDot, { backgroundColor: typeInfo.color }]} />
                   <Text style={styles.categorySelectorText}>{typeInfo.name}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.bookAddButton} activeOpacity={0.7}>
+                <TouchableOpacity
+                  style={styles.bookAddButton}
+                  onPress={handleAddBook}
+                  activeOpacity={0.7}
+                >
                   <Plus size={12} color='#6B7280' />
                   <Text style={styles.bookAddButtonText}>책 추가</Text>
                 </TouchableOpacity>

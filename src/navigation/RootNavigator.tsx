@@ -7,6 +7,7 @@ import {
   BookDetailScreen,
   LibraryDetailScreen,
   SearchScreen,
+  AddBookScreen,
   NotificationScreen,
   FeedbackScreen,
   UserScreen,
@@ -63,6 +64,14 @@ export const RootNavigator: React.FC = () => {
         })}
       />
       <Stack.Screen name='Search' component={SearchScreen} />
+      <Stack.Screen
+        name='AddBook'
+        component={AddBookScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
+        }}
+      />
       <Stack.Screen
         name='Notification'
         component={NotificationScreen}
