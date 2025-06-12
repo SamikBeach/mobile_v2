@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { useAtomValue } from 'jotai';
 import { userAtom } from '../../atoms/user';
 import { ProfileScreen } from '../profile/ProfileScreen';
@@ -11,17 +11,17 @@ export const MyScreen: React.FC = () => {
   if (!user) {
     return (
       <View style={styles.container}>
-        {/* TODO: 로그인 필요 화면 또는 로그인 화면으로 리다이렉트 */}
+        <View style={styles.loginRequiredContainer}>
+          <Text style={styles.loginRequiredText}>로그인이 필요합니다</Text>
+        </View>
       </View>
     );
   }
 
-  // 자신의 프로필을 보여주기 위해 userId를 전달
-  // React Navigation의 route params를 시뮬레이션
-  // 실제로는 navigation.navigate('Profile', { userId: user.id })로 이동해야 함
+  // 현재 사용자의 프로필을 보여주기 위해 ProfileScreen을 렌더링
   return (
     <View style={styles.container}>
-      <ProfileScreen />
+      <ProfileScreen userId={user.id} />
     </View>
   );
 };
@@ -31,8 +31,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  contentContainer: {
-    paddingVertical: 16,
-    gap: 20,
+  loginRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loginRequiredText: {
+    fontSize: 16,
+    color: '#6B7280',
   },
 });

@@ -7,7 +7,6 @@ import { ReviewType, ReviewResponseDto, HomeReviewPreview } from '../../apis/rev
 import { CommentBottomSheet } from '../CommentBottomSheet';
 import { useReviewLike, useReviewComments } from '../../hooks';
 import { RootStackParamList } from '../../navigation/types';
-
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Union type for both review types
@@ -231,11 +230,15 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     }
   };
 
+  const handleUserPress = () => {
+    navigation.navigate('Profile', { userId: authorData.id });
+  };
+
   return (
     <View style={styles.reviewCard}>
       {/* Header */}
       <View style={styles.reviewHeader}>
-        <View style={styles.userInfo}>
+        <TouchableOpacity style={styles.userInfo} onPress={handleUserPress} activeOpacity={0.7}>
           <View style={styles.userAvatar}>
             {authorData.profileImage ? (
               <Image
@@ -271,7 +274,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
             </View>
             <Text style={styles.reviewTime}>{formatDate(createdAt)}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Content */}

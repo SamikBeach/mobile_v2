@@ -6,6 +6,7 @@ import { HomeLibraryPreview, LibraryListItem } from '../../apis/library';
 interface LibraryCardProps {
   library: HomeLibraryPreview | LibraryListItem;
   onPress?: () => void;
+  onOwnerPress?: (ownerId: number) => void;
   hidePublicTag?: boolean;
   currentUserId?: number;
 }
@@ -13,6 +14,7 @@ interface LibraryCardProps {
 export const LibraryCard: React.FC<LibraryCardProps> = ({
   library,
   onPress,
+  onOwnerPress,
   hidePublicTag = true, // 프론트엔드에서 기본값이 true
   currentUserId,
 }) => {
@@ -49,11 +51,18 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
   // 책 개수
   const booksCount = library.bookCount ?? displayBooks.length;
 
+  const handleOwnerPress = (event: any) => {
+    event.stopPropagation();
+    if (onOwnerPress && library.owner?.id) {
+      onOwnerPress(library.owner.id);
+    }
+  };
+
   return (
     <TouchableOpacity style={styles.container} onPress={onPress}>
       {/* Header with Avatar and Library Info */}
       <View style={styles.header}>
-        <View style={styles.ownerInfo}>
+        <TouchableOpacity style={styles.ownerInfo} onPress={handleOwnerPress} activeOpacity={0.7}>
           <View style={styles.avatarContainer}>
             {library.owner?.profileImage ? (
               <Image
@@ -104,7 +113,7 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
             {/* Owner Name */}
             <Text style={styles.ownerName}>{ownerName}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Description */}
