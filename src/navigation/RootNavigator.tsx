@@ -12,6 +12,7 @@ import {
   FeedbackScreen,
   UserScreen,
   ProfileScreen,
+  AccountSettingsScreen,
 } from '../screens';
 import { RootStackParamList } from './types';
 
@@ -114,6 +115,13 @@ export const RootNavigator: React.FC = () => {
           },
           headerTintColor: '#111827',
         })}
+      />
+      <Stack.Screen
+        name='AccountSettings'
+        component={AccountSettingsScreen}
+        options={{
+          headerShown: false,
+        }}
       />
     </Stack.Navigator>
   );

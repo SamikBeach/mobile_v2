@@ -6,6 +6,7 @@ export { SearchScreen } from './SearchScreen';
 export { NotificationScreen } from './NotificationScreen';
 export { FeedbackScreen } from './FeedbackScreen';
 export { UserScreen } from './UserScreen';
+export { AccountSettingsScreen } from './AccountSettingsScreen';
 export * from './popular';
 export * from './discover';
 export { LibrariesScreen } from './libraries/LibrariesScreen';

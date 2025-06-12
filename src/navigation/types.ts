@@ -17,4 +17,5 @@ export type RootStackParamList = {
   Feedback: undefined;
   User: undefined;
   Profile: { userId?: number; section?: string };
+  AccountSettings: undefined;
 };

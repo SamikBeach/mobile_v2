@@ -190,8 +190,10 @@ export function UserScreen() {
   // 설정 페이지로 이동
   const handleSettingsClick = () => {
     navigation.goBack();
-    // TODO: 설정 페이지로 네비게이션
-    console.log('설정 페이지로 이동');
+    // 모달이 닫힌 후 AccountSettings 페이지로 이동
+    setTimeout(() => {
+      navigation.navigate('AccountSettings');
+    }, 100);
   };
 
   if (!user) {
