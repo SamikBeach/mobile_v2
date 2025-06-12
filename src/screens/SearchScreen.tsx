@@ -9,7 +9,7 @@ import {
   StatusBar,
   Keyboard,
 } from 'react-native';
-import { X } from 'lucide-react-native';
+import { X, ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -110,6 +110,22 @@ export function SearchScreen() {
     navigation.goBack();
   };
 
+  const handleXButtonPress = () => {
+    if (query.trim()) {
+      // 검색어가 있으면 검색어 삭제
+      setQuery('');
+      inputRef.current?.focus();
+    } else {
+      // 검색어가 없으면 닫기
+      handleClose();
+    }
+  };
+
+  const handleBackPress = () => {
+    Keyboard.dismiss();
+    navigation.goBack();
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle='dark-content' backgroundColor='white' />
@@ -119,6 +135,15 @@ export function SearchScreen() {
           <View style={styles.innerContainer}>
             {/* 검색 입력 */}
             <View style={styles.searchContainer}>
+              {/* 뒤로가기 버튼 */}
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={handleBackPress}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <ChevronLeft size={20} color='#6B7280' />
+              </TouchableOpacity>
+
               <TextInput
                 ref={inputRef}
                 value={query}
@@ -155,7 +180,7 @@ export function SearchScreen() {
         {/* 닫기 버튼 */}
         <TouchableOpacity
           style={[styles.closeButton, isTablet && styles.closeButtonTablet]}
-          onPress={handleClose}
+          onPress={handleXButtonPress}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <X size={20} color='#9CA3AF' />
@@ -184,11 +209,15 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderBottomWidth: 0,
     paddingBottom: 0,
-    marginRight: 40, // X 버튼과 겹치지 않도록 여백 추가
+    paddingLeft: 40, // 뒤로가기 버튼 공간
+    paddingRight: 40, // X 버튼 공간
   },
   searchInput: {
+    flex: 1,
     height: 48,
     fontSize: 16,
     color: '#1F2937',
@@ -226,5 +255,17 @@ const styles = StyleSheet.create({
   closeButtonTablet: {
     top: 20,
     right: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    top: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    zIndex: 10,
   },
 });
