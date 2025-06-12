@@ -56,7 +56,11 @@ export const DiscoverBooksSection: React.FC<DiscoverBooksSectionProps> = ({
           <Compass size={20} color='#00C471' />
           <Text style={styles.title}>오늘의 발견</Text>
         </View>
-        <TouchableOpacity onPress={handleMorePress}>
+        <TouchableOpacity
+          onPress={handleMorePress}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.moreButtonContainer}
+        >
           <Text style={styles.moreButton}>더보기</Text>
         </TouchableOpacity>
       </View>
@@ -138,6 +142,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1F2937',
+  },
+  moreButtonContainer: {
+    padding: 8,
   },
   moreButton: {
     fontSize: 14,
