@@ -35,6 +35,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     setCommentText,
     handleAddComment,
     handleDeleteComment,
+    handleUpdateComment,
     handleLikeComment,
     isLoading: isCommentLoading,
     refetch: refetchComments,
@@ -362,9 +363,11 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
           setCommentText={setCommentText}
           onSubmitComment={handleSubmitComment}
           onDeleteComment={handleDeleteCommentWithAlert}
+          onUpdateComment={handleUpdateComment}
           onLikeComment={handleLikeCommentWithAlert}
           isLoading={isCommentLoading}
           currentUserId={review.author.id}
+          commentCount={commentCount || 0}
         />
       )}
     </View>

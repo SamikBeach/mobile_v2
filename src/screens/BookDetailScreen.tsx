@@ -44,7 +44,9 @@ import { LibrarySelectionBottomSheet } from '../components/LibrarySelectionBotto
 import { CreateLibraryBottomSheet } from '../components/CreateLibraryBottomSheet';
 import { ReviewBottomSheet } from '../components/ReviewBottomSheet';
 import { ReviewActionBottomSheet } from '../components/ReviewActionBottomSheet';
+import { CommentBottomSheet } from '../components/CommentBottomSheet';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useReviewComments } from '../hooks/useReviewComments';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -566,6 +568,26 @@ const BookReviewsList: React.FC<{
   const reviewActionBottomSheetRef = useRef<BottomSheetModal>(null);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
 
+  // 댓글 BottomSheet 관련 상태
+  const [commentBottomSheetVisible, setCommentBottomSheetVisible] = useState(false);
+  const [selectedReviewForComments, setSelectedReviewForComments] = useState<Review | null>(null);
+
+  // useReviewComments 훅 사용 (ReviewCard와 동일한 방식)
+  const {
+    comments,
+    commentText,
+    setCommentText,
+    handleAddComment,
+    handleDeleteComment,
+    handleUpdateComment,
+    handleLikeComment,
+    isLoading: isCommentLoading,
+    refetch: refetchComments,
+  } = useReviewComments(
+    selectedReviewForComments?.id || 0,
+    commentBottomSheetVisible && !!selectedReviewForComments
+  );
+
   // 책 정보 가져오기 (bookId 확인용)
   const { data: book } = useSuspenseQuery({
     queryKey: ['book-detail', isbn],
@@ -705,10 +727,55 @@ const BookReviewsList: React.FC<{
   );
 
   // 댓글 토글 핸들러
-  const handleCommentsToggle = useCallback((reviewId: number) => {
-    // TODO: 댓글 기능 구현
-    console.log('댓글 토글:', reviewId);
-  }, []);
+  const handleCommentsToggle = useCallback(
+    (review: Review) => {
+      setSelectedReviewForComments(review);
+      setCommentBottomSheetVisible(true);
+      // 댓글이 처음 열릴 때 데이터 새로고침
+      if (!commentBottomSheetVisible) {
+        setTimeout(() => refetchComments(), 100);
+      }
+    },
+    [commentBottomSheetVisible, refetchComments]
+  );
+
+  // 댓글 제출 핸들러 (useReviewComments 훅의 함수 사용)
+  const handleSubmitComment = useCallback(async () => {
+    if (!commentText.trim() || !selectedReviewForComments) return;
+
+    try {
+      await handleAddComment();
+    } catch (error) {
+      console.error('댓글 작성 중 오류:', error);
+      Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
+    }
+  }, [commentText, selectedReviewForComments, handleAddComment]);
+
+  // 댓글 삭제 핸들러 (Alert 추가)
+  const handleDeleteCommentWithAlert = useCallback(
+    async (commentId: number) => {
+      try {
+        await handleDeleteComment(commentId);
+      } catch (error) {
+        console.error('댓글 삭제 중 오류:', error);
+        Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
+      }
+    },
+    [handleDeleteComment]
+  );
+
+  // 댓글 좋아요 핸들러 (Alert 추가)
+  const handleLikeCommentWithAlert = useCallback(
+    async (commentId: number, isLiked: boolean) => {
+      try {
+        await handleLikeComment(commentId, isLiked);
+      } catch (error) {
+        console.error('댓글 좋아요 처리 중 오류:', error);
+        Alert.alert('오류', '댓글 좋아요 처리 중 문제가 발생했습니다.');
+      }
+    },
+    [handleLikeComment]
+  );
 
   // 사용자 프로필로 이동
   const handleUserPress = useCallback(
@@ -910,7 +977,7 @@ const BookReviewsList: React.FC<{
 
                     <TouchableOpacity
                       style={styles.reviewActionButton}
-                      onPress={() => handleCommentsToggle(review.id)}
+                      onPress={() => handleCommentsToggle(review)}
                     >
                       <MessageSquare size={14} color='#6B7280' />
                       <Text style={styles.reviewActionText}>{review.commentsCount || 0}</Text>
@@ -948,6 +1015,22 @@ const BookReviewsList: React.FC<{
         bottomSheetRef={reviewActionBottomSheetRef}
         onEdit={handleEditReview}
         onDelete={handleDeleteReview}
+      />
+
+      {/* 댓글 BottomSheet */}
+      <CommentBottomSheet
+        isVisible={commentBottomSheetVisible}
+        onClose={() => setCommentBottomSheetVisible(false)}
+        comments={comments}
+        commentText={commentText}
+        setCommentText={setCommentText}
+        onSubmitComment={handleSubmitComment}
+        onDeleteComment={handleDeleteCommentWithAlert}
+        onUpdateComment={handleUpdateComment}
+        onLikeComment={handleLikeCommentWithAlert}
+        isLoading={isCommentLoading}
+        currentUserId={currentUser?.id}
+        commentCount={selectedReviewForComments?.commentsCount || 0}
       />
     </View>
   );

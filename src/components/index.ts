@@ -17,4 +17,5 @@ export * from './LibrarySelectionBottomSheet';
 export * from './CreateLibraryBottomSheet';
 export * from './ReviewBottomSheet';
 export * from './CommentBottomSheet';
+export * from './CommentActionBottomSheet';
 export * from './ReviewTypeBottomSheet';

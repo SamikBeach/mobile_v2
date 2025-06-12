@@ -11,9 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Send, ThumbsUp, Trash2, MessageCircle } from 'lucide-react-native';
+import { Send, ThumbsUp, MoreHorizontal, MessageCircle } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Comment } from '../apis/review/types';
+import { CommentActionBottomSheet } from './CommentActionBottomSheet';
 
 interface CommentBottomSheetProps {
   isVisible: boolean;
@@ -24,8 +26,10 @@ interface CommentBottomSheetProps {
   onSubmitComment: () => Promise<void>;
   onDeleteComment: (commentId: number) => Promise<void>;
   onLikeComment: (commentId: number, isLiked: boolean) => Promise<void>;
+  onUpdateComment?: (commentId: number, content: string) => Promise<void>;
   isLoading: boolean;
   currentUserId?: number;
+  commentCount?: number;
 }
 
 // 댓글 아이템 컴포넌트
@@ -33,78 +37,157 @@ const CommentItem = ({
   comment,
   onDelete,
   onLike,
+  onUpdate,
   currentUserId,
 }: {
   comment: Comment;
   onDelete: (commentId: number) => void;
   onLike: (commentId: number, isLiked: boolean) => void;
+  onUpdate?: (commentId: number, content: string) => void;
   currentUserId?: number;
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.content);
+  const commentActionBottomSheetRef = useRef<BottomSheetModal>(null);
+
   const formatDate = (date: Date | string) => {
     const commentDate = typeof date === 'string' ? new Date(date) : date;
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - commentDate.getTime());
-    const diffMinutes = Math.ceil(diffTime / (1000 * 60));
-    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffMinutes < 60) return `${diffMinutes}분 전`;
-    if (diffHours < 24) return `${diffHours}시간 전`;
+    if (diffDays === 0) return '오늘';
     if (diffDays <= 7) return `${diffDays}일 전`;
     if (diffDays <= 30) return `${Math.ceil(diffDays / 7)}주 전`;
     return `${Math.ceil(diffDays / 30)}개월 전`;
   };
 
   const getInitials = (username: string) => {
-    return username.charAt(0).toUpperCase();
+    return username.charAt(0);
   };
 
   const isAuthor = currentUserId === comment.author.id;
 
+  const handleMorePress = () => {
+    commentActionBottomSheetRef.current?.present();
+  };
+
+  const handleEdit = () => {
+    commentActionBottomSheetRef.current?.dismiss();
+    setIsEditing(true);
+    setEditText(comment.content);
+  };
+
   const handleDelete = () => {
-    Alert.alert('댓글 삭제', '정말로 이 댓글을 삭제하시겠습니까?', [
+    commentActionBottomSheetRef.current?.dismiss();
+    Alert.alert('댓글 삭제', '이 댓글을 정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.', [
       { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: () => onDelete(comment.id) },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: () => onDelete(comment.id),
+      },
     ]);
   };
 
+  const handleSaveEdit = async () => {
+    if (!editText.trim()) return;
+
+    try {
+      if (onUpdate) {
+        await onUpdate(comment.id, editText.trim());
+      }
+      setIsEditing(false);
+    } catch {
+      Alert.alert('오류', '댓글 수정 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditText(comment.content);
+  };
+
   return (
-    <View style={styles.commentItem}>
-      <View style={styles.commentHeader}>
-        <View style={styles.commentUserInfo}>
-          <View style={styles.commentAvatar}>
-            <Text style={styles.commentAvatarText}>{getInitials(comment.author.username)}</Text>
+    <>
+      <View style={styles.commentItem}>
+        <View style={styles.commentHeader}>
+          <View style={styles.commentUserInfo}>
+            <View style={styles.commentAvatar}>
+              <Text style={styles.commentAvatarText}>{getInitials(comment.author.username)}</Text>
+            </View>
+            <View style={styles.commentUserDetails}>
+              <Text style={styles.commentUsername}>{comment.author.username}</Text>
+              <Text style={styles.commentTime}>{formatDate(comment.createdAt)}</Text>
+            </View>
           </View>
-          <View style={styles.commentUserDetails}>
-            <Text style={styles.commentUsername}>{comment.author.username}</Text>
-            <Text style={styles.commentTime}>{formatDate(comment.createdAt)}</Text>
-          </View>
+          {isAuthor && (
+            <TouchableOpacity onPress={handleMorePress} style={styles.moreButton}>
+              <MoreHorizontal size={14} color='#6B7280' />
+            </TouchableOpacity>
+          )}
         </View>
-        {isAuthor && (
-          <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-            <Trash2 size={14} color='#6B7280' />
-          </TouchableOpacity>
+
+        {isEditing ? (
+          // 수정 모드
+          <View style={styles.editContainer}>
+            <TextInput
+              style={styles.editInput}
+              value={editText}
+              onChangeText={setEditText}
+              multiline
+              placeholder='댓글을 수정하세요...'
+              placeholderTextColor='#9CA3AF'
+            />
+            <View style={styles.editActions}>
+              <TouchableOpacity style={styles.editCancelButton} onPress={handleCancelEdit}>
+                <Text style={styles.editCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.editSaveButton} onPress={handleSaveEdit}>
+                <Text style={styles.editSaveText}>저장</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          // 일반 표시 모드
+          <>
+            <Text style={styles.commentContent}>{comment.content}</Text>
+            <View style={styles.commentActions}>
+              <TouchableOpacity
+                style={[
+                  styles.commentActionButton,
+                  comment.isLiked && styles.commentActionButtonLiked,
+                ]}
+                onPress={() => onLike(comment.id, comment.isLiked || false)}
+              >
+                <ThumbsUp
+                  size={14}
+                  color={comment.isLiked ? '#059669' : '#6B7280'}
+                  fill={comment.isLiked ? '#059669' : 'transparent'}
+                />
+                <Text
+                  style={[
+                    styles.commentActionText,
+                    comment.isLiked && styles.commentActionTextLiked,
+                  ]}
+                >
+                  {comment.likeCount || 0}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
         )}
       </View>
-      <Text style={styles.commentContent}>{comment.content}</Text>
-      <View style={styles.commentActions}>
-        <TouchableOpacity
-          style={[styles.commentActionButton, comment.isLiked && styles.commentActionButtonLiked]}
-          onPress={() => onLike(comment.id, comment.isLiked || false)}
-        >
-          <ThumbsUp
-            size={14}
-            color={comment.isLiked ? '#059669' : '#6B7280'}
-            fill={comment.isLiked ? '#059669' : 'transparent'}
-          />
-          <Text
-            style={[styles.commentActionText, comment.isLiked && styles.commentActionTextLiked]}
-          >
-            {comment.likeCount || 0}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+
+      {/* 댓글 액션 BottomSheet */}
+      {isAuthor && (
+        <CommentActionBottomSheet
+          bottomSheetRef={commentActionBottomSheetRef}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
+    </>
   );
 };
 
@@ -117,11 +200,17 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
   onSubmitComment,
   onDeleteComment,
   onLikeComment,
+  onUpdateComment,
   isLoading,
   currentUserId,
+  commentCount,
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const textInputRef = useRef<TextInput>(null);
+  const safeAreaInsets = useSafeAreaInsets();
+
+  // Calculate safe snap points
+  const maxHeight = `${Math.min(80, 100 - safeAreaInsets.top / 10)}%`;
 
   // Handle bottom sheet changes
   const handleSheetChanges = useCallback(
@@ -172,6 +261,7 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
       comment={item}
       onDelete={onDeleteComment}
       onLike={onLikeComment}
+      onUpdate={onUpdateComment}
       currentUserId={currentUserId}
     />
   );
@@ -191,7 +281,7 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
     <BottomSheetModal
       ref={bottomSheetModalRef}
       index={0}
-      snapPoints={['75%']}
+      snapPoints={[maxHeight]}
       onChange={handleSheetChanges}
       enablePanDownToClose={true}
       backdropComponent={renderBackdrop}
@@ -200,33 +290,40 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
       keyboardBehavior='interactive'
       keyboardBlurBehavior='restore'
       android_keyboardInputMode='adjustResize'
+      topInset={safeAreaInsets.top}
     >
-      <BottomSheetView style={styles.contentContainer}>
+      <BottomSheetView style={[styles.contentContainer, { paddingBottom: safeAreaInsets.bottom }]}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>댓글 {comments.length}개</Text>
+          <Text style={styles.title}>댓글 {commentCount ?? comments.length}개</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeButtonText}>닫기</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Comments List */}
-        <FlatList
-          data={comments}
-          renderItem={renderCommentItem}
-          keyExtractor={item => item.id.toString()}
-          style={styles.commentsList}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={EmptyComments}
-          contentContainerStyle={comments.length === 0 ? styles.emptyListContainer : undefined}
-        />
+        {/* Comments List - 입력 영역 공간 확보 */}
+        <View style={styles.commentsContainer}>
+          <FlatList
+            data={comments}
+            renderItem={renderCommentItem}
+            keyExtractor={item => item.id.toString()}
+            style={styles.commentsList}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={EmptyComments}
+            contentContainerStyle={[
+              comments.length === 0 ? styles.emptyListContainer : styles.listContentContainer,
+            ]}
+          />
+        </View>
 
         {/* Comment Input - Fixed at bottom */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          keyboardVerticalOffset={0}
+        <View
+          style={[styles.inputContainer, { paddingBottom: Math.max(safeAreaInsets.bottom, 16) }]}
         >
-          <View style={styles.inputContainer}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={0}
+          >
             <View style={styles.inputWrapper}>
               <TextInput
                 ref={textInputRef}
@@ -252,8 +349,8 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
                 <Send size={16} color='white' />
               </TouchableOpacity>
             </View>
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </BottomSheetView>
     </BottomSheetModal>
   );
@@ -273,7 +370,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 0,
+    maxHeight: '100%',
   },
   header: {
     flexDirection: 'row',
@@ -303,6 +400,9 @@ const styles = StyleSheet.create({
   emptyListContainer: {
     flex: 1,
     justifyContent: 'center',
+  },
+  listContentContainer: {
+    flexGrow: 1,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -372,8 +472,54 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6B7280',
   },
-  deleteButton: {
+  moreButton: {
     padding: 4,
+  },
+  editContainer: {
+    paddingVertical: 8,
+  },
+  editInput: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 14,
+    maxHeight: 120,
+    textAlignVertical: 'top',
+    backgroundColor: '#F9FAFB',
+    color: '#111827',
+  },
+  editActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  editCancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+  },
+  editCancelText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  editSaveButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#059669',
+  },
+  editSaveText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#FFFFFF',
   },
   commentContent: {
     fontSize: 14,
@@ -410,7 +556,6 @@ const styles = StyleSheet.create({
     borderTopColor: '#F3F4F6',
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 16,
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -435,5 +580,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  commentsContainer: {
+    flex: 1,
   },
 });
