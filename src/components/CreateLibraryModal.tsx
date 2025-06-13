@@ -6,9 +6,9 @@ import {
   StyleSheet,
   TextInput,
   Switch,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { X } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -51,7 +51,11 @@ export const CreateLibraryModal: React.FC<CreateLibraryModalProps> = ({
       // 서재 목록 캐시 무효화
       queryClient.invalidateQueries({ queryKey: ['user-libraries'] });
 
-      Alert.alert('성공', '새 서재가 생성되었습니다.');
+      Toast.show({
+        type: 'success',
+        text1: '성공',
+        text2: '새 서재가 생성되었습니다.',
+      });
 
       if (onSuccess) {
         onSuccess(response.id);
@@ -61,7 +65,11 @@ export const CreateLibraryModal: React.FC<CreateLibraryModalProps> = ({
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || '서재 생성에 실패했습니다.';
-      Alert.alert('오류', errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: errorMessage,
+      });
     },
   });
 
@@ -100,7 +108,11 @@ export const CreateLibraryModal: React.FC<CreateLibraryModalProps> = ({
         return prev.filter(id => id !== tagId);
       } else {
         if (prev.length >= 5) {
-          Alert.alert('알림', '태그는 최대 5개까지 선택할 수 있습니다.');
+          Toast.show({
+            type: 'info',
+            text1: '알림',
+            text2: '태그는 최대 5개까지 선택할 수 있습니다.',
+          });
           return prev;
         }
         return [...prev, tagId];
@@ -110,7 +122,11 @@ export const CreateLibraryModal: React.FC<CreateLibraryModalProps> = ({
 
   const handleSubmit = () => {
     if (!formData.name.trim()) {
-      Alert.alert('알림', '서재 이름을 입력해주세요.');
+      Toast.show({
+        type: 'info',
+        text1: '알림',
+        text2: '서재 이름을 입력해주세요.',
+      });
       return;
     }
 

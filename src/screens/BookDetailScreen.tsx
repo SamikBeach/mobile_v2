@@ -9,6 +9,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import {
   useSuspenseQuery,
   useMutation,
@@ -314,7 +315,11 @@ const BookDetailContent: React.FC<BookDetailContentProps> = ({
   const handleAladinPress = () => {
     const url = `https://www.aladin.co.kr/shop/wproduct.aspx?isbn=${isbn}`;
     Linking.openURL(url).catch(() => {
-      Alert.alert('오류', '알라딘 페이지를 열 수 없습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '알라딘 페이지를 열 수 없습니다.',
+      });
     });
   };
 
@@ -699,10 +704,18 @@ const BookReviewsList: React.FC<{
     mutationFn: (reviewId: number) => deleteReview(reviewId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['book-reviews', bookId, isbn, sort] });
-      Alert.alert('성공', '리뷰가 삭제되었습니다.');
+      Toast.show({
+        type: 'success',
+        text1: '성공',
+        text2: '리뷰가 삭제되었습니다.',
+      });
     },
     onError: () => {
-      Alert.alert('오류', '리뷰 삭제 중 오류가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '리뷰 삭제 중 오류가 발생했습니다.',
+      });
     },
   });
 
@@ -710,7 +723,11 @@ const BookReviewsList: React.FC<{
   const handleLike = useCallback(
     (reviewId: number, isLiked: boolean) => {
       if (!currentUser) {
-        Alert.alert('로그인 필요', '로그인 후 이용해주세요.');
+        Toast.show({
+          type: 'info',
+          text1: '로그인 필요',
+          text2: '로그인 후 이용해주세요.',
+        });
         return;
       }
 
@@ -750,7 +767,11 @@ const BookReviewsList: React.FC<{
         await handleAddComment(comment);
       } catch (error) {
         console.error('댓글 작성 중 오류:', error);
-        Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
+        Toast.show({
+          type: 'error',
+          text1: '오류',
+          text2: '댓글 작성 중 문제가 발생했습니다.',
+        });
       }
     },
     [selectedReviewForComments, handleAddComment]
@@ -763,7 +784,11 @@ const BookReviewsList: React.FC<{
         await handleDeleteComment(commentId);
       } catch (error) {
         console.error('댓글 삭제 중 오류:', error);
-        Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
+        Toast.show({
+          type: 'error',
+          text1: '오류',
+          text2: '댓글 삭제 중 문제가 발생했습니다.',
+        });
       }
     },
     [handleDeleteComment]
@@ -776,7 +801,11 @@ const BookReviewsList: React.FC<{
         await handleLikeComment(commentId, isLiked);
       } catch (error) {
         console.error('댓글 좋아요 처리 중 오류:', error);
-        Alert.alert('오류', '댓글 좋아요 처리 중 문제가 발생했습니다.');
+        Toast.show({
+          type: 'error',
+          text1: '오류',
+          text2: '댓글 좋아요 처리 중 문제가 발생했습니다.',
+        });
       }
     },
     [handleLikeComment]
@@ -809,7 +838,11 @@ const BookReviewsList: React.FC<{
     if (selectedReview) {
       // TODO: 리뷰 수정 기능 구현
       console.log('리뷰 수정:', selectedReview.id);
-      Alert.alert('알림', '리뷰 수정 기능은 준비 중입니다.');
+      Toast.show({
+        type: 'info',
+        text1: '알림',
+        text2: '리뷰 수정 기능은 준비 중입니다.',
+      });
     }
   }, [selectedReview]);
 
@@ -1069,10 +1102,18 @@ export const BookDetailScreen: React.FC = () => {
     try {
       // TODO: 실제 API 호출로 서재에 책 추가
       console.log('Book added to library:', libraryId);
-      Alert.alert('성공', '서재에 책이 추가되었습니다.');
+      Toast.show({
+        type: 'success',
+        text1: '성공',
+        text2: '서재에 책이 추가되었습니다.',
+      });
       setLibrarySelectionBottomSheetVisible(false);
     } catch {
-      Alert.alert('오류', '서재에 책을 추가하는데 실패했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '서재에 책을 추가하는데 실패했습니다.',
+      });
     }
   };
 
@@ -1098,7 +1139,11 @@ export const BookDetailScreen: React.FC = () => {
   ) => {
     // TODO: 실제 API 호출로 리뷰 제출
     console.log('Review submitted:', { rating, content, readingStatus });
-    Alert.alert('성공', '리뷰가 등록되었습니다.');
+    Toast.show({
+      type: 'success',
+      text1: '성공',
+      text2: '리뷰가 등록되었습니다.',
+    });
     setReviewBottomSheetVisible(false);
   };
 

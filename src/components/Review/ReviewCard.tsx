@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ThumbsUp, MessageCircle, Star } from 'lucide-react-native';
@@ -30,6 +31,12 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   // Local state for optimistic updates
   const [localIsLiked, setLocalIsLiked] = useState<boolean | null>(null);
   const [localLikeCount, setLocalLikeCount] = useState<number | null>(null);
+
+  // Reset local state when review changes
+  useEffect(() => {
+    setLocalIsLiked(null);
+    setLocalLikeCount(null);
+  }, [review.id]);
 
   // Hooks for like and comment functionality (only for detailed reviews)
   const { handleLikeToggle, isLoading: isLikeLoading } = useReviewLike();
@@ -191,7 +198,11 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
       setLocalIsLiked(currentIsLiked);
       setLocalLikeCount(currentLikeCount);
       console.error('좋아요 처리 중 오류:', error);
-      Alert.alert('오류', '좋아요 처리 중 문제가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '좋아요 처리 중 문제가 발생했습니다.',
+      });
     }
   };
 
@@ -211,7 +222,11 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
       await handleAddComment(comment);
     } catch (error) {
       console.error('댓글 작성 중 오류:', error);
-      Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '댓글 작성 중 문제가 발생했습니다.',
+      });
     }
   };
 
@@ -221,7 +236,11 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
       await handleDeleteComment(commentId);
     } catch (error) {
       console.error('댓글 삭제 중 오류:', error);
-      Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '댓글 삭제 중 문제가 발생했습니다.',
+      });
     }
   };
 
@@ -231,7 +250,11 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
       await handleLikeComment(commentId, isLiked);
     } catch (error) {
       console.error('댓글 좋아요 처리 중 오류:', error);
-      Alert.alert('오류', '댓글 좋아요 처리 중 문제가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '댓글 좋아요 처리 중 문제가 발생했습니다.',
+      });
     }
   };
 

@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Send, ThumbsUp, MoreHorizontal, MessageCircle } from 'lucide-react-native';
 import {
   BottomSheetModal,
@@ -100,7 +101,11 @@ const CommentItem = ({
       }
       setIsEditing(false);
     } catch {
-      Alert.alert('오류', '댓글 수정 중 오류가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '댓글 수정 중 오류가 발생했습니다.',
+      });
     }
   };
 
