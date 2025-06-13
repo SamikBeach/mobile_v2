@@ -53,6 +53,7 @@ import {
   InteractiveRatingStarsFallback,
 } from '../components/InteractiveRatingStars';
 import { useBookRating } from '../hooks/useBookRating';
+import { useReviewDialog } from '../hooks/useReviewDialog';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -1093,25 +1094,41 @@ const ReviewBottomSheetWithData: React.FC<{
   isbn: string;
   isVisible: boolean;
   onClose: () => void;
-  onSubmit: (rating: number, content: string, readingStatus?: ReadingStatusType | null) => void;
   initialRating: number;
   initialContent: string;
   isEditMode: boolean;
-}> = ({ isbn, isVisible, onClose, onSubmit, initialRating, initialContent, isEditMode }) => {
+}> = ({ isbn, isVisible, onClose, initialRating, initialContent, isEditMode }) => {
   const { data: book } = useSuspenseQuery({
     queryKey: ['book-detail', isbn],
     queryFn: () => getBookByIsbn(isbn),
   });
+
+  const { handleReviewSubmit, isSubmitting } = useReviewDialog({
+    book,
+    isbn,
+    userRating: book?.userRating,
+    userReadingStatus: book?.userReadingStatus as ReadingStatusType | null,
+  });
+
+  const handleSubmitAndClose = async (
+    rating: number,
+    content: string,
+    readingStatus?: ReadingStatusType | null
+  ) => {
+    await handleReviewSubmit(rating, content, readingStatus);
+    onClose();
+  };
 
   return (
     <ReviewBottomSheet
       isVisible={isVisible}
       onClose={onClose}
       bookTitle={book?.title || ''}
-      onSubmit={onSubmit}
+      onSubmit={handleSubmitAndClose}
       initialRating={initialRating}
       initialContent={initialContent}
       isEditMode={isEditMode}
+      isSubmitting={isSubmitting}
       userReadingStatus={book?.userReadingStatus as ReadingStatusType | null}
     />
   );
@@ -1123,7 +1140,7 @@ export const BookDetailScreen: React.FC = () => {
   const { isbn } = route.params;
 
   // useBookRating 훅 사용
-  const { handleSubmitRating, userRating, userRatingData } = useBookRating(isbn);
+  const { userRating, userRatingData } = useBookRating(isbn);
 
   // 바텀시트 상태들
   const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
@@ -1161,17 +1178,6 @@ export const BookDetailScreen: React.FC = () => {
 
   const handleReviewPress = () => {
     setReviewBottomSheetVisible(true);
-  };
-
-  const handleReviewSubmit = (
-    rating: number,
-    content: string,
-    _readingStatus?: ReadingStatusType | null
-  ) => {
-    setReviewBottomSheetVisible(false);
-    // 평점 저장
-    handleSubmitRating(rating);
-    console.log('Review submitted:', { rating, content });
   };
 
   return (
@@ -1216,7 +1222,6 @@ export const BookDetailScreen: React.FC = () => {
           isbn={isbn}
           isVisible={reviewBottomSheetVisible}
           onClose={() => setReviewBottomSheetVisible(false)}
-          onSubmit={handleReviewSubmit}
           initialRating={userRating}
           initialContent={userRatingData?.comment || ''}
           isEditMode={!!userRatingData}
