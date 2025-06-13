@@ -23,9 +23,7 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 import {
   Star,
-  Edit3,
   ChevronDown,
-  X,
   BookOpen,
   Users,
   UserCheck,
@@ -33,6 +31,7 @@ import {
   ThumbsUp,
   MessageSquare,
   MoreHorizontal,
+  PenLine,
 } from 'lucide-react-native';
 
 import { getBookByIsbn, BookDetails } from '../apis/book';
@@ -49,6 +48,11 @@ import { ReviewActionBottomSheet } from '../components/ReviewActionBottomSheet';
 import { CommentBottomSheet } from '../components/CommentBottomSheet';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useReviewComments, useReviewCommentCount } from '../hooks/useReviewComments';
+import {
+  InteractiveRatingStars,
+  InteractiveRatingStarsFallback,
+} from '../components/InteractiveRatingStars';
+import { useBookRating } from '../hooks/useBookRating';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -99,31 +103,6 @@ const formatPublishDate = (date: Date | string): string => {
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const day = String(dateObj.getDate()).padStart(2, '0');
   return `${year}년 ${month}월 ${day}일`;
-};
-
-// 별점 컴포넌트
-const RatingStars: React.FC<{ rating: number; size?: number; interactive?: boolean }> = ({
-  rating,
-  size = 16,
-  interactive = false,
-}) => {
-  const stars = [];
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 !== 0;
-
-  for (let i = 0; i < 5; i++) {
-    if (i < fullStars) {
-      stars.push(<Star key={i} size={size} color='#FCD34D' fill='#FCD34D' />);
-    } else if (i === fullStars && hasHalfStar) {
-      stars.push(<Star key={i} size={size} color='#FCD34D' fill='#FCD34D' />);
-    } else {
-      stars.push(
-        <Star key={i} size={size} color='#D1D5DB' fill={interactive ? 'transparent' : '#D1D5DB'} />
-      );
-    }
-  }
-
-  return <View style={styles.starsContainer}>{stars}</View>;
 };
 
 // 카테고리 태그 컴포넌트
@@ -377,14 +356,11 @@ const BookDetailContent: React.FC<BookDetailContentProps> = ({
           </View>
 
           <View style={styles.ratingActions}>
-            <View style={styles.userRating}>
-              <RatingStars rating={book.userRating || 0} size={16} interactive />
-              <TouchableOpacity style={styles.ratingClearButton}>
-                <X size={16} color='#6B7280' />
-              </TouchableOpacity>
-            </View>
+            <Suspense fallback={<InteractiveRatingStarsFallback size={16} />}>
+              <InteractiveRatingStars isbn={isbn} size={16} />
+            </Suspense>
             <TouchableOpacity style={styles.reviewButton} onPress={onReviewPress}>
-              <Edit3 size={12} color='#374151' />
+              <PenLine size={12} color='#374151' />
               <Text style={styles.reviewButtonText}>리뷰 쓰기</Text>
             </TouchableOpacity>
           </View>
@@ -576,7 +552,7 @@ const ReviewItem: React.FC<{
   expandedReviews,
   setExpandedReviews,
   likingReviewId,
-  currentUser,
+  currentUser: _currentUser,
   handleLike,
   handleCommentsToggle,
   handleUserPress,
@@ -1117,6 +1093,9 @@ export const BookDetailScreen: React.FC = () => {
   const route = useRoute<BookDetailRouteProp>();
   const { isbn } = route.params;
 
+  // useBookRating 훅 사용
+  const { handleSubmitRating } = useBookRating(isbn);
+
   // 바텀시트 상태들
   const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
   const [librarySelectionBottomSheetVisible, setLibrarySelectionBottomSheetVisible] =
@@ -1175,15 +1154,10 @@ export const BookDetailScreen: React.FC = () => {
   const handleReviewSubmit = (
     rating: number,
     content: string,
-    readingStatus?: ReadingStatusType | null
+    _readingStatus?: ReadingStatusType | null
   ) => {
-    // TODO: 실제 API 호출로 리뷰 제출
-    console.log('Review submitted:', { rating, content, readingStatus });
-    Toast.show({
-      type: 'success',
-      text1: '성공',
-      text2: '리뷰가 등록되었습니다.',
-    });
+    // useBookRating 훅의 handleSubmitRating 사용
+    handleSubmitRating(rating, content);
     setReviewBottomSheetVisible(false);
   };
 
@@ -1355,19 +1329,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
   },
-  userRating: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   starsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 1,
-  },
-  ratingClearButton: {
-    padding: 4,
   },
   reviewButton: {
     flexDirection: 'row',
