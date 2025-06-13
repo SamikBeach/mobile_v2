@@ -105,6 +105,13 @@ const CommentItem = ({
     try {
       if (onUpdate) {
         await onUpdate(comment.id, editText.trim());
+        // 댓글 수정 성공 토스트
+        Toast.show({
+          type: 'success',
+          text1: '댓글 수정 완료',
+          text2: '댓글이 성공적으로 수정되었습니다.',
+          position: 'top',
+        });
       }
     } catch {
       // 에러 발생 시 수정 모드 다시 활성화 (src_frontend와 동일)
@@ -114,6 +121,7 @@ const CommentItem = ({
         type: 'error',
         text1: '오류',
         text2: '댓글 수정 중 오류가 발생했습니다.',
+        position: 'top',
       });
     }
   };
@@ -274,6 +282,14 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
         textInputRef.current.clear();
         console.log('🧹 Input cleared');
       }
+
+      // 댓글 제출 성공 토스트
+      Toast.show({
+        type: 'success',
+        text1: '댓글 작성 완료',
+        text2: '댓글이 성공적으로 작성되었습니다.',
+        position: 'top',
+      });
     } catch (error) {
       console.error('❌ Error in onSubmitComment:', error);
     }
@@ -293,11 +309,28 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
     []
   );
 
+  // 댓글 삭제 핸들러 (토스트 추가)
+  const handleDeleteCommentWithToast = async (commentId: number) => {
+    try {
+      await onDeleteComment(commentId);
+      // 댓글 삭제 성공 토스트
+      Toast.show({
+        type: 'success',
+        text1: '댓글 삭제 완료',
+        text2: '댓글이 성공적으로 삭제되었습니다.',
+        position: 'top',
+      });
+    } catch (error) {
+      // 에러는 이미 onDeleteComment에서 처리되므로 여기서는 추가 처리 안함
+      console.error('댓글 삭제 중 오류:', error);
+    }
+  };
+
   // Render comment item
   const renderCommentItem = ({ item }: { item: ReviewComment }) => (
     <CommentItem
       comment={item}
-      onDelete={onDeleteComment}
+      onDelete={handleDeleteCommentWithToast}
       onLike={onLikeComment}
       onUpdate={onUpdateComment}
       currentUserId={currentUserId}
