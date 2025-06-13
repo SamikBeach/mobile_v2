@@ -5,14 +5,17 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
-  FlatList,
-  Image,
   Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { Send, ThumbsUp, MoreHorizontal, MessageCircle } from 'lucide-react-native';
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetFlatList,
+  BottomSheetFooter,
+} from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Comment } from '../apis/review/types';
 import { CommentActionBottomSheet } from './CommentActionBottomSheet';
@@ -266,6 +269,24 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
     />
   );
 
+  // 커스텀 핸들 컴포넌트
+  const renderHandle = useCallback(
+    () => (
+      <View style={styles.customHandleContainer}>
+        <View style={styles.dragHandleContainer}>
+          <View style={styles.dragHandle} />
+        </View>
+        <View style={styles.header}>
+          <Text style={styles.title}>댓글 {commentCount ?? comments.length}개</Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>닫기</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    ),
+    [commentCount, comments.length, onClose]
+  );
+
   // Empty state component
   const EmptyComments = () => (
     <View style={styles.emptyContainer}>
@@ -277,49 +298,11 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
     </View>
   );
 
-  return (
-    <BottomSheetModal
-      ref={bottomSheetModalRef}
-      index={0}
-      snapPoints={[maxHeight]}
-      onChange={handleSheetChanges}
-      enablePanDownToClose={true}
-      backdropComponent={renderBackdrop}
-      handleIndicatorStyle={styles.dragHandle}
-      backgroundStyle={styles.modalContainer}
-      keyboardBehavior='interactive'
-      keyboardBlurBehavior='restore'
-      android_keyboardInputMode='adjustResize'
-      topInset={safeAreaInsets.top}
-    >
-      <BottomSheetView style={[styles.contentContainer, { paddingBottom: safeAreaInsets.bottom }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>댓글 {commentCount ?? comments.length}개</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>닫기</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Comments List - 입력 영역 공간 확보 */}
-        <View style={styles.commentsContainer}>
-          <FlatList
-            data={comments}
-            renderItem={renderCommentItem}
-            keyExtractor={item => item.id.toString()}
-            style={styles.commentsList}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={EmptyComments}
-            contentContainerStyle={[
-              comments.length === 0 ? styles.emptyListContainer : styles.listContentContainer,
-            ]}
-          />
-        </View>
-
-        {/* Comment Input - Fixed at bottom */}
-        <View
-          style={[styles.inputContainer, { paddingBottom: Math.max(safeAreaInsets.bottom, 16) }]}
-        >
+  // Footer component for fixed input
+  const renderFooter = useCallback(
+    (props: any) => (
+      <BottomSheetFooter {...props}>
+        <View style={styles.inputContainer}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={0}
@@ -351,7 +334,36 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
             </View>
           </KeyboardAvoidingView>
         </View>
-      </BottomSheetView>
+      </BottomSheetFooter>
+    ),
+    [commentText, isLoading, handleSubmit, setCommentText, safeAreaInsets.bottom]
+  );
+
+  return (
+    <BottomSheetModal
+      ref={bottomSheetModalRef}
+      index={0}
+      snapPoints={[maxHeight]}
+      onChange={handleSheetChanges}
+      enablePanDownToClose={true}
+      enableContentPanningGesture={false}
+      backdropComponent={renderBackdrop}
+      handleComponent={renderHandle}
+      footerComponent={renderFooter}
+      backgroundStyle={styles.modalContainer}
+      keyboardBehavior='interactive'
+      keyboardBlurBehavior='restore'
+      android_keyboardInputMode='adjustResize'
+      topInset={safeAreaInsets.top}
+    >
+      <BottomSheetFlatList
+        data={comments}
+        renderItem={renderCommentItem}
+        keyExtractor={item => item.id.toString()}
+        ListEmptyComponent={EmptyComments}
+        contentContainerStyle={styles.flatListContainer}
+        showsVerticalScrollIndicator={false}
+      />
     </BottomSheetModal>
   );
 };
@@ -380,6 +392,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+    width: '100%',
   },
   title: {
     fontSize: 18,
@@ -408,6 +421,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
+    paddingHorizontal: 20,
   },
   emptyIconContainer: {
     width: 64,
@@ -431,6 +445,7 @@ const styles = StyleSheet.create({
   },
   commentItem: {
     paddingVertical: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
   },
@@ -556,6 +571,8 @@ const styles = StyleSheet.create({
     borderTopColor: '#F3F4F6',
     paddingHorizontal: 20,
     paddingTop: 16,
+    paddingBottom: 20, // Reduced to move input closer to bottom
+    minHeight: 80, // Reduced minimum height
   },
   inputWrapper: {
     flexDirection: 'row',
@@ -583,5 +600,19 @@ const styles = StyleSheet.create({
   },
   commentsContainer: {
     flex: 1,
+  },
+  flatListContainer: {
+    flexGrow: 1,
+    paddingBottom: 240, // Much increased to prevent content being hidden behind input
+  },
+  customHandleContainer: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 8,
+  },
+  dragHandleContainer: {
+    alignItems: 'center',
+    paddingBottom: 8,
   },
 });
