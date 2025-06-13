@@ -7,16 +7,14 @@ import {
   getReviewComments,
 } from '../apis/review';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
-import { Comment } from '../apis/review/types';
+import { useCallback } from 'react';
+import { Comment, ReviewComment } from '../apis/review/types';
 
 interface UseReviewCommentsResult {
-  comments: Comment[];
+  comments: ReviewComment[];
   isLoading: boolean;
   error: Error | null;
-  commentText: string;
-  setCommentText: (text: string) => void;
-  handleAddComment: () => Promise<void>;
+  handleAddComment: (comment: string) => Promise<void>;
   handleDeleteComment: (commentId: number) => Promise<void>;
   handleUpdateComment: (commentId: number, content: string) => Promise<void>;
   handleLikeComment: (commentId: number, isLiked: boolean) => Promise<void>;
@@ -28,7 +26,6 @@ export function useReviewComments(
   showComments: boolean = false
 ): UseReviewCommentsResult {
   const queryClient = useQueryClient();
-  const [commentText, setCommentText] = useState('');
 
   // 댓글 목록 조회 - showComments가 true일 때만 활성화
   const {
@@ -134,9 +131,9 @@ export function useReviewComments(
 
   // 댓글 추가 mutation
   const { mutateAsync: addComment } = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (content: string) => {
       return createComment(reviewId, {
-        content: commentText,
+        content,
       });
     },
     onSuccess: () => {
@@ -307,13 +304,11 @@ export function useReviewComments(
   );
 
   // 댓글 추가 핸들러
-  const handleAddComment = async () => {
-    if (!commentText.trim()) return;
+  const handleAddComment = async (comment: string) => {
+    if (!comment.trim()) return;
 
     try {
-      await addComment();
-      // 성공 시 입력 필드 초기화
-      setCommentText('');
+      await addComment(comment);
     } catch (error) {
       console.error('Failed to add comment:', error);
     }
@@ -345,8 +340,6 @@ export function useReviewComments(
     comments,
     isLoading,
     error: error as Error | null,
-    commentText,
-    setCommentText,
     handleAddComment,
     handleDeleteComment,
     handleLikeComment,

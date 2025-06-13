@@ -575,8 +575,6 @@ const BookReviewsList: React.FC<{
   // useReviewComments 훅 사용 (ReviewCard와 동일한 방식)
   const {
     comments,
-    commentText,
-    setCommentText,
     handleAddComment,
     handleDeleteComment,
     handleUpdateComment,
@@ -740,16 +738,23 @@ const BookReviewsList: React.FC<{
   );
 
   // 댓글 제출 핸들러 (useReviewComments 훅의 함수 사용)
-  const handleSubmitComment = useCallback(async () => {
-    if (!commentText.trim() || !selectedReviewForComments) return;
+  const handleSubmitComment = useCallback(
+    async (comment: string) => {
+      console.log('🚀 handleSubmitComment called!');
+      if (!comment.trim() || !selectedReviewForComments) return;
 
-    try {
-      await handleAddComment();
-    } catch (error) {
-      console.error('댓글 작성 중 오류:', error);
-      Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
-    }
-  }, [commentText, selectedReviewForComments, handleAddComment]);
+      try {
+        console.log('🚀 handleSubmitComment called');
+        console.log('📝 comment:', comment);
+        console.log('📝 selectedReviewForComments:', selectedReviewForComments);
+        await handleAddComment(comment);
+      } catch (error) {
+        console.error('댓글 작성 중 오류:', error);
+        Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
+      }
+    },
+    [selectedReviewForComments, handleAddComment]
+  );
 
   // 댓글 삭제 핸들러 (Alert 추가)
   const handleDeleteCommentWithAlert = useCallback(
@@ -1022,8 +1027,6 @@ const BookReviewsList: React.FC<{
         isVisible={commentBottomSheetVisible}
         onClose={() => setCommentBottomSheetVisible(false)}
         comments={comments}
-        commentText={commentText}
-        setCommentText={setCommentText}
         onSubmitComment={handleSubmitComment}
         onDeleteComment={handleDeleteCommentWithAlert}
         onUpdateComment={handleUpdateComment}

@@ -31,8 +31,6 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   const { handleLikeToggle, isLoading: isLikeLoading } = useReviewLike();
   const {
     comments,
-    commentText,
-    setCommentText,
     handleAddComment,
     handleDeleteComment,
     handleUpdateComment,
@@ -192,9 +190,9 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   };
 
   // 댓글 제출 핸들러
-  const handleSubmitComment = async () => {
+  const handleSubmitComment = async (comment: string) => {
     try {
-      await handleAddComment();
+      await handleAddComment(comment);
     } catch (error) {
       console.error('댓글 작성 중 오류:', error);
       Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
@@ -359,8 +357,6 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
           isVisible={showCommentsBottomSheet}
           onClose={() => setShowCommentsBottomSheet(false)}
           comments={comments}
-          commentText={commentText}
-          setCommentText={setCommentText}
           onSubmitComment={handleSubmitComment}
           onDeleteComment={handleDeleteCommentWithAlert}
           onUpdateComment={handleUpdateComment}

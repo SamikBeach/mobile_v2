@@ -17,16 +17,14 @@ import {
   BottomSheetFooter,
 } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Comment } from '../apis/review/types';
+import { ReviewComment } from '../apis/review/types';
 import { CommentActionBottomSheet } from './CommentActionBottomSheet';
 
 interface CommentBottomSheetProps {
   isVisible: boolean;
   onClose: () => void;
-  comments: Comment[];
-  commentText: string;
-  setCommentText: (text: string) => void;
-  onSubmitComment: () => Promise<void>;
+  comments: ReviewComment[];
+  onSubmitComment: (comment: string) => Promise<void>;
   onDeleteComment: (commentId: number) => Promise<void>;
   onLikeComment: (commentId: number, isLiked: boolean) => Promise<void>;
   onUpdateComment?: (commentId: number, content: string) => Promise<void>;
@@ -43,7 +41,7 @@ const CommentItem = ({
   onUpdate,
   currentUserId,
 }: {
-  comment: Comment;
+  comment: ReviewComment;
   onDelete: (commentId: number) => void;
   onLike: (commentId: number, isLiked: boolean) => void;
   onUpdate?: (commentId: number, content: string) => void;
@@ -198,8 +196,6 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
   isVisible,
   onClose,
   comments,
-  commentText,
-  setCommentText,
   onSubmitComment,
   onDeleteComment,
   onLikeComment,
@@ -210,6 +206,7 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const textInputRef = useRef<TextInput>(null);
+  const commentTextRef = useRef<string>('');
   const safeAreaInsets = useSafeAreaInsets();
 
   // Calculate safe snap points
@@ -240,8 +237,38 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
 
   // Submit comment handler
   const handleSubmit = async () => {
-    if (!commentText.trim() || isLoading) return;
-    await onSubmitComment();
+    console.log('🚀 handleSubmit called');
+    console.log('📝 isLoading:', isLoading);
+
+    if (isLoading) {
+      console.log('❌ Blocked: already loading');
+      return;
+    }
+
+    const inputText = commentTextRef.current;
+    console.log('💬 Input text from ref:', `"${inputText}"`);
+    console.log('📏 Input text length:', inputText.length);
+    console.log('🔍 Trimmed text:', `"${inputText.trim()}"`);
+
+    if (!inputText.trim()) {
+      console.log('❌ Blocked: empty text after trim');
+      return;
+    }
+
+    try {
+      console.log('📤 Calling onSubmitComment with:', `"${inputText}"`);
+      await onSubmitComment(inputText);
+      console.log('✅ onSubmitComment completed successfully');
+
+      // Clear the ref and input after successful submission
+      commentTextRef.current = '';
+      if (textInputRef.current) {
+        textInputRef.current.clear();
+        console.log('🧹 Input cleared');
+      }
+    } catch (error) {
+      console.error('❌ Error in onSubmitComment:', error);
+    }
   };
 
   // Backdrop component
@@ -259,7 +286,7 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
   );
 
   // Render comment item
-  const renderCommentItem = ({ item }: { item: Comment }) => (
+  const renderCommentItem = ({ item }: { item: ReviewComment }) => (
     <CommentItem
       comment={item}
       onDelete={onDeleteComment}
@@ -313,8 +340,11 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
                 style={styles.textInput}
                 placeholder='댓글을 입력하세요...'
                 placeholderTextColor='#9CA3AF'
-                value={commentText}
-                onChangeText={setCommentText}
+                onChangeText={text => {
+                  console.log('✏️ Text changed:', `"${text}"`);
+                  commentTextRef.current = text;
+                  console.log('💾 Saved to ref:', `"${commentTextRef.current}"`);
+                }}
                 multiline
                 maxLength={500}
                 editable={!isLoading}
@@ -323,11 +353,11 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
                 style={[
                   styles.sendButton,
                   {
-                    backgroundColor: commentText.trim() && !isLoading ? '#16A34A' : '#D1D5DB',
+                    backgroundColor: !isLoading ? '#16A34A' : '#D1D5DB',
                   },
                 ]}
                 onPress={handleSubmit}
-                disabled={!commentText.trim() || isLoading}
+                disabled={isLoading}
               >
                 <Send size={16} color='white' />
               </TouchableOpacity>
@@ -336,7 +366,7 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
         </View>
       </BottomSheetFooter>
     ),
-    [commentText, isLoading, handleSubmit, setCommentText, safeAreaInsets.bottom]
+    [isLoading, handleSubmit]
   );
 
   return (

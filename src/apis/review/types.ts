@@ -115,6 +115,8 @@ export interface ReviewComment {
   id: number;
   content: string;
   author: ReviewUser;
+  likeCount?: number;
+  isLiked?: boolean;
   createdAt: string;
   updatedAt: string;
 }
