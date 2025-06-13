@@ -50,6 +50,7 @@ const CommentItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.content);
   const commentActionBottomSheetRef = useRef<BottomSheetModal>(null);
+  const editInputRef = useRef<TextInput>(null);
 
   const formatDate = (date: Date | string) => {
     const commentDate = typeof date === 'string' ? new Date(date) : date;
@@ -77,6 +78,10 @@ const CommentItem = ({
     commentActionBottomSheetRef.current?.dismiss();
     setIsEditing(true);
     setEditText(comment.content);
+    // 수정 모드 진입 후 TextInput에 자동 포커스
+    setTimeout(() => {
+      editInputRef.current?.focus();
+    }, 100);
   };
 
   const handleDelete = () => {
@@ -94,12 +99,17 @@ const CommentItem = ({
   const handleSaveEdit = async () => {
     if (!editText.trim()) return;
 
+    // 낙관적 업데이트: 즉시 수정 모드 종료 (src_frontend와 동일)
+    setIsEditing(false);
+
     try {
       if (onUpdate) {
         await onUpdate(comment.id, editText.trim());
       }
-      setIsEditing(false);
     } catch {
+      // 에러 발생 시 수정 모드 다시 활성화 (src_frontend와 동일)
+      setIsEditing(true);
+      setEditText(comment.content); // 원래 내용으로 복원
       Toast.show({
         type: 'error',
         text1: '오류',
@@ -137,6 +147,7 @@ const CommentItem = ({
           // 수정 모드
           <View style={styles.editContainer}>
             <TextInput
+              ref={editInputRef}
               style={styles.editInput}
               value={editText}
               onChangeText={setEditText}

@@ -8,7 +8,7 @@ import {
 } from '../apis/review';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
-import { Comment, ReviewComment } from '../apis/review/types';
+import { ReviewComment } from '../apis/review/types';
 
 // 실시간 댓글 개수를 가져오는 훅 (src_frontend와 동일한 방식)
 export function useReviewCommentCount(reviewId: number): number {
@@ -344,41 +344,18 @@ export function useReviewComments(
     },
   });
 
-  // 댓글 수정 뮤테이션
+  // 댓글 수정 뮤테이션 (src_frontend와 동일한 방식)
   const updateCommentMutation = useMutation({
     mutationFn: ({ commentId, content }: { commentId: number; content: string }) =>
       updateComment(commentId, { content }),
-    onMutate: async ({ commentId, content }) => {
-      // 낙관적 업데이트
-      await queryClient.cancelQueries({
-        queryKey: ['review', 'comments', reviewId],
-      });
-
-      const previousComments = queryClient.getQueryData<Comment[]>([
-        'review',
-        'comments',
-        reviewId,
-      ]);
-
-      // 댓글 목록에서 해당 댓글 업데이트
-      queryClient.setQueryData<Comment[]>(['review', 'comments', reviewId], old => {
-        if (!old) return [];
-        return old.map(comment => (comment.id === commentId ? { ...comment, content } : comment));
-      });
-
-      return { previousComments };
-    },
-    onError: (err, variables, context) => {
-      // 에러 시 이전 상태로 롤백
-      if (context?.previousComments) {
-        queryClient.setQueryData(['review', 'comments', reviewId], context.previousComments);
-      }
-    },
-    onSettled: () => {
-      // 성공/실패와 관계없이 댓글 목록 갱신
+    onSuccess: () => {
+      // 댓글 목록 새로고침 (src_frontend와 동일)
       queryClient.invalidateQueries({
-        queryKey: ['review', 'comments', reviewId],
+        queryKey: ['review-comments', reviewId],
       });
+    },
+    onError: () => {
+      console.error('댓글 수정에 실패했습니다.');
     },
   });
 

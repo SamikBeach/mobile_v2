@@ -229,7 +229,7 @@ export const updateComment = async (
   commentId: number,
   data: UpdateCommentDto
 ): Promise<Comment> => {
-  const response = await axios.put<Comment>(`/review/comment/${commentId}`, data);
+  const response = await axios.patch<Comment>(`/review/comment/${commentId}`, data);
   return response.data;
 };
 
