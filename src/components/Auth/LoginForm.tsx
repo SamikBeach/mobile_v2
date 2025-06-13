@@ -71,7 +71,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           type: 'success',
           text1: '로그인 성공',
           text2: `${response.user.username}님, 환영합니다!`,
-          position: 'top',
           visibilityTime: 3000,
         });
 
@@ -83,7 +82,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           type: 'error',
           text1: '로그인 오류',
           text2: '로그인 처리 중 오류가 발생했습니다.',
-          position: 'top',
           visibilityTime: 4000,
         });
       }
@@ -99,7 +97,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         type: 'error',
         text1: '로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     },
@@ -132,7 +129,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         type: 'error',
         text1: '구글 로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     }
@@ -158,7 +154,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         type: 'error',
         text1: '애플 로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     }
@@ -184,7 +179,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         type: 'error',
         text1: '네이버 로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     }
@@ -210,7 +204,6 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         type: 'error',
         text1: '카카오 로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     }

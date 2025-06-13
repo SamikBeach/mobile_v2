@@ -110,7 +110,6 @@ const CommentItem = ({
           type: 'success',
           text1: '댓글 수정 완료',
           text2: '댓글이 성공적으로 수정되었습니다.',
-          position: 'top',
         });
       }
     } catch {
@@ -121,7 +120,6 @@ const CommentItem = ({
         type: 'error',
         text1: '오류',
         text2: '댓글 수정 중 오류가 발생했습니다.',
-        position: 'top',
       });
     }
   };
@@ -288,7 +286,6 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
         type: 'success',
         text1: '댓글 작성 완료',
         text2: '댓글이 성공적으로 작성되었습니다.',
-        position: 'top',
       });
     } catch (error) {
       console.error('❌ Error in onSubmitComment:', error);
@@ -318,7 +315,6 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
         type: 'success',
         text1: '댓글 삭제 완료',
         text2: '댓글이 성공적으로 삭제되었습니다.',
-        position: 'top',
       });
     } catch (error) {
       // 에러는 이미 onDeleteComment에서 처리되므로 여기서는 추가 처리 안함
