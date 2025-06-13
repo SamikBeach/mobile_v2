@@ -38,6 +38,7 @@ import {
 import { getBookByIsbn, BookDetails } from '../apis/book';
 import { getBookReviews, likeReview, unlikeReview, deleteReview } from '../apis/review';
 import { Review, BookReviewsResponse } from '../apis/review/types';
+import { User } from '../apis/user/types';
 import { userAtom } from '../atoms/user';
 import { ReadingStatusType, StatusTexts, StatusColors } from '../constants';
 import { ReadingStatusBottomSheet } from '../components/ReadingStatusBottomSheet';
@@ -47,7 +48,7 @@ import { ReviewBottomSheet } from '../components/ReviewBottomSheet';
 import { ReviewActionBottomSheet } from '../components/ReviewActionBottomSheet';
 import { CommentBottomSheet } from '../components/CommentBottomSheet';
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { useReviewComments } from '../hooks/useReviewComments';
+import { useReviewComments, useReviewCommentCount } from '../hooks/useReviewComments';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -554,7 +555,165 @@ const ReviewText: React.FC<{
   );
 };
 
-// 책 리뷰 목록 컴포넌트 (웹 버전과 완전히 동일한 디자인)
+// 리뷰 아이템 컴포넌트 (React Hook 규칙 준수를 위해 분리)
+const ReviewItem: React.FC<{
+  review: Review;
+  index: number;
+  totalCount: number;
+  expandedReviews: Record<number, boolean>;
+  setExpandedReviews: (updater: (prev: Record<number, boolean>) => Record<number, boolean>) => void;
+  likingReviewId: number | null;
+  currentUser: User | null;
+  handleLike: (reviewId: number, isLiked: boolean) => void;
+  handleCommentsToggle: (review: Review) => void;
+  handleUserPress: (userId: number) => void;
+  handleReviewActionPress: (review: Review) => void;
+  isMyReview: (review: Review) => boolean;
+}> = ({
+  review,
+  index,
+  totalCount,
+  expandedReviews,
+  setExpandedReviews,
+  likingReviewId,
+  currentUser,
+  handleLike,
+  handleCommentsToggle,
+  handleUserPress,
+  handleReviewActionPress,
+  isMyReview,
+}) => {
+  // 리뷰 별점 확인
+  const rating = getReviewRating(review);
+
+  // 실시간 댓글 개수 가져오기 (src_frontend와 동일한 방식)
+  const realTimeCommentCount = useReviewCommentCount(review.id);
+
+  return (
+    <View
+      key={review.id}
+      style={[
+        index === 0 ? styles.firstReviewItem : styles.reviewItem,
+        index !== totalCount - 1 && styles.reviewItemBorder,
+      ]}
+    >
+      <View style={styles.reviewItemContent}>
+        {/* 아바타 */}
+        <TouchableOpacity
+          style={styles.reviewAvatar}
+          onPress={() => handleUserPress(review.author.id)}
+        >
+          {review.author.profileImage ? (
+            <Image source={{ uri: review.author.profileImage }} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarText}>{review.author.username.charAt(0)}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* 리뷰 내용 영역 */}
+        <View style={styles.reviewContent}>
+          {/* 헤더 영역 */}
+          <View style={styles.reviewHeaderRow}>
+            <View style={styles.reviewHeaderLeft}>
+              {/* 사용자명과 날짜를 같은 줄에 배치 (웹 버전과 동일) */}
+              <View style={styles.userInfoRow}>
+                <TouchableOpacity onPress={() => handleUserPress(review.author.id)}>
+                  <Text style={styles.reviewAuthorName}>{review.author.username}</Text>
+                </TouchableOpacity>
+                <Text style={styles.reviewDate}>{formatReviewDate(review.createdAt)}</Text>
+              </View>
+
+              {/* 별점 표시 (웹 버전과 동일하게 별도 줄) */}
+              {rating > 0 && (
+                <View style={styles.reviewRatingRow}>
+                  <View style={styles.starsContainer}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        size={12}
+                        color={i < Math.floor(rating) ? '#FCD34D' : '#E5E7EB'}
+                        fill={i < Math.floor(rating) ? '#FCD34D' : '#E5E7EB'}
+                      />
+                    ))}
+                  </View>
+                  <Text style={styles.reviewRatingText}>({rating})</Text>
+                </View>
+              )}
+            </View>
+
+            {/* 내 리뷰일 경우 액션 버튼 */}
+            {isMyReview(review) && (
+              <TouchableOpacity
+                style={styles.moreButton}
+                onPress={() => handleReviewActionPress(review)}
+              >
+                <MoreHorizontal size={16} color='#6B7280' />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* 리뷰 텍스트 (웹 버전과 동일한 간격) */}
+          <View style={styles.reviewTextContainer}>
+            <ReviewText
+              content={review.content}
+              reviewId={review.id}
+              expandedReviews={expandedReviews}
+              setExpandedReviews={setExpandedReviews}
+            />
+          </View>
+
+          {/* 이미지가 있는 경우 표시 */}
+          {review.images && review.images.length > 0 && (
+            <View style={styles.reviewImagesContainer}>
+              {review.images.map((image: any) => (
+                <View key={image.id} style={styles.reviewImageWrapper}>
+                  <Image
+                    source={{ uri: image.url }}
+                    style={styles.reviewImage}
+                    resizeMode='cover'
+                  />
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* 액션 버튼들 (웹 버전과 동일한 간격) */}
+          <View style={styles.reviewActionsContainer}>
+            <TouchableOpacity
+              style={[styles.reviewActionButton, review.isLiked && styles.reviewActionButtonLiked]}
+              onPress={() => handleLike(review.id, review.isLiked || false)}
+              disabled={likingReviewId === review.id}
+            >
+              <ThumbsUp
+                size={14}
+                color={review.isLiked ? '#059669' : '#6B7280'}
+                fill={review.isLiked ? '#059669' : 'transparent'}
+              />
+              <Text
+                style={[styles.reviewActionText, review.isLiked && styles.reviewActionTextLiked]}
+              >
+                {review.likesCount || 0}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.reviewActionButton}
+              onPress={() => handleCommentsToggle(review)}
+            >
+              <MessageSquare size={14} color='#6B7280' />
+              <Text style={styles.reviewActionText}>
+                {realTimeCommentCount > 0 ? realTimeCommentCount : review.commentsCount || 0}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 const BookReviewsList: React.FC<{
   isbn: string;
   onReviewCountChange?: (count: number) => void;
@@ -891,141 +1050,23 @@ const BookReviewsList: React.FC<{
   return (
     <View style={styles.reviewsContainer}>
       <View>
-        {reviews.map((review: Review, index: number) => {
-          // 리뷰 별점 확인
-          const rating = getReviewRating(review);
-
-          return (
-            <View
-              key={review.id}
-              style={[
-                index === 0 ? styles.firstReviewItem : styles.reviewItem,
-                index !== reviews.length - 1 && styles.reviewItemBorder,
-              ]}
-            >
-              <View style={styles.reviewItemContent}>
-                {/* 아바타 */}
-                <TouchableOpacity
-                  style={styles.reviewAvatar}
-                  onPress={() => handleUserPress(review.author.id)}
-                >
-                  {review.author.profileImage ? (
-                    <Image
-                      source={{ uri: review.author.profileImage }}
-                      style={styles.avatarImage}
-                    />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Text style={styles.avatarText}>{review.author.username.charAt(0)}</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-
-                {/* 리뷰 내용 영역 */}
-                <View style={styles.reviewContent}>
-                  {/* 헤더 영역 */}
-                  <View style={styles.reviewHeaderRow}>
-                    <View style={styles.reviewHeaderLeft}>
-                      {/* 사용자명과 날짜를 같은 줄에 배치 (웹 버전과 동일) */}
-                      <View style={styles.userInfoRow}>
-                        <TouchableOpacity onPress={() => handleUserPress(review.author.id)}>
-                          <Text style={styles.reviewAuthorName}>{review.author.username}</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.reviewDate}>{formatReviewDate(review.createdAt)}</Text>
-                      </View>
-
-                      {/* 별점 표시 (웹 버전과 동일하게 별도 줄) */}
-                      {rating > 0 && (
-                        <View style={styles.reviewRatingRow}>
-                          <View style={styles.starsContainer}>
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                size={12}
-                                color={i < Math.floor(rating) ? '#FCD34D' : '#E5E7EB'}
-                                fill={i < Math.floor(rating) ? '#FCD34D' : '#E5E7EB'}
-                              />
-                            ))}
-                          </View>
-                          <Text style={styles.reviewRatingText}>({rating})</Text>
-                        </View>
-                      )}
-                    </View>
-
-                    {/* 내 리뷰일 경우 액션 버튼 */}
-                    {isMyReview(review) && (
-                      <TouchableOpacity
-                        style={styles.moreButton}
-                        onPress={() => handleReviewActionPress(review)}
-                      >
-                        <MoreHorizontal size={16} color='#6B7280' />
-                      </TouchableOpacity>
-                    )}
-                  </View>
-
-                  {/* 리뷰 텍스트 (웹 버전과 동일한 간격) */}
-                  <View style={styles.reviewTextContainer}>
-                    <ReviewText
-                      content={review.content}
-                      reviewId={review.id}
-                      expandedReviews={expandedReviews}
-                      setExpandedReviews={setExpandedReviews}
-                    />
-                  </View>
-
-                  {/* 이미지가 있는 경우 표시 */}
-                  {review.images && review.images.length > 0 && (
-                    <View style={styles.reviewImagesContainer}>
-                      {review.images.map((image: any) => (
-                        <View key={image.id} style={styles.reviewImageWrapper}>
-                          <Image
-                            source={{ uri: image.url }}
-                            style={styles.reviewImage}
-                            resizeMode='cover'
-                          />
-                        </View>
-                      ))}
-                    </View>
-                  )}
-
-                  {/* 액션 버튼들 (웹 버전과 동일한 간격) */}
-                  <View style={styles.reviewActionsContainer}>
-                    <TouchableOpacity
-                      style={[
-                        styles.reviewActionButton,
-                        review.isLiked && styles.reviewActionButtonLiked,
-                      ]}
-                      onPress={() => handleLike(review.id, review.isLiked || false)}
-                      disabled={likingReviewId === review.id}
-                    >
-                      <ThumbsUp
-                        size={14}
-                        color={review.isLiked ? '#059669' : '#6B7280'}
-                        fill={review.isLiked ? '#059669' : 'transparent'}
-                      />
-                      <Text
-                        style={[
-                          styles.reviewActionText,
-                          review.isLiked && styles.reviewActionTextLiked,
-                        ]}
-                      >
-                        {review.likesCount || 0}
-                      </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={styles.reviewActionButton}
-                      onPress={() => handleCommentsToggle(review)}
-                    >
-                      <MessageSquare size={14} color='#6B7280' />
-                      <Text style={styles.reviewActionText}>{review.commentsCount || 0}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </View>
-          );
-        })}
+        {reviews.map((review: Review, index: number) => (
+          <ReviewItem
+            key={review.id}
+            review={review}
+            index={index}
+            totalCount={reviews.length}
+            expandedReviews={expandedReviews}
+            setExpandedReviews={setExpandedReviews}
+            likingReviewId={likingReviewId}
+            currentUser={currentUser}
+            handleLike={handleLike}
+            handleCommentsToggle={handleCommentsToggle}
+            handleUserPress={handleUserPress}
+            handleReviewActionPress={handleReviewActionPress}
+            isMyReview={isMyReview}
+          />
+        ))}
       </View>
 
       {/* 리뷰 더보기 버튼 */}
@@ -1066,7 +1107,6 @@ const BookReviewsList: React.FC<{
         onLikeComment={handleLikeCommentWithAlert}
         isLoading={isCommentLoading}
         currentUserId={currentUser?.id}
-        commentCount={selectedReviewForComments?.commentsCount || 0}
       />
     </View>
   );

@@ -10,6 +10,23 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { Comment, ReviewComment } from '../apis/review/types';
 
+// 실시간 댓글 개수를 가져오는 훅 (src_frontend와 동일한 방식)
+export function useReviewCommentCount(reviewId: number): number {
+  const queryClient = useQueryClient();
+
+  // 캐시에서 댓글 데이터를 가져와서 실시간 개수 반환
+  const commentsData = queryClient.getQueryData(['review-comments', reviewId]) as
+    | { comments: ReviewComment[] }
+    | undefined;
+
+  if (commentsData?.comments) {
+    return commentsData.comments.length;
+  }
+
+  // 캐시에 데이터가 없으면 0 반환
+  return 0;
+}
+
 interface UseReviewCommentsResult {
   comments: ReviewComment[];
   isLoading: boolean;
@@ -41,15 +58,14 @@ export function useReviewComments(
 
   const comments = commentsResponse.comments || [];
 
-  // 리뷰의 댓글 수만 업데이트하는 헬퍼 함수 (웹 버전과 동일한 로직)
+  // 리뷰의 댓글 수만 업데이트하는 헬퍼 함수 (src_frontend와 완전히 동일한 로직)
   const updateReviewCommentCount = useCallback(
     (reviewId: number, changeAmount: number) => {
-      // 모든 리뷰 관련 쿼리 키들을 가져옴
-      const queryKeys = queryClient.getQueryCache().findAll();
-
-      queryKeys.forEach(query => {
-        // communityReviews 쿼리 처리
-        if (query.queryKey[0] === 'communityReviews') {
+      // communityReviews의 모든 관련 쿼리 인스턴스의 commentCount를 직접 업데이트
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ['communityReviews'] })
+        .forEach(query => {
           queryClient.setQueryData(query.queryKey, (oldData: any) => {
             if (!oldData || !oldData.pages) return oldData;
             return {
@@ -67,10 +83,82 @@ export function useReviewComments(
               })),
             };
           });
-        }
+        });
 
-        // book-reviews 쿼리 처리 (무한 쿼리 형태)
-        if (query.queryKey[0] === 'book-reviews') {
+      // 홈화면 인기 리뷰 쿼리 업데이트
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ['home'] })
+        .forEach(query => {
+          queryClient.setQueryData(query.queryKey, (oldData: any) => {
+            if (!oldData || !oldData.reviews) return oldData;
+            return {
+              ...oldData,
+              reviews: oldData.reviews.map((review: any) =>
+                review.id === reviewId
+                  ? {
+                      ...review,
+                      commentCount: Math.max(0, (review.commentCount || 0) + changeAmount),
+                    }
+                  : review
+              ),
+            };
+          });
+        });
+
+      // 프로필 리뷰 섹션의 user-reviews 쿼리도 업데이트
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ['user-reviews'] })
+        .forEach(query => {
+          queryClient.setQueryData(query.queryKey, (oldData: any) => {
+            if (!oldData || !oldData.pages) return oldData;
+            return {
+              ...oldData,
+              pages: oldData.pages.map((page: any) => ({
+                ...page,
+                reviews: page.reviews.map((review: any) =>
+                  review.id === reviewId
+                    ? {
+                        ...review,
+                        commentCount: Math.max(0, (review.commentCount || 0) + changeAmount),
+                      }
+                    : review
+                ),
+              })),
+            };
+          });
+        });
+
+      // 프로필 커뮤니티 섹션의 user-community-reviews 쿼리도 업데이트
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ['user-community-reviews'] })
+        .forEach(query => {
+          queryClient.setQueryData(query.queryKey, (oldData: any) => {
+            if (!oldData || !oldData.pages) return oldData;
+            return {
+              ...oldData,
+              pages: oldData.pages.map((page: any) => ({
+                ...page,
+                reviews: page.reviews.map((review: any) =>
+                  review.id === reviewId
+                    ? {
+                        ...review,
+                        commentCount: Math.max(0, (review.commentCount || 0) + changeAmount),
+                      }
+                    : review
+                ),
+              })),
+            };
+          });
+        });
+
+      // book-reviews 쿼리 처리 (무한 쿼리 형태)
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ['book-reviews'] })
+        .forEach(query => {
           queryClient.setQueryData(query.queryKey, (oldData: any) => {
             // 무한 쿼리 형태인 경우 ({ pages: [{...}] })
             if (oldData?.pages && Array.isArray(oldData.pages)) {
@@ -123,8 +211,7 @@ export function useReviewComments(
 
             return oldData;
           });
-        }
-      });
+        });
     },
     [queryClient, reviewId]
   );

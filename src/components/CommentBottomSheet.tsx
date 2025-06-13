@@ -31,7 +31,6 @@ interface CommentBottomSheetProps {
   onUpdateComment?: (commentId: number, content: string) => Promise<void>;
   isLoading: boolean;
   currentUserId?: number;
-  commentCount?: number;
 }
 
 // 댓글 아이템 컴포넌트
@@ -207,17 +206,23 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
   onUpdateComment,
   isLoading,
   currentUserId,
-  commentCount,
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const textInputRef = useRef<TextInput>(null);
   const commentTextRef = useRef<string>('');
   const safeAreaInsets = useSafeAreaInsets();
 
-  // Calculate safe snap points
-  const maxHeight = `${Math.min(80, 100 - safeAreaInsets.top / 10)}%`;
+  // Calculate max height based on screen height and safe area
+  const maxHeight = `${85}%`;
 
-  // Handle bottom sheet changes
+  useEffect(() => {
+    if (isVisible) {
+      bottomSheetModalRef.current?.present();
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [isVisible]);
+
   const handleSheetChanges = useCallback(
     (index: number) => {
       if (index === -1) {
@@ -226,19 +231,6 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
     },
     [onClose]
   );
-
-  // Present modal when isVisible becomes true
-  useEffect(() => {
-    if (isVisible) {
-      bottomSheetModalRef.current?.present();
-      // 바텀시트가 열린 후 잠시 기다렸다가 포커스
-      setTimeout(() => {
-        textInputRef.current?.focus();
-      }, 100);
-    } else {
-      bottomSheetModalRef.current?.dismiss();
-    }
-  }, [isVisible]);
 
   // Submit comment handler
   const handleSubmit = async () => {
@@ -301,7 +293,7 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
     />
   );
 
-  // 커스텀 핸들 컴포넌트
+  // 커스텀 핸들 컴포넌트 - 실시간 댓글 개수 사용
   const renderHandle = useCallback(
     () => (
       <View style={styles.customHandleContainer}>
@@ -309,14 +301,14 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
           <View style={styles.dragHandle} />
         </View>
         <View style={styles.header}>
-          <Text style={styles.title}>댓글 {commentCount ?? comments.length}개</Text>
+          <Text style={styles.title}>댓글 {comments.length}개</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeButtonText}>닫기</Text>
           </TouchableOpacity>
         </View>
       </View>
     ),
-    [commentCount, comments.length, onClose]
+    [comments.length, onClose] // comments.length를 dependency로 사용
   );
 
   // Empty state component
@@ -535,6 +527,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 14,
+    height: 44,
     maxHeight: 120,
     textAlignVertical: 'top',
     backgroundColor: '#F9FAFB',
@@ -621,9 +614,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontSize: 16,
+    fontSize: 14,
+    height: 44,
     maxHeight: 120,
-    textAlignVertical: 'center',
+    textAlignVertical: 'top',
     backgroundColor: '#F9FAFB',
   },
   sendButton: {

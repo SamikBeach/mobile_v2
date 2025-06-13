@@ -6,7 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ThumbsUp, MessageCircle, Star } from 'lucide-react-native';
 import { ReviewType, ReviewResponseDto, HomeReviewPreview } from '../../apis/review/types';
 import { CommentBottomSheet } from '../CommentBottomSheet';
-import { useReviewLike, useReviewComments } from '../../hooks';
+import { useReviewLike, useReviewComments, useReviewCommentCount } from '../../hooks';
 import { RootStackParamList } from '../../navigation/types';
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -52,6 +52,9 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     isReviewResponseDto(review) ? review.id : 0,
     showCommentsBottomSheet && isReviewResponseDto(review)
   );
+
+  // 실시간 댓글 개수 (src_frontend와 동일한 방식)
+  const realTimeCommentCount = useReviewCommentCount(isReviewResponseDto(review) ? review.id : 0);
 
   const formatDate = (date: Date | string) => {
     const reviewDate = typeof date === 'string' ? new Date(date) : date;
@@ -153,7 +156,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     content = review.content;
     createdAt = review.createdAt;
     likeCount = localLikeCount !== null ? localLikeCount : review.likeCount;
-    commentCount = review.commentCount;
+    commentCount = realTimeCommentCount > 0 ? realTimeCommentCount : review.commentCount;
     displayBook = review.books && review.books.length > 0 ? review.books[0] : null;
     hasRating = review.userRating && review.userRating.rating > 0;
     rating = hasRating && review.userRating ? review.userRating.rating : 0;
@@ -165,7 +168,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     content = review.content;
     createdAt = review.createdAt;
     likeCount = localLikeCount !== null ? localLikeCount : review.likeCount;
-    commentCount = review.commentCount;
+    commentCount = realTimeCommentCount > 0 ? realTimeCommentCount : review.commentCount;
     displayBook = review.books && review.books.length > 0 ? review.books[0] : null;
     hasRating = false;
     rating = 0;
@@ -402,7 +405,6 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
           onLikeComment={handleLikeCommentWithAlert}
           isLoading={isCommentLoading}
           currentUserId={review.author.id}
-          commentCount={commentCount || 0}
         />
       )}
     </View>
