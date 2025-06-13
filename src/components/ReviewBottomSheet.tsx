@@ -78,16 +78,26 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   }, [isVisible]);
 
-  // 초기 데이터 설정 - src_frontend와 동일하게 수정
+  // 다이얼로그가 열릴 때 초기 데이터 설정
   useEffect(() => {
-    setRating(initialRating);
-  }, [initialRating]);
-
-  useEffect(() => {
-    if (isEditMode && initialContent) {
-      setContent(initialContent);
+    if (isVisible) {
+      // 다이얼로그가 열릴 때마다 초기값으로 설정
+      setRating(initialRating);
+      if (isEditMode && initialContent) {
+        setContent(initialContent);
+      } else if (!isEditMode) {
+        // 새로 작성하는 경우 내용 초기화
+        setContent('');
+      }
     }
-  }, [isEditMode, initialContent, isVisible]);
+  }, [isVisible, initialRating, isEditMode, initialContent]);
+
+  // initialRating이 변경되면 즉시 반영 (다이얼로그가 열려있는 상태에서도)
+  useEffect(() => {
+    if (isVisible) {
+      setRating(initialRating);
+    }
+  }, [initialRating, isVisible]);
 
   // Dialog가 닫힐 때 상태 초기화
   useEffect(() => {
