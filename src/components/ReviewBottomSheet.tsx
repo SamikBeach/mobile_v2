@@ -45,7 +45,9 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
   // State 관리
   const [rating, setRating] = useState(initialRating);
   const [content, setContent] = useState(initialContent);
-  const [readingStatus, setReadingStatus] = useState<ReadingStatusType | null>(null);
+  const [readingStatus, setReadingStatus] = useState<ReadingStatusType | null>(
+    userReadingStatus || ReadingStatusType.READ
+  );
   const [isReadingStatusModalVisible, setIsReadingStatusModalVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
 
@@ -75,7 +77,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   }, [isVisible]);
 
-  // 초기 데이터 설정
+  // 초기 데이터 설정 - src_frontend와 동일하게 수정
   useEffect(() => {
     setRating(initialRating);
   }, [initialRating]);
@@ -86,12 +88,12 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   }, [isEditMode, initialContent, isVisible]);
 
-  // Dialog가 닫힐 때 상태 초기화
+  // Dialog가 닫힐 때 상태 초기화 - src_frontend와 동일하게 수정
   useEffect(() => {
     if (!isVisible) {
+      // 수정 모드가 아닐 때만 내용 초기화 (평점은 초기화하지 않음)
       if (!isEditMode) {
         setContent('');
-        setRating(0);
       }
     }
   }, [isVisible, isEditMode]);
@@ -204,6 +206,21 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
         return '#059669';
       default:
         return '#111827';
+    }
+  };
+
+  // 읽기 상태별 파스텔 배경색 반환
+  const getStatusBackgroundColor = (status: ReadingStatusType | null) => {
+    if (!status) return '#FEF7F7'; // 더 연한 빨강
+    switch (status) {
+      case ReadingStatusType.WANT_TO_READ:
+        return '#FAF5FF'; // 더 연한 보라
+      case ReadingStatusType.READING:
+        return '#EFF6FF'; // 더 연한 파랑
+      case ReadingStatusType.READ:
+        return '#F0FDF4'; // 더 연한 초록
+      default:
+        return '#F9FAFB';
     }
   };
 
@@ -324,7 +341,13 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
       {isCreateMode && (
         <View style={styles.readingStatusSection}>
           <TouchableOpacity
-            style={[styles.readingStatusButton, { borderColor: getStatusColor(readingStatus) }]}
+            style={[
+              styles.readingStatusButton,
+              {
+                borderColor: getStatusColor(readingStatus),
+                backgroundColor: getStatusBackgroundColor(readingStatus),
+              },
+            ]}
             onPress={handleOpenReadingStatusModal}
             disabled={isSubmitting}
           >
@@ -444,11 +467,12 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
                     {Object.values(ReadingStatusType).map(status => {
                       const isSelected = readingStatus === status;
                       const statusColor = getStatusColor(status);
+                      const backgroundColor = getStatusBackgroundColor(status);
 
                       return (
                         <TouchableOpacity
                           key={status}
-                          style={[styles.optionItem, isSelected && { backgroundColor: '#F0FDF4' }]}
+                          style={[styles.optionItem, isSelected && { backgroundColor }]}
                           onPress={() => handleReadingStatusSelect(status)}
                         >
                           <Text style={styles.statusIcon}>{getStatusIcon(status)}</Text>
@@ -467,7 +491,9 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
                       style={[
                         styles.optionItem,
                         styles.noneOptionBorder,
-                        readingStatus === null && { backgroundColor: '#FEF2F2' },
+                        readingStatus === null && {
+                          backgroundColor: getStatusBackgroundColor(null),
+                        },
                       ]}
                       onPress={() => handleReadingStatusSelect(null)}
                     >
@@ -578,7 +604,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderWidth: 1,
     borderRadius: 12,
-    backgroundColor: '#F9FAFB',
   },
   readingStatusContent: {
     flexDirection: 'row',
@@ -646,20 +671,22 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   optionsContainer: {
-    paddingTop: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 0,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     borderWidth: 0,
     borderColor: 'transparent',
-    marginBottom: 0,
-    gap: 16,
+    marginBottom: 8,
+    marginHorizontal: 4,
+    gap: 12,
     backgroundColor: 'transparent',
-    minHeight: 64,
+    minHeight: 56,
   },
   optionText: {
     flex: 1,
@@ -672,10 +699,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   noneOptionBorder: {
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    marginTop: 4,
-    paddingTop: 20,
+    borderTopWidth: 0,
+    borderTopColor: 'transparent',
+    marginTop: 8,
     backgroundColor: 'transparent',
     borderBottomWidth: 0,
   },

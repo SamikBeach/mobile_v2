@@ -1088,18 +1088,46 @@ const BookReviewsList: React.FC<{
   );
 };
 
+// ReviewBottomSheet에 책 데이터를 전달하는 래퍼 컴포넌트
+const ReviewBottomSheetWithData: React.FC<{
+  isbn: string;
+  isVisible: boolean;
+  onClose: () => void;
+  onSubmit: (rating: number, content: string, readingStatus?: ReadingStatusType | null) => void;
+  initialRating: number;
+  initialContent: string;
+  isEditMode: boolean;
+}> = ({ isbn, isVisible, onClose, onSubmit, initialRating, initialContent, isEditMode }) => {
+  const { data: book } = useSuspenseQuery({
+    queryKey: ['book-detail', isbn],
+    queryFn: () => getBookByIsbn(isbn),
+  });
+
+  return (
+    <ReviewBottomSheet
+      isVisible={isVisible}
+      onClose={onClose}
+      bookTitle={book?.title || ''}
+      onSubmit={onSubmit}
+      initialRating={initialRating}
+      initialContent={initialContent}
+      isEditMode={isEditMode}
+      userReadingStatus={book?.userReadingStatus as ReadingStatusType | null}
+    />
+  );
+};
+
 // 메인 화면 컴포넌트
 export const BookDetailScreen: React.FC = () => {
   const route = useRoute<BookDetailRouteProp>();
   const { isbn } = route.params;
 
   // useBookRating 훅 사용
-  const { handleSubmitRating } = useBookRating(isbn);
+  const { handleSubmitRating, userRating, userRatingData } = useBookRating(isbn);
 
   // 바텀시트 상태들
   const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
-  const [librarySelectionBottomSheetVisible, setLibrarySelectionBottomSheetVisible] =
-    useState(false);
+  const [libraryBottomSheetVisible, setLibraryBottomSheetVisible] = useState(false);
   const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
   const [reviewBottomSheetVisible, setReviewBottomSheetVisible] = useState(false);
 
@@ -1108,43 +1136,27 @@ export const BookDetailScreen: React.FC = () => {
   };
 
   const handleReadingStatusSelect = (status: ReadingStatusType | null) => {
-    // TODO: 실제 API 호출로 읽기 상태 업데이트
-    console.log('Reading status selected:', status);
     setReadingStatusBottomSheetVisible(false);
+    console.log('Selected reading status:', status);
   };
 
   const handleLibraryPress = () => {
-    setLibrarySelectionBottomSheetVisible(true);
+    setLibraryBottomSheetVisible(true);
   };
 
   const handleLibrarySelect = async (libraryId: number) => {
-    try {
-      // TODO: 실제 API 호출로 서재에 책 추가
-      console.log('Book added to library:', libraryId);
-      Toast.show({
-        type: 'success',
-        text1: '성공',
-        text2: '서재에 책이 추가되었습니다.',
-      });
-      setLibrarySelectionBottomSheetVisible(false);
-    } catch {
-      Toast.show({
-        type: 'error',
-        text1: '오류',
-        text2: '서재에 책을 추가하는데 실패했습니다.',
-      });
-    }
+    setLibraryBottomSheetVisible(false);
+    console.log('Selected library:', libraryId);
   };
 
   const handleCreateNewLibrary = () => {
-    setLibrarySelectionBottomSheetVisible(false);
+    setLibraryBottomSheetVisible(false);
     setCreateLibraryBottomSheetVisible(true);
   };
 
   const handleLibraryCreated = (libraryId: number) => {
     setCreateLibraryBottomSheetVisible(false);
-    // 새로 만든 서재에 바로 책 추가
-    handleLibrarySelect(libraryId);
+    console.log('Created library:', libraryId);
   };
 
   const handleReviewPress = () => {
@@ -1156,9 +1168,10 @@ export const BookDetailScreen: React.FC = () => {
     content: string,
     _readingStatus?: ReadingStatusType | null
   ) => {
-    // useBookRating 훅의 handleSubmitRating 사용
-    handleSubmitRating(rating, content);
     setReviewBottomSheetVisible(false);
+    // 평점 저장
+    handleSubmitRating(rating);
+    console.log('Review submitted:', { rating, content });
   };
 
   return (
@@ -1184,8 +1197,8 @@ export const BookDetailScreen: React.FC = () => {
 
       {/* 서재 선택 바텀시트 */}
       <LibrarySelectionBottomSheet
-        isVisible={librarySelectionBottomSheetVisible}
-        onClose={() => setLibrarySelectionBottomSheetVisible(false)}
+        isVisible={libraryBottomSheetVisible}
+        onClose={() => setLibraryBottomSheetVisible(false)}
         onLibrarySelect={handleLibrarySelect}
         onCreateNewLibrary={handleCreateNewLibrary}
       />
@@ -1198,13 +1211,17 @@ export const BookDetailScreen: React.FC = () => {
       />
 
       {/* 리뷰 작성 바텀시트 */}
-      <ReviewBottomSheet
-        isVisible={reviewBottomSheetVisible}
-        onClose={() => setReviewBottomSheetVisible(false)}
-        bookTitle='' // TODO: 실제 책 제목으로 변경해야 함
-        onSubmit={handleReviewSubmit}
-        userReadingStatus={null} // TODO: 실제 읽기 상태로 변경해야 함
-      />
+      <Suspense fallback={null}>
+        <ReviewBottomSheetWithData
+          isbn={isbn}
+          isVisible={reviewBottomSheetVisible}
+          onClose={() => setReviewBottomSheetVisible(false)}
+          onSubmit={handleReviewSubmit}
+          initialRating={userRating}
+          initialContent={userRatingData?.comment || ''}
+          isEditMode={!!userRatingData}
+        />
+      </Suspense>
     </>
   );
 };
