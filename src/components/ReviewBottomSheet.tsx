@@ -59,6 +59,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
   const handleSheetChanges = useCallback(
     (index: number) => {
       if (index === -1) {
+        // 드래그로 닫을 때는 바로 닫기 (backdrop은 커스텀으로 처리)
         onClose();
       }
     },
@@ -88,15 +89,15 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   }, [isEditMode, initialContent, isVisible]);
 
-  // Dialog가 닫힐 때 상태 초기화 - src_frontend와 동일하게 수정
+  // Dialog가 닫힐 때 상태 초기화
   useEffect(() => {
     if (!isVisible) {
-      // 수정 모드가 아닐 때만 내용 초기화 (평점은 초기화하지 않음)
-      if (!isEditMode) {
-        setContent('');
-      }
+      // 다이얼로그가 닫히면 작성하던 내용 모두 제거
+      setContent('');
+      setRating(0);
+      setReadingStatus(userReadingStatus || ReadingStatusType.READ);
     }
-  }, [isVisible, isEditMode]);
+  }, [isVisible, userReadingStatus]);
 
   // 모달이 열릴 때 현재 읽기 상태 설정 (수정 모드가 아닐 때만)
   useEffect(() => {
@@ -122,13 +123,44 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   };
 
+  // 리뷰 내용이 있는지 확인하는 함수 (내용만 체크)
+  const hasContent = () => {
+    return content.trim().length > 0;
+  };
+
   const handleClose = () => {
-    if (onCancel) {
-      onCancel();
+    // 리뷰 내용이 있으면 확인 알림
+    if (hasContent()) {
+      Alert.alert(
+        '작성 중인 리뷰가 있습니다',
+        '정말로 나가시겠습니까? 작성 중인 리뷰는 저장되지 않습니다.',
+        [
+          {
+            text: '계속 작성',
+            style: 'cancel',
+          },
+          {
+            text: '나가기',
+            style: 'destructive',
+            onPress: () => {
+              if (onCancel) {
+                onCancel();
+              } else {
+                onClose();
+              }
+              bottomSheetModalRef.current?.dismiss();
+            },
+          },
+        ]
+      );
     } else {
-      onClose();
+      if (onCancel) {
+        onCancel();
+      } else {
+        onClose();
+      }
+      bottomSheetModalRef.current?.dismiss();
     }
-    bottomSheetModalRef.current?.dismiss();
   };
 
   // 별점 텍스트 반환
@@ -276,18 +308,56 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   };
 
-  // Main backdrop component
+  // 커스텀 backdrop - 기존 backdrop을 사용하되 터치 이벤트만 커스터마이징
   const renderMainBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-        enableTouchThrough={false}
-      />
-    ),
-    []
+    (props: any) => {
+      const handleBackdropPress = () => {
+        // 리뷰 내용이 있으면 확인 알림 (바텀시트는 닫지 않음)
+        if (content.trim().length > 0) {
+          Alert.alert(
+            '작성 중인 리뷰가 있습니다',
+            '정말로 나가시겠습니까? 작성 중인 리뷰는 저장되지 않습니다.',
+            [
+              {
+                text: '계속 작성',
+                style: 'cancel',
+              },
+              {
+                text: '나가기',
+                style: 'destructive',
+                onPress: () => {
+                  onClose();
+                  bottomSheetModalRef.current?.dismiss();
+                },
+              },
+            ]
+          );
+        } else {
+          // 내용이 없으면 바로 닫기
+          onClose();
+          bottomSheetModalRef.current?.dismiss();
+        }
+      };
+
+      // 기존 BottomSheetBackdrop 위에 투명한 TouchableOpacity 오버레이
+      return (
+        <View style={StyleSheet.absoluteFillObject}>
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.5}
+            enableTouchThrough={true}
+          />
+          <TouchableOpacity
+            style={StyleSheet.absoluteFillObject}
+            activeOpacity={1}
+            onPress={handleBackdropPress}
+          />
+        </View>
+      );
+    },
+    [content, onClose]
   );
 
   const renderContent = () => (
@@ -430,6 +500,8 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
         backdropComponent={renderMainBackdrop}
         handleIndicatorStyle={styles.dragHandle}
         backgroundStyle={styles.modalContainer}
+        enableOverDrag={false}
+        enableContentPanningGesture={false}
       >
         {renderContent()}
       </BottomSheetModal>

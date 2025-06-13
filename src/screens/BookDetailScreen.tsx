@@ -208,7 +208,10 @@ const BookInfo: React.FC<{ book: BookDetails }> = ({ book }) => {
 };
 
 // 탭 섹션 컴포넌트
-const TabSection: React.FC<{ isbn: string }> = ({ isbn }) => {
+const TabSection: React.FC<{ isbn: string; onReviewPress?: () => void }> = ({
+  isbn,
+  onReviewPress,
+}) => {
   const [activeTab, setActiveTab] = useState<'reviews' | 'libraries' | 'videos'>('reviews');
   const [reviewCount, setReviewCount] = useState(0);
 
@@ -245,7 +248,11 @@ const TabSection: React.FC<{ isbn: string }> = ({ isbn }) => {
       {/* 탭 컨텐츠 */}
       <View style={styles.tabContent}>
         {activeTab === 'reviews' && (
-          <BookReviewsList isbn={isbn} onReviewCountChange={setReviewCount} />
+          <BookReviewsList
+            isbn={isbn}
+            onReviewCountChange={setReviewCount}
+            onReviewPress={onReviewPress}
+          />
         )}
         {activeTab === 'libraries' && (
           <View style={styles.emptyState}>
@@ -423,7 +430,7 @@ const BookDetailContent: React.FC<BookDetailContentProps> = ({
         <Text style={styles.dataProvider}>정보제공: 알라딘</Text>
 
         {/* 탭 섹션 */}
-        <TabSection isbn={isbn} />
+        <TabSection isbn={isbn} onReviewPress={onReviewPress} />
       </View>
     </ScrollView>
   );
@@ -694,7 +701,8 @@ const ReviewItem: React.FC<{
 const BookReviewsList: React.FC<{
   isbn: string;
   onReviewCountChange?: (count: number) => void;
-}> = ({ isbn, onReviewCountChange }) => {
+  onReviewPress?: () => void;
+}> = ({ isbn, onReviewCountChange, onReviewPress }) => {
   const currentUser = useAtomValue(userAtom);
   const queryClient = useQueryClient();
   const navigation = useNavigation();
@@ -1017,7 +1025,7 @@ const BookReviewsList: React.FC<{
     return (
       <View style={styles.emptyReviewsContainer}>
         <Text style={styles.emptyReviewsText}>아직 리뷰가 없습니다</Text>
-        <TouchableOpacity style={styles.firstReviewButton}>
+        <TouchableOpacity style={styles.firstReviewButton} onPress={onReviewPress}>
           <Text style={styles.firstReviewButtonText}>첫 리뷰를 작성해보세요</Text>
         </TouchableOpacity>
       </View>
