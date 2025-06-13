@@ -27,6 +27,10 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   const [showCommentsBottomSheet, setShowCommentsBottomSheet] = useState(false);
   const navigation = useNavigation<NavigationProp>();
 
+  // Local state for optimistic updates
+  const [localIsLiked, setLocalIsLiked] = useState<boolean | null>(null);
+  const [localLikeCount, setLocalLikeCount] = useState<number | null>(null);
+
   // Hooks for like and comment functionality (only for detailed reviews)
   const { handleLikeToggle, isLoading: isLikeLoading } = useReviewLike();
   const {
@@ -141,24 +145,24 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     authorData = review.author;
     content = review.content;
     createdAt = review.createdAt;
-    likeCount = review.likeCount;
+    likeCount = localLikeCount !== null ? localLikeCount : review.likeCount;
     commentCount = review.commentCount;
     displayBook = review.books && review.books.length > 0 ? review.books[0] : null;
     hasRating = review.userRating && review.userRating.rating > 0;
     rating = hasRating && review.userRating ? review.userRating.rating : 0;
-    isLiked = review.isLiked;
+    isLiked = localIsLiked !== null ? localIsLiked : review.isLiked;
     reviewType = review.type;
   } else {
     // HomeReviewPreview
     authorData = review.author || { username: review.authorName, profileImage: undefined };
     content = review.content;
     createdAt = review.createdAt;
-    likeCount = review.likeCount;
+    likeCount = localLikeCount !== null ? localLikeCount : review.likeCount;
     commentCount = review.commentCount;
     displayBook = review.books && review.books.length > 0 ? review.books[0] : null;
     hasRating = false;
     rating = 0;
-    isLiked = false;
+    isLiked = localIsLiked !== null ? localIsLiked : false;
     reviewType = review.type;
   }
 
@@ -167,13 +171,25 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   const isLongContent = lineCount > 7 || content.length > 500;
   const shouldShowMore = isLongContent;
 
-  // 좋아요 핸들러
+  // 좋아요 핸들러 - 낙관적 UI 업데이트 적용
   const handleLike = async () => {
     if (!isReviewResponseDto(review)) return;
 
+    const currentIsLiked = localIsLiked !== null ? localIsLiked : review.isLiked;
+    const currentLikeCount = localLikeCount !== null ? localLikeCount : review.likeCount;
+
+    // 낙관적 UI 업데이트
+    setLocalIsLiked(!currentIsLiked);
+    setLocalLikeCount(
+      currentIsLiked ? Math.max(0, (currentLikeCount || 0) - 1) : (currentLikeCount || 0) + 1
+    );
+
     try {
-      await handleLikeToggle(review.id, review.isLiked);
+      await handleLikeToggle(review.id, currentIsLiked);
     } catch (error) {
+      // 에러 발생 시 UI 되돌리기
+      setLocalIsLiked(currentIsLiked);
+      setLocalLikeCount(currentLikeCount);
       console.error('좋아요 처리 중 오류:', error);
       Alert.alert('오류', '좋아요 처리 중 문제가 발생했습니다.');
     }
