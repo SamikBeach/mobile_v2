@@ -47,7 +47,11 @@ export const PopularReviewsSection: React.FC<PopularReviewsSectionProps> = ({
           <Users size={20} color='#F59E0B' />
           <Text style={styles.title}>커뮤니티 인기글</Text>
         </View>
-        <TouchableOpacity onPress={handleMorePress}>
+        <TouchableOpacity
+          onPress={handleMorePress}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.moreButtonContainer}
+        >
           <Text style={styles.moreButton}>더보기</Text>
         </TouchableOpacity>
       </View>
@@ -111,6 +115,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1F2937',
+  },
+  moreButtonContainer: {
+    padding: 8,
   },
   moreButton: {
     fontSize: 14,

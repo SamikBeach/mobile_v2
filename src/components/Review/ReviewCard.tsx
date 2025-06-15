@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ThumbsUp, MessageCircle, Star } from 'lucide-react-native';
 import { ReviewType, ReviewResponseDto, HomeReviewPreview } from '../../apis/review/types';
 import { CommentBottomSheet } from '../CommentBottomSheet';
-import { useReviewLike, useReviewComments } from '../../hooks';
+import { useReviewLike, useReviewComments, useReviewCommentCount } from '../../hooks';
 import { RootStackParamList } from '../../navigation/types';
-
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 // Union type for both review types
@@ -28,14 +28,23 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   const [showCommentsBottomSheet, setShowCommentsBottomSheet] = useState(false);
   const navigation = useNavigation<NavigationProp>();
 
+  // Local state for optimistic updates
+  const [localIsLiked, setLocalIsLiked] = useState<boolean | null>(null);
+  const [localLikeCount, setLocalLikeCount] = useState<number | null>(null);
+
+  // Reset local state when review changes
+  useEffect(() => {
+    setLocalIsLiked(null);
+    setLocalLikeCount(null);
+  }, [review.id]);
+
   // Hooks for like and comment functionality (only for detailed reviews)
   const { handleLikeToggle, isLoading: isLikeLoading } = useReviewLike();
   const {
     comments,
-    commentText,
-    setCommentText,
     handleAddComment,
     handleDeleteComment,
+    handleUpdateComment,
     handleLikeComment,
     isLoading: isCommentLoading,
     refetch: refetchComments,
@@ -43,6 +52,9 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     isReviewResponseDto(review) ? review.id : 0,
     showCommentsBottomSheet && isReviewResponseDto(review)
   );
+
+  // 실시간 댓글 개수 (src_frontend와 동일한 방식)
+  const realTimeCommentCount = useReviewCommentCount(isReviewResponseDto(review) ? review.id : 0);
 
   const formatDate = (date: Date | string) => {
     const reviewDate = typeof date === 'string' ? new Date(date) : date;
@@ -143,24 +155,24 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     authorData = review.author;
     content = review.content;
     createdAt = review.createdAt;
-    likeCount = review.likeCount;
-    commentCount = review.commentCount;
+    likeCount = localLikeCount !== null ? localLikeCount : review.likeCount;
+    commentCount = realTimeCommentCount > 0 ? realTimeCommentCount : review.commentCount;
     displayBook = review.books && review.books.length > 0 ? review.books[0] : null;
     hasRating = review.userRating && review.userRating.rating > 0;
     rating = hasRating && review.userRating ? review.userRating.rating : 0;
-    isLiked = review.isLiked;
+    isLiked = localIsLiked !== null ? localIsLiked : review.isLiked;
     reviewType = review.type;
   } else {
     // HomeReviewPreview
     authorData = review.author || { username: review.authorName, profileImage: undefined };
     content = review.content;
     createdAt = review.createdAt;
-    likeCount = review.likeCount;
-    commentCount = review.commentCount;
+    likeCount = localLikeCount !== null ? localLikeCount : review.likeCount;
+    commentCount = realTimeCommentCount > 0 ? realTimeCommentCount : review.commentCount;
     displayBook = review.books && review.books.length > 0 ? review.books[0] : null;
     hasRating = false;
     rating = 0;
-    isLiked = false;
+    isLiked = localIsLiked !== null ? localIsLiked : false;
     reviewType = review.type;
   }
 
@@ -169,15 +181,31 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   const isLongContent = lineCount > 7 || content.length > 500;
   const shouldShowMore = isLongContent;
 
-  // 좋아요 핸들러
+  // 좋아요 핸들러 - 낙관적 UI 업데이트 적용
   const handleLike = async () => {
     if (!isReviewResponseDto(review)) return;
 
+    const currentIsLiked = localIsLiked !== null ? localIsLiked : review.isLiked;
+    const currentLikeCount = localLikeCount !== null ? localLikeCount : review.likeCount;
+
+    // 낙관적 UI 업데이트
+    setLocalIsLiked(!currentIsLiked);
+    setLocalLikeCount(
+      currentIsLiked ? Math.max(0, (currentLikeCount || 0) - 1) : (currentLikeCount || 0) + 1
+    );
+
     try {
-      await handleLikeToggle(review.id, review.isLiked);
+      await handleLikeToggle(review.id, currentIsLiked);
     } catch (error) {
+      // 에러 발생 시 UI 되돌리기
+      setLocalIsLiked(currentIsLiked);
+      setLocalLikeCount(currentLikeCount);
       console.error('좋아요 처리 중 오류:', error);
-      Alert.alert('오류', '좋아요 처리 중 문제가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '좋아요 처리 중 문제가 발생했습니다.',
+      });
     }
   };
 
@@ -192,12 +220,16 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
   };
 
   // 댓글 제출 핸들러
-  const handleSubmitComment = async () => {
+  const handleSubmitComment = async (comment: string) => {
     try {
-      await handleAddComment();
+      await handleAddComment(comment);
     } catch (error) {
       console.error('댓글 작성 중 오류:', error);
-      Alert.alert('오류', '댓글 작성 중 문제가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '댓글 작성 중 문제가 발생했습니다.',
+      });
     }
   };
 
@@ -207,7 +239,11 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
       await handleDeleteComment(commentId);
     } catch (error) {
       console.error('댓글 삭제 중 오류:', error);
-      Alert.alert('오류', '댓글 삭제 중 문제가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '댓글 삭제 중 문제가 발생했습니다.',
+      });
     }
   };
 
@@ -217,7 +253,11 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
       await handleLikeComment(commentId, isLiked);
     } catch (error) {
       console.error('댓글 좋아요 처리 중 오류:', error);
-      Alert.alert('오류', '댓글 좋아요 처리 중 문제가 발생했습니다.');
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '댓글 좋아요 처리 중 문제가 발생했습니다.',
+      });
     }
   };
 
@@ -231,11 +271,15 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
     }
   };
 
+  const handleUserPress = () => {
+    navigation.navigate('Profile', { userId: authorData.id });
+  };
+
   return (
     <View style={styles.reviewCard}>
       {/* Header */}
       <View style={styles.reviewHeader}>
-        <View style={styles.userInfo}>
+        <TouchableOpacity style={styles.userInfo} onPress={handleUserPress} activeOpacity={0.7}>
           <View style={styles.userAvatar}>
             {authorData.profileImage ? (
               <Image
@@ -271,7 +315,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
             </View>
             <Text style={styles.reviewTime}>{formatDate(createdAt)}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Content */}
@@ -355,10 +399,9 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({ review, onPress }) => {
           isVisible={showCommentsBottomSheet}
           onClose={() => setShowCommentsBottomSheet(false)}
           comments={comments}
-          commentText={commentText}
-          setCommentText={setCommentText}
           onSubmitComment={handleSubmitComment}
           onDeleteComment={handleDeleteCommentWithAlert}
+          onUpdateComment={handleUpdateComment}
           onLikeComment={handleLikeCommentWithAlert}
           isLoading={isCommentLoading}
           currentUserId={review.author.id}

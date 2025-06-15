@@ -13,7 +13,6 @@ export const BookCard: React.FC<BookCardProps> = ({ book, onPress, horizontal = 
   const [aspectRatio, setAspectRatio] = useState<number>(3 / 4.5);
   const [horizontalAspectRatio, setHorizontalAspectRatio] = useState<number>(3 / 4.5);
 
-  // 모든 값들을 안전하게 처리하는 헬퍼 함수들
   const safeString = (value: any): string => {
     if (value === null || value === undefined || value === '') {
       return '';

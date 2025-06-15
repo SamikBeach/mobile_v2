@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -13,6 +12,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Send } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 import { RootStackParamList } from '../navigation/types';
 import { submitFeedback, FeedbackDto } from '../apis/feedback';
 
@@ -29,26 +29,23 @@ export function FeedbackScreen() {
       return submitFeedback(feedbackData);
     },
     onSuccess: data => {
-      // 성공 시 알림 표시 및 화면 닫기
-      Alert.alert(
-        '피드백 제출 완료',
-        data.message || '피드백이 제출되었습니다. 소중한 의견 감사합니다!',
-        [
-          {
-            text: '확인',
-            onPress: () => {
-              setContent('');
-              navigation.goBack();
-            },
-          },
-        ]
-      );
+      // 성공 시 토스트 표시 및 화면 닫기
+      Toast.show({
+        type: 'success',
+        text1: '피드백 제출 완료',
+        text2: data.message || '피드백이 제출되었습니다. 소중한 의견 감사합니다!',
+      });
+
+      setContent('');
+      navigation.goBack();
     },
     onError: error => {
       console.error('피드백 제출 오류:', error);
-      Alert.alert('오류', '피드백 제출 중 오류가 발생했습니다. 다시 시도해주세요.', [
-        { text: '확인' },
-      ]);
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '피드백 제출 중 오류가 발생했습니다. 다시 시도해주세요.',
+      });
     },
   });
 
@@ -56,7 +53,11 @@ export function FeedbackScreen() {
   const handleSubmit = () => {
     // 내용이 비어있는지 확인
     if (!content.trim()) {
-      Alert.alert('알림', '피드백 내용을 입력해주세요.', [{ text: '확인' }]);
+      Toast.show({
+        type: 'info',
+        text1: '알림',
+        text2: '피드백 내용을 입력해주세요.',
+      });
       return;
     }
 

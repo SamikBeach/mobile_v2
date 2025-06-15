@@ -464,12 +464,16 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
 };
 
 // Main Profile Screen Component
-export const ProfileScreen: React.FC = () => {
+interface ProfileScreenProps {
+  userId?: number;
+}
+
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId: propUserId }) => {
   const route = useRoute<ProfileScreenRouteProp>();
   const currentUser = useAtomValue(userAtom);
 
-  // route params가 있으면 사용하고, 없으면 현재 사용자 ID 사용
-  const userId = route.params?.userId || currentUser?.id;
+  // props로 전달된 userId가 있으면 사용하고, 없으면 route params, 마지막으로 현재 사용자 ID 사용
+  const userId = propUserId || route.params?.userId || currentUser?.id;
   const section = route.params?.section || 'read';
 
   const handleRetry = () => {

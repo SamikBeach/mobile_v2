@@ -195,15 +195,19 @@ export const getBookReviews = async (
   sort: 'likes' | 'comments' | 'recent' = 'likes',
   isbn?: string
 ): Promise<BookReviewsResponse> => {
-  const params: Record<string, string | number> = {
-    page,
-    limit,
-    sort,
+  // 추가 파라미터 설정
+  const additionalParams: Record<string, string | number> = {
+    bookId,
   };
 
-  if (isbn) params.isbn = isbn;
+  // ISBN이 있는 경우 추가
+  if (isbn) {
+    additionalParams.isbn = isbn;
+  }
 
-  const response = await axios.get<BookReviewsResponse>(`/book/${bookId}/reviews`, { params });
+  const response = await axios.get<BookReviewsResponse>(`/review/book/${bookId}`, {
+    params: { page, limit, sort, isbn },
+  });
   return response.data;
 };
 
@@ -225,7 +229,7 @@ export const updateComment = async (
   commentId: number,
   data: UpdateCommentDto
 ): Promise<Comment> => {
-  const response = await axios.put<Comment>(`/review/comment/${commentId}`, data);
+  const response = await axios.patch<Comment>(`/review/comment/${commentId}`, data);
   return response.data;
 };
 

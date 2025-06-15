@@ -89,6 +89,8 @@ const AddBookButton: React.FC<{ onPress: () => void }> = ({ onPress }) => (
 
 // 주인 정보 및 서재 정보 컴포넌트 - 담긴 책 위에 배치
 const LibraryInfo: React.FC<{ library: Library }> = ({ library }) => {
+  const navigation = useNavigation();
+
   const formatDate = (date: Date | string) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     const year = dateObj.getFullYear();
@@ -97,11 +99,17 @@ const LibraryInfo: React.FC<{ library: Library }> = ({ library }) => {
     return `${year}년 ${month}월 ${day}일`;
   };
 
+  const handleOwnerPress = () => {
+    if (library.owner?.id) {
+      (navigation as any).navigate('Profile', { userId: library.owner.id });
+    }
+  };
+
   return (
     <View style={styles.libraryInfoSection}>
       <View style={styles.infoCard}>
         {/* 주인 정보 */}
-        <View style={styles.ownerInfo}>
+        <TouchableOpacity style={styles.ownerInfo} onPress={handleOwnerPress} activeOpacity={0.7}>
           <ProfileAvatar
             username={library.owner.username}
             profileImage={library.owner.profileImage}
@@ -109,7 +117,7 @@ const LibraryInfo: React.FC<{ library: Library }> = ({ library }) => {
           <View style={styles.ownerDetails}>
             <Text style={styles.ownerNameText}>{library.owner.username}</Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* 서재 통계 */}
         <View style={styles.statsRow}>

@@ -88,7 +88,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           type: 'success',
           text1: '이메일 확인 완료',
           text2: '사용 가능한 이메일입니다.',
-          position: 'top',
           visibilityTime: 2000,
         });
         onEmailVerified(watch('email'));
@@ -99,7 +98,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
           type: 'error',
           text1: '이메일 사용 불가',
           text2: errorMessage,
-          position: 'top',
           visibilityTime: 4000,
         });
       }
@@ -112,7 +110,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         type: 'error',
         text1: '이메일 확인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     },
@@ -152,7 +149,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         type: 'error',
         text1: '구글 로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     }
@@ -174,7 +170,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         type: 'error',
         text1: '애플 로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     }
@@ -196,7 +191,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         type: 'error',
         text1: '네이버 로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     }
@@ -218,7 +212,6 @@ export const SignUpForm: React.FC<SignUpFormProps> = ({
         type: 'error',
         text1: '카카오 로그인 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     }

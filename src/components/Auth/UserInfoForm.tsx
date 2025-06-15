@@ -39,7 +39,6 @@ export const UserInfoForm: React.FC<UserInfoFormProps> = ({ email, onSuccess }) 
         type: 'success',
         text1: '회원 정보 등록 완료',
         text2: '이메일 인증을 진행해주세요.',
-        position: 'top',
         visibilityTime: 3000,
       });
       onSuccess();
@@ -52,7 +51,6 @@ export const UserInfoForm: React.FC<UserInfoFormProps> = ({ email, onSuccess }) 
         type: 'error',
         text1: '회원 정보 등록 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     },

@@ -55,7 +55,11 @@ export const PopularBooksSection: React.FC<PopularBooksSectionProps> = ({
           <TrendingUp size={20} color='#9333EA' />
           <Text style={styles.title}>지금 인기 있는 책</Text>
         </View>
-        <TouchableOpacity onPress={handleMorePress}>
+        <TouchableOpacity
+          onPress={handleMorePress}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.moreButtonContainer}
+        >
           <Text style={styles.moreButton}>더보기</Text>
         </TouchableOpacity>
       </View>
@@ -140,6 +144,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1F2937',
+  },
+  moreButtonContainer: {
+    padding: 8,
   },
   moreButton: {
     fontSize: 14,

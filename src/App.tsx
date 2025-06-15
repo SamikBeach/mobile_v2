@@ -5,11 +5,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Provider as JotaiProvider } from 'jotai';
-import Toast from 'react-native-toast-message';
 import { QueryProvider } from './providers/QueryProvider';
 import { AuthProvider } from './providers/AuthProvider';
 import { RootNavigator } from './navigation';
 import { useDeepLink } from './hooks/useDeepLink';
+import { CustomToast } from './components/CustomToast';
 
 const AppContent: React.FC = () => {
   // Deep Link 처리 훅 초기화
@@ -21,7 +21,7 @@ const AppContent: React.FC = () => {
       <BottomSheetModalProvider>
         <RootNavigator />
       </BottomSheetModalProvider>
-      <Toast />
+      <CustomToast />
     </>
   );
 };

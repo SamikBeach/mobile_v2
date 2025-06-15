@@ -28,7 +28,6 @@ export const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ email, onSuccess
         type: 'success',
         text1: '회원가입 완료',
         text2: '미역서점에 오신 것을 환영합니다!',
-        position: 'top',
         visibilityTime: 3000,
       });
       onSuccess();
@@ -41,7 +40,6 @@ export const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ email, onSuccess
         type: 'error',
         text1: '인증 실패',
         text2: errorMessage,
-        position: 'top',
         visibilityTime: 4000,
       });
     },

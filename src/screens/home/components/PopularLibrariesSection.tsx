@@ -1,9 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { BookOpen } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LibraryCard, SkeletonLoader } from '../../../components';
 import { useHomePopularLibrariesQuery } from '../../../hooks/useHomeQueries';
 import { LibraryListItem } from '@/apis/library';
+import { RootStackParamList } from '../../../navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface PopularLibrariesSectionProps {
   onLibraryPress?: (library: LibraryListItem) => void;
@@ -14,6 +19,7 @@ export const PopularLibrariesSection: React.FC<PopularLibrariesSectionProps> = (
   onLibraryPress,
   onMorePress,
 }) => {
+  const navigation = useNavigation<NavigationProp>();
   const { libraries, error } = useHomePopularLibrariesQuery(2);
 
   const handleLibraryPress = (library: LibraryListItem) => {
@@ -22,6 +28,10 @@ export const PopularLibrariesSection: React.FC<PopularLibrariesSectionProps> = (
     } else {
       Alert.alert('서재 상세', `${library.name} 서재를 선택했습니다.`);
     }
+  };
+
+  const handleOwnerPress = (ownerId: number) => {
+    navigation.navigate('Profile', { userId: ownerId });
   };
 
   const handleMorePress = () => {
@@ -49,7 +59,11 @@ export const PopularLibrariesSection: React.FC<PopularLibrariesSectionProps> = (
           <BookOpen size={20} color='#F43F5E' />
           <Text style={styles.title}>인기 서재</Text>
         </View>
-        <TouchableOpacity onPress={handleMorePress}>
+        <TouchableOpacity
+          onPress={handleMorePress}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.moreButtonContainer}
+        >
           <Text style={styles.moreButton}>더보기</Text>
         </TouchableOpacity>
       </View>
@@ -62,7 +76,11 @@ export const PopularLibrariesSection: React.FC<PopularLibrariesSectionProps> = (
         <View style={styles.librariesList}>
           {safeLibraries.slice(0, 2).map((library, index) => (
             <View key={library.id} style={index > 0 ? styles.libraryItemSpacing : null}>
-              <LibraryCard library={library} onPress={() => handleLibraryPress(library)} />
+              <LibraryCard
+                library={library}
+                onPress={() => handleLibraryPress(library)}
+                onOwnerPress={handleOwnerPress}
+              />
             </View>
           ))}
         </View>
@@ -113,6 +131,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1F2937',
+  },
+  moreButtonContainer: {
+    padding: 8,
   },
   moreButton: {
     fontSize: 14,

@@ -89,6 +89,10 @@ const LibrariesList: React.FC<LibrariesListProps> = ({ userId, isMyProfile, onCr
     });
   };
 
+  const handleOwnerPress = (ownerId: number) => {
+    navigation.navigate('Profile', { userId: ownerId });
+  };
+
   // 자동으로 모든 페이지 로드
   React.useEffect(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -101,6 +105,7 @@ const LibrariesList: React.FC<LibrariesListProps> = ({ userId, isMyProfile, onCr
       <LibraryCard
         library={library}
         onPress={() => handleLibraryPress(library)}
+        onOwnerPress={handleOwnerPress}
         currentUserId={currentUser?.id}
       />
     </View>

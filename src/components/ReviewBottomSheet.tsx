@@ -45,7 +45,9 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
   // State 관리
   const [rating, setRating] = useState(initialRating);
   const [content, setContent] = useState(initialContent);
-  const [readingStatus, setReadingStatus] = useState<ReadingStatusType | null>(null);
+  const [readingStatus, setReadingStatus] = useState<ReadingStatusType | null>(
+    userReadingStatus || ReadingStatusType.READ
+  );
   const [isReadingStatusModalVisible, setIsReadingStatusModalVisible] = useState(false);
   const slideAnim = useRef(new Animated.Value(300)).current;
 
@@ -57,6 +59,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
   const handleSheetChanges = useCallback(
     (index: number) => {
       if (index === -1) {
+        // 드래그로 닫을 때는 바로 닫기 (backdrop은 커스텀으로 처리)
         onClose();
       }
     },
@@ -75,26 +78,36 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   }, [isVisible]);
 
-  // 초기 데이터 설정
+  // 다이얼로그가 열릴 때 초기 데이터 설정
   useEffect(() => {
-    setRating(initialRating);
-  }, [initialRating]);
-
-  useEffect(() => {
-    if (isEditMode && initialContent) {
-      setContent(initialContent);
+    if (isVisible) {
+      // 다이얼로그가 열릴 때마다 초기값으로 설정
+      setRating(initialRating);
+      if (isEditMode && initialContent) {
+        setContent(initialContent);
+      } else if (!isEditMode) {
+        // 새로 작성하는 경우 내용 초기화
+        setContent('');
+      }
     }
-  }, [isEditMode, initialContent, isVisible]);
+  }, [isVisible, initialRating, isEditMode, initialContent]);
+
+  // initialRating이 변경되면 즉시 반영 (다이얼로그가 열려있는 상태에서도)
+  useEffect(() => {
+    if (isVisible) {
+      setRating(initialRating);
+    }
+  }, [initialRating, isVisible]);
 
   // Dialog가 닫힐 때 상태 초기화
   useEffect(() => {
     if (!isVisible) {
-      if (!isEditMode) {
-        setContent('');
-        setRating(0);
-      }
+      // 다이얼로그가 닫히면 작성하던 내용 모두 제거
+      setContent('');
+      setRating(0);
+      setReadingStatus(userReadingStatus || ReadingStatusType.READ);
     }
-  }, [isVisible, isEditMode]);
+  }, [isVisible, userReadingStatus]);
 
   // 모달이 열릴 때 현재 읽기 상태 설정 (수정 모드가 아닐 때만)
   useEffect(() => {
@@ -120,13 +133,44 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   };
 
+  // 리뷰 내용이 있는지 확인하는 함수 (내용만 체크)
+  const hasContent = () => {
+    return content.trim().length > 0;
+  };
+
   const handleClose = () => {
-    if (onCancel) {
-      onCancel();
+    // 리뷰 내용이 있으면 확인 알림
+    if (hasContent()) {
+      Alert.alert(
+        '작성 중인 리뷰가 있습니다',
+        '정말로 나가시겠습니까? 작성 중인 리뷰는 저장되지 않습니다.',
+        [
+          {
+            text: '계속 작성',
+            style: 'cancel',
+          },
+          {
+            text: '나가기',
+            style: 'destructive',
+            onPress: () => {
+              if (onCancel) {
+                onCancel();
+              } else {
+                onClose();
+              }
+              bottomSheetModalRef.current?.dismiss();
+            },
+          },
+        ]
+      );
     } else {
-      onClose();
+      if (onCancel) {
+        onCancel();
+      } else {
+        onClose();
+      }
+      bottomSheetModalRef.current?.dismiss();
     }
-    bottomSheetModalRef.current?.dismiss();
   };
 
   // 별점 텍스트 반환
@@ -207,6 +251,21 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   };
 
+  // 읽기 상태별 파스텔 배경색 반환
+  const getStatusBackgroundColor = (status: ReadingStatusType | null) => {
+    if (!status) return '#FEF7F7'; // 더 연한 빨강
+    switch (status) {
+      case ReadingStatusType.WANT_TO_READ:
+        return '#FAF5FF'; // 더 연한 보라
+      case ReadingStatusType.READING:
+        return '#EFF6FF'; // 더 연한 파랑
+      case ReadingStatusType.READ:
+        return '#F0FDF4'; // 더 연한 초록
+      default:
+        return '#F9FAFB';
+    }
+  };
+
   const handleReadingStatusSelect = (status: ReadingStatusType | null) => {
     setReadingStatus(status);
     closeReadingStatusModal();
@@ -259,18 +318,56 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     }
   };
 
-  // Main backdrop component
+  // 커스텀 backdrop - 기존 backdrop을 사용하되 터치 이벤트만 커스터마이징
   const renderMainBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-        enableTouchThrough={false}
-      />
-    ),
-    []
+    (props: any) => {
+      const handleBackdropPress = () => {
+        // 리뷰 내용이 있으면 확인 알림 (바텀시트는 닫지 않음)
+        if (content.trim().length > 0) {
+          Alert.alert(
+            '작성 중인 리뷰가 있습니다',
+            '정말로 나가시겠습니까? 작성 중인 리뷰는 저장되지 않습니다.',
+            [
+              {
+                text: '계속 작성',
+                style: 'cancel',
+              },
+              {
+                text: '나가기',
+                style: 'destructive',
+                onPress: () => {
+                  onClose();
+                  bottomSheetModalRef.current?.dismiss();
+                },
+              },
+            ]
+          );
+        } else {
+          // 내용이 없으면 바로 닫기
+          onClose();
+          bottomSheetModalRef.current?.dismiss();
+        }
+      };
+
+      // 기존 BottomSheetBackdrop 위에 투명한 TouchableOpacity 오버레이
+      return (
+        <View style={StyleSheet.absoluteFillObject}>
+          <BottomSheetBackdrop
+            {...props}
+            disappearsOnIndex={-1}
+            appearsOnIndex={0}
+            opacity={0.5}
+            enableTouchThrough={true}
+          />
+          <TouchableOpacity
+            style={StyleSheet.absoluteFillObject}
+            activeOpacity={1}
+            onPress={handleBackdropPress}
+          />
+        </View>
+      );
+    },
+    [content, onClose]
   );
 
   const renderContent = () => (
@@ -324,7 +421,13 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
       {isCreateMode && (
         <View style={styles.readingStatusSection}>
           <TouchableOpacity
-            style={[styles.readingStatusButton, { borderColor: getStatusColor(readingStatus) }]}
+            style={[
+              styles.readingStatusButton,
+              {
+                borderColor: getStatusColor(readingStatus),
+                backgroundColor: getStatusBackgroundColor(readingStatus),
+              },
+            ]}
             onPress={handleOpenReadingStatusModal}
             disabled={isSubmitting}
           >
@@ -407,6 +510,8 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
         backdropComponent={renderMainBackdrop}
         handleIndicatorStyle={styles.dragHandle}
         backgroundStyle={styles.modalContainer}
+        enableOverDrag={false}
+        enableContentPanningGesture={false}
       >
         {renderContent()}
       </BottomSheetModal>
@@ -444,11 +549,12 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
                     {Object.values(ReadingStatusType).map(status => {
                       const isSelected = readingStatus === status;
                       const statusColor = getStatusColor(status);
+                      const backgroundColor = getStatusBackgroundColor(status);
 
                       return (
                         <TouchableOpacity
                           key={status}
-                          style={[styles.optionItem, isSelected && { backgroundColor: '#F0FDF4' }]}
+                          style={[styles.optionItem, isSelected && { backgroundColor }]}
                           onPress={() => handleReadingStatusSelect(status)}
                         >
                           <Text style={styles.statusIcon}>{getStatusIcon(status)}</Text>
@@ -467,7 +573,9 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
                       style={[
                         styles.optionItem,
                         styles.noneOptionBorder,
-                        readingStatus === null && { backgroundColor: '#FEF2F2' },
+                        readingStatus === null && {
+                          backgroundColor: getStatusBackgroundColor(null),
+                        },
                       ]}
                       onPress={() => handleReadingStatusSelect(null)}
                     >
@@ -578,7 +686,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderWidth: 1,
     borderRadius: 12,
-    backgroundColor: '#F9FAFB',
   },
   readingStatusContent: {
     flexDirection: 'row',
@@ -646,20 +753,22 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   optionsContainer: {
-    paddingTop: 16,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   optionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 0,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     borderWidth: 0,
     borderColor: 'transparent',
-    marginBottom: 0,
-    gap: 16,
+    marginBottom: 8,
+    marginHorizontal: 4,
+    gap: 12,
     backgroundColor: 'transparent',
-    minHeight: 64,
+    minHeight: 56,
   },
   optionText: {
     flex: 1,
@@ -672,10 +781,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   noneOptionBorder: {
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    marginTop: 4,
-    paddingTop: 20,
+    borderTopWidth: 0,
+    borderTopColor: 'transparent',
+    marginTop: 8,
     backgroundColor: 'transparent',
     borderBottomWidth: 0,
   },
