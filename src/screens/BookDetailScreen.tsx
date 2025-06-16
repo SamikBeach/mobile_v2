@@ -1144,15 +1144,12 @@ const ReviewBottomSheetWithData: React.FC<{
   );
 };
 
-// 메인 화면 컴포넌트
 export const BookDetailScreen: React.FC = () => {
   const route = useRoute<BookDetailRouteProp>();
   const { isbn } = route.params;
 
-  // useBookRating 훅 사용
   const { userRating, userRatingData } = useBookRating(isbn);
 
-  // 바텀시트 상태들
   const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
   const [libraryBottomSheetVisible, setLibraryBottomSheetVisible] = useState(false);
   const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
