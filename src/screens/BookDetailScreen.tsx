@@ -301,7 +301,7 @@ const TabSection: React.FC<{ isbn: string; bookId: number; onReviewPress?: () =>
   bookId,
   onReviewPress,
 }) => {
-  const [activeTab, setActiveTab] = useState<'reviews' | 'libraries' | 'videos'>('reviews');
+  const [activeTab, setActiveTab] = useState<'reviews' | 'libraries'>('reviews');
   const [reviewCount, setReviewCount] = useState(0);
   const [libraryCount, setLibraryCount] = useState(0);
 
@@ -338,14 +338,6 @@ const TabSection: React.FC<{ isbn: string; bookId: number; onReviewPress?: () =>
             이 책이 등록된 서재 ({libraryCount})
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'videos' && styles.activeTabItem]}
-          onPress={() => setActiveTab('videos')}
-        >
-          <Text style={[styles.tabText, activeTab === 'videos' && styles.activeTabText]}>
-            관련 영상
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* 탭 컨텐츠 */}
@@ -368,11 +360,6 @@ const TabSection: React.FC<{ isbn: string; bookId: number; onReviewPress?: () =>
           >
             <BookLibrariesList isbn={isbn} bookId={bookId} onLibraryCountChange={setLibraryCount} />
           </Suspense>
-        )}
-        {activeTab === 'videos' && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>관련 영상이 없습니다.</Text>
-          </View>
         )}
       </View>
     </View>
