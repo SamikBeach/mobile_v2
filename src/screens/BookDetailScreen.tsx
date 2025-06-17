@@ -54,6 +54,10 @@ import {
 } from '../components/InteractiveRatingStars';
 import { useBookRating } from '../hooks/useBookRating';
 import { useReviewDialog } from '../hooks/useReviewDialog';
+import {
+  createOrUpdateReadingStatus,
+  deleteReadingStatusByBookId,
+} from '../apis/reading-status/reading-status';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -1147,6 +1151,7 @@ const ReviewBottomSheetWithData: React.FC<{
 export const BookDetailScreen: React.FC = () => {
   const route = useRoute<BookDetailRouteProp>();
   const { isbn } = route.params;
+  const queryClient = useQueryClient();
 
   const { userRating, userRatingData } = useBookRating(isbn);
 
@@ -1155,13 +1160,61 @@ export const BookDetailScreen: React.FC = () => {
   const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
   const [reviewBottomSheetVisible, setReviewBottomSheetVisible] = useState(false);
 
+  // 현재 책 데이터 가져오기
+  const { data: book } = useSuspenseQuery({
+    queryKey: ['book-detail', isbn],
+    queryFn: () => getBookByIsbn(isbn),
+  });
+
+  // 읽기 상태 업데이트 mutation
+  const readingStatusMutation = useMutation({
+    mutationFn: async (status: ReadingStatusType | null) => {
+      if (!book) throw new Error('책 정보가 없습니다.');
+
+      if (status === null) {
+        // 읽기 상태 삭제
+        await deleteReadingStatusByBookId(book.id);
+        return null;
+      }
+
+      return createOrUpdateReadingStatus(book.id, { status }, isbn);
+    },
+    onSuccess: (data, status) => {
+      // 쿼리 무효화하여 UI 업데이트
+      queryClient.invalidateQueries({ queryKey: ['book-detail', isbn] });
+
+      // Toast 표시
+      const statusText = status ? StatusTexts[status] : '선택 안함';
+      Toast.show({
+        type: 'success',
+        text1: '읽기 상태 변경',
+        text2: `'${statusText}'로 변경되었습니다.`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('읽기 상태 변경 실패:', error);
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '읽기 상태 변경에 실패했습니다.',
+      });
+    },
+  });
+
   const handleReadingStatusPress = () => {
     setReadingStatusBottomSheetVisible(true);
   };
 
   const handleReadingStatusSelect = (status: ReadingStatusType | null) => {
     setReadingStatusBottomSheetVisible(false);
-    console.log('Selected reading status:', status);
+
+    // 현재 상태와 같으면 변경하지 않음
+    const currentStatus = book?.userReadingStatus as ReadingStatusType | null;
+    if (currentStatus === status) {
+      return;
+    }
+
+    readingStatusMutation.mutate(status);
   };
 
   const handleLibraryPress = () => {
@@ -1204,7 +1257,7 @@ export const BookDetailScreen: React.FC = () => {
       <ReadingStatusBottomSheet
         isVisible={readingStatusBottomSheetVisible}
         onClose={() => setReadingStatusBottomSheetVisible(false)}
-        currentStatus={null} // TODO: 실제 책 데이터에서 가져와야 함
+        currentStatus={book?.userReadingStatus as ReadingStatusType | null}
         onStatusSelect={handleReadingStatusSelect}
       />
 
