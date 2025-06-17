@@ -127,15 +127,25 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
       <View style={styles.booksContainer}>
         {displayBooks && displayBooks.length > 0 ? (
           <View style={styles.booksGrid}>
-            {displayBooks.map((book: any) => (
-              <View key={book.id} style={styles.bookImageContainer}>
-                <Image
-                  source={{ uri: book.coverImage }}
-                  style={styles.bookImage}
-                  resizeMode='cover'
-                />
-              </View>
-            ))}
+            {Array.from({ length: 3 }).map((_, index) => {
+              const book = displayBooks[index];
+              return (
+                <View
+                  key={index}
+                  style={[styles.bookImageContainer, !book && styles.emptySlotContainer]}
+                >
+                  {book ? (
+                    <Image
+                      source={{ uri: book.coverImage }}
+                      style={styles.bookImage}
+                      resizeMode='cover'
+                    />
+                  ) : (
+                    <View style={styles.emptyBookSlot} />
+                  )}
+                </View>
+              );
+            })}
           </View>
         ) : (
           <View style={styles.emptyBooksContainer}>
@@ -283,6 +293,15 @@ const styles = StyleSheet.create({
   bookImage: {
     width: '100%',
     height: '100%',
+  },
+  emptyBookSlot: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
+  },
+  emptySlotContainer: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
   },
   emptyBooksContainer: {
     minHeight: 100, // reduced min height for empty state
