@@ -3,7 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Plus, Library } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { useQuery } from '@tanstack/react-query';
-import { getMyLibraries, Library as UserLibrary } from '@/apis/library';
+import { useAtomValue } from 'jotai';
+import { getUserLibraries, Library as UserLibrary } from '../apis/library';
+import { userAtom } from '../atoms/user';
 
 interface LibrarySelectionBottomSheetProps {
   isVisible: boolean;
@@ -19,6 +21,7 @@ export const LibrarySelectionBottomSheet: React.FC<LibrarySelectionBottomSheetPr
   onCreateNewLibrary,
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const currentUser = useAtomValue(userAtom);
 
   // 사용자 서재 목록 조회
   const {
@@ -26,9 +29,16 @@ export const LibrarySelectionBottomSheet: React.FC<LibrarySelectionBottomSheetPr
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['my-libraries'],
-    queryFn: getMyLibraries,
-    enabled: isVisible,
+    queryKey: ['user-libraries', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) {
+        throw new Error('사용자가 로그인되어 있지 않습니다.');
+      }
+
+      return await getUserLibraries(currentUser.id);
+    },
+    enabled: isVisible && !!currentUser?.id,
+    retry: false,
   });
 
   const libraries = librariesResponse || [];

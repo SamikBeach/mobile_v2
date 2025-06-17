@@ -80,16 +80,28 @@ export const getLibraryTags = async (limit?: number): Promise<LibraryTagResponse
  * 사용자 서재 목록 조회
  */
 export const getUserLibraries = async (userId: number): Promise<Library[]> => {
-  const response = await axios.get<Library[]>(`/users/${userId}/libraries`);
-  return response.data;
+  const response = await axios.get<{ items: Library[]; total: number }>(
+    `/user/${userId}/libraries`
+  );
+
+  // src_frontend와 동일한 응답 구조 처리
+  return response.data.items || (response.data as any) || [];
 };
 
 /**
  * 현재 사용자의 서재 목록 조회
  */
 export const getMyLibraries = async (): Promise<Library[]> => {
-  const response = await axios.get<Library[]>('/library/my');
-  return response.data;
+  // 먼저 현재 사용자 정보를 가져옴
+  const userResponse = await axios.get('/auth/me');
+  const currentUser = userResponse.data;
+
+  if (!currentUser || !currentUser.id) {
+    throw new Error('사용자 정보를 찾을 수 없습니다.');
+  }
+
+  // getUserLibraries 함수를 재사용
+  return await getUserLibraries(currentUser.id);
 };
 
 /**
