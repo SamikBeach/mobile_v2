@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   Linking,
+  FlatList,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import {
@@ -47,6 +48,7 @@ import { ReviewBottomSheet } from '../components/ReviewBottomSheet';
 import { ReviewActionBottomSheet } from '../components/ReviewActionBottomSheet';
 import { CommentBottomSheet } from '../components/CommentBottomSheet';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { LibraryCard } from '../components/Library/LibraryCard';
 import { useReviewComments, useReviewCommentCount } from '../hooks/useReviewComments';
 import {
   InteractiveRatingStars,
@@ -58,10 +60,89 @@ import {
   createOrUpdateReadingStatus,
   deleteReadingStatusByBookId,
 } from '../apis/reading-status/reading-status';
-import { addBookToLibraryWithIsbn } from '../apis/library/library';
+import { addBookToLibraryWithIsbn, getLibrariesByBookId } from '../apis/library/library';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
+
+// 서재 목록 컴포넌트
+const BookLibrariesList: React.FC<{
+  isbn: string;
+  bookId: number;
+  onLibraryCountChange?: (count: number) => void;
+}> = ({ isbn, bookId, onLibraryCountChange }) => {
+  const currentUser = useAtomValue(userAtom);
+
+  const {
+    data: librariesData,
+    isLoading,
+    error,
+  } = useSuspenseQuery({
+    queryKey: ['book-libraries-full', bookId],
+    queryFn: () => getLibrariesByBookId(bookId, 1, 10, isbn),
+  });
+
+  // 라이브러리 개수 업데이트
+  useEffect(() => {
+    if (librariesData && onLibraryCountChange) {
+      onLibraryCountChange(librariesData.meta.total || 0);
+    }
+  }, [librariesData, onLibraryCountChange]);
+
+  const handleLibraryPress = (library: any) => {
+    // TODO: LibraryDetail 네비게이션 구현 필요
+    console.log('Library pressed:', library.id);
+  };
+
+  const handleOwnerPress = (ownerId: number) => {
+    // TODO: 유저 프로필 네비게이션 구현 필요
+    console.log('Owner pressed:', ownerId);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.emptyState}>
+        <LoadingSpinner />
+        <Text style={styles.emptyStateText}>서재 목록을 불러오는 중...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>서재 목록을 불러오는데 실패했습니다.</Text>
+      </View>
+    );
+  }
+
+  if (!librariesData?.data || librariesData.data.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>이 책이 등록된 서재가 없습니다.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <FlatList
+      data={librariesData.data}
+      renderItem={({ item }) => (
+        <LibraryCard
+          library={item}
+          onPress={() => handleLibraryPress(item)}
+          onOwnerPress={handleOwnerPress}
+          currentUserId={currentUser?.id}
+          hidePublicTag={true}
+        />
+      )}
+      keyExtractor={item => item.id.toString()}
+      showsVerticalScrollIndicator={false}
+      scrollEnabled={false} // TabSection 내부에서는 스크롤 비활성화
+      contentContainerStyle={{ paddingVertical: 8 }}
+    />
+  );
+};
 
 // 날짜 포맷팅 함수 (웹 버전과 동일)
 const formatReviewDate = (dateStr: string) => {
@@ -215,12 +296,27 @@ const BookInfo: React.FC<{ book: BookDetails }> = ({ book }) => {
 };
 
 // 탭 섹션 컴포넌트
-const TabSection: React.FC<{ isbn: string; onReviewPress?: () => void }> = ({
+const TabSection: React.FC<{ isbn: string; bookId: number; onReviewPress?: () => void }> = ({
   isbn,
+  bookId,
   onReviewPress,
 }) => {
   const [activeTab, setActiveTab] = useState<'reviews' | 'libraries' | 'videos'>('reviews');
   const [reviewCount, setReviewCount] = useState(0);
+  const [libraryCount, setLibraryCount] = useState(0);
+
+  // 서재 데이터 미리 가져오기 (탭 헤더 개수 표시용 및 캐싱)
+  const { data: librariesData } = useSuspenseQuery({
+    queryKey: ['book-libraries-full', bookId],
+    queryFn: () => getLibrariesByBookId(bookId, 1, 10, isbn),
+  });
+
+  // 실제 서재 개수 업데이트
+  useEffect(() => {
+    if (librariesData?.meta.total !== undefined) {
+      setLibraryCount(librariesData.meta.total);
+    }
+  }, [librariesData]);
 
   return (
     <View style={styles.tabSection}>
@@ -239,7 +335,7 @@ const TabSection: React.FC<{ isbn: string; onReviewPress?: () => void }> = ({
           onPress={() => setActiveTab('libraries')}
         >
           <Text style={[styles.tabText, activeTab === 'libraries' && styles.activeTabText]}>
-            이 책이 등록된 서재 (0)
+            이 책이 등록된 서재 ({libraryCount})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -262,9 +358,16 @@ const TabSection: React.FC<{ isbn: string; onReviewPress?: () => void }> = ({
           />
         )}
         {activeTab === 'libraries' && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>등록된 서재가 없습니다.</Text>
-          </View>
+          <Suspense
+            fallback={
+              <View style={styles.emptyState}>
+                <LoadingSpinner />
+                <Text style={styles.emptyStateText}>서재 목록을 불러오는 중...</Text>
+              </View>
+            }
+          >
+            <BookLibrariesList isbn={isbn} bookId={bookId} onLibraryCountChange={setLibraryCount} />
+          </Suspense>
         )}
         {activeTab === 'videos' && (
           <View style={styles.emptyState}>
@@ -437,7 +540,7 @@ const BookDetailContent: React.FC<BookDetailContentProps> = ({
         <Text style={styles.dataProvider}>정보제공: 알라딘</Text>
 
         {/* 탭 섹션 */}
-        <TabSection isbn={isbn} onReviewPress={onReviewPress} />
+        <TabSection isbn={isbn} bookId={book.id} onReviewPress={onReviewPress} />
       </View>
     </ScrollView>
   );
