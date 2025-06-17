@@ -58,6 +58,7 @@ import {
   createOrUpdateReadingStatus,
   deleteReadingStatusByBookId,
 } from '../apis/reading-status/reading-status';
+import { addBookToLibraryWithIsbn } from '../apis/library/library';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -1201,6 +1202,48 @@ export const BookDetailScreen: React.FC = () => {
     },
   });
 
+  // 서재에 책 추가 mutation
+  const addToLibraryMutation = useMutation({
+    mutationFn: async (libraryId: number) => {
+      if (!book) throw new Error('책 정보가 없습니다.');
+
+      return addBookToLibraryWithIsbn({
+        libraryId,
+        bookId: book.id,
+        isbn,
+      });
+    },
+    onSuccess: (_data, _libraryId) => {
+      // 서재 목록 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ['user-libraries'] });
+
+      // 성공 Toast 표시
+      Toast.show({
+        type: 'success',
+        text1: '서재에 추가',
+        text2: `"${book?.title}"이 서재에 추가되었습니다.`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('서재에 추가 실패:', error);
+
+      // 409 Conflict 에러 (이미 추가된 책)
+      if (error.response?.status === 409) {
+        Toast.show({
+          type: 'info',
+          text1: '이미 추가됨',
+          text2: '이 책은 이미 해당 서재에 추가되어 있습니다.',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: '오류',
+          text2: '서재에 책을 추가하는데 실패했습니다.',
+        });
+      }
+    },
+  });
+
   const handleReadingStatusPress = () => {
     setReadingStatusBottomSheetVisible(true);
   };
@@ -1223,7 +1266,7 @@ export const BookDetailScreen: React.FC = () => {
 
   const handleLibrarySelect = async (libraryId: number) => {
     setLibraryBottomSheetVisible(false);
-    console.log('Selected library:', libraryId);
+    addToLibraryMutation.mutate(libraryId);
   };
 
   const handleCreateNewLibrary = () => {

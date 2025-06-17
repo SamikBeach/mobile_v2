@@ -283,7 +283,7 @@ export const addBookToLibraryWithIsbn = async ({
   bookId: number;
   isbn: string;
 }): Promise<LibraryBook> => {
-  const response = await axios.post<LibraryBook>(`/library/${libraryId}/books/isbn`, {
+  const response = await axios.post<LibraryBook>(`/library/${libraryId}/books`, {
     bookId,
     isbn,
   });
