@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -380,7 +380,14 @@ export const LibrariesScreen = () => {
   );
 
   // 모든 데이터 계산도 hooks 이후에
-  const libraries = data?.pages.flatMap(page => page.data) || [];
+  const libraries = useMemo(() => {
+    const allLibraries = data?.pages.flatMap(page => page.data) || [];
+    // ID 중복 제거
+    const uniqueLibraries = allLibraries.filter(
+      (library, index, self) => self.findIndex(l => l.id === library.id) === index
+    );
+    return uniqueLibraries;
+  }, [data]);
 
   // 모든 hooks 호출 후 조건부 렌더링
   if (librariesLoading && !libraries.length) {
@@ -420,7 +427,7 @@ export const LibrariesScreen = () => {
       <FlatList
         data={libraries}
         renderItem={renderLibraryItem}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item, index) => `library-${item.id}-${index}`}
         numColumns={1}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
