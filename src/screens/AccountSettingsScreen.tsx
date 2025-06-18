@@ -255,11 +255,11 @@ export const AccountSettingsScreen: React.FC = () => {
       {/* 헤더 */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <View style={styles.headerContent}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <ArrowLeft size={24} color='#111827' />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>계정 설정</Text>
-          <View style={styles.headerSpacer} />
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <ArrowLeft size={24} color='#111827' />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>계정 설정</Text>
+        <View style={styles.headerSpacer} />
         </View>
       </View>
 

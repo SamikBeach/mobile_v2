@@ -176,7 +176,7 @@ const SortFilter = ({
       style={[styles.sortButton, timeRange !== 'all' && styles.activeSortButton]}
       onPress={onTimeRangePress}
     >
-      <Calendar size={12} color={timeRange !== 'all' ? '#1D4ED8' : '#6B7280'} />
+      <Calendar size={14} color={timeRange !== 'all' ? '#1D4ED8' : '#6B7280'} />
       <Text style={[styles.sortButtonText, timeRange !== 'all' && styles.activeSortButtonText]}>
         {timeRangeOptions.find(opt => opt.value === timeRange)?.label || '전체 기간'}
       </Text>
