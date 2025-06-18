@@ -27,15 +27,14 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
   onSuccess,
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const nameInputRef = useRef<TextInput>(null);
+  const descriptionInputRef = useRef<TextInput>(null);
   const queryClient = useQueryClient();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    isPublic: false,
-  });
-
+  const [isPublic, setIsPublic] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [nameText, setNameText] = useState('');
+  const [descriptionText, setDescriptionText] = useState('');
 
   // 라이브러리 태그 조회
   const {
@@ -105,11 +104,12 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
   }, [isVisible]);
 
   const handleClose = () => {
-    setFormData({
-      name: '',
-      description: '',
-      isPublic: false,
-    });
+    // TextInput 내용 초기화
+    nameInputRef.current?.clear();
+    descriptionInputRef.current?.clear();
+    setNameText('');
+    setDescriptionText('');
+    setIsPublic(false);
     setSelectedTagIds([]);
     bottomSheetModalRef.current?.dismiss();
     onClose(); // 부모 컴포넌트에 닫힘을 알림
@@ -133,7 +133,7 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
   };
 
   const handleSubmit = () => {
-    if (!formData.name.trim()) {
+    if (!nameText.trim()) {
       Toast.show({
         type: 'info',
         text1: '서재 이름을 입력해주세요.',
@@ -142,9 +142,9 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
     }
 
     const createData: CreateLibraryDto = {
-      name: formData.name.trim(),
-      description: formData.description.trim() || undefined,
-      isPublic: formData.isPublic,
+      name: nameText.trim(),
+      description: descriptionText.trim() || undefined,
+      isPublic: isPublic,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
     };
 
@@ -240,9 +240,9 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
         <View style={styles.inputGroup}>
           <Text style={styles.label}>서재 이름</Text>
           <TextInput
+            ref={nameInputRef}
             style={styles.textInput}
-            value={formData.name}
-            onChangeText={text => setFormData(prev => ({ ...prev, name: text }))}
+            onChangeText={setNameText}
             placeholder='서재 이름을 입력하세요'
             maxLength={50}
           />
@@ -252,9 +252,9 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
         <View style={styles.inputGroup}>
           <Text style={styles.label}>서재 설명</Text>
           <TextInput
+            ref={descriptionInputRef}
             style={[styles.textInput, styles.textArea]}
-            value={formData.description}
-            onChangeText={text => setFormData(prev => ({ ...prev, description: text }))}
+            onChangeText={setDescriptionText}
             placeholder='서재에 대한 간단한 설명을 입력하세요'
             multiline
             numberOfLines={4}
@@ -276,10 +276,10 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
             <Text style={styles.switchDescription}>공개 서재는 모든 사용자가 볼 수 있습니다</Text>
           </View>
           <Switch
-            value={formData.isPublic}
-            onValueChange={value => setFormData(prev => ({ ...prev, isPublic: value }))}
+            value={isPublic}
+            onValueChange={setIsPublic}
             trackColor={{ false: '#F3F4F6', true: '#10B981' }}
-            thumbColor={formData.isPublic ? '#FFFFFF' : '#FFFFFF'}
+            thumbColor={isPublic ? '#FFFFFF' : '#FFFFFF'}
           />
         </View>
       </View>
@@ -297,7 +297,7 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
         <TouchableOpacity
           style={[styles.button, styles.submitButton, isPending && styles.disabledButton]}
           onPress={handleSubmit}
-          disabled={isPending || !formData.name.trim()}
+          disabled={isPending || !nameText.trim()}
         >
           <Text style={styles.submitButtonText}>{isPending ? '생성 중...' : '생성'}</Text>
         </TouchableOpacity>
