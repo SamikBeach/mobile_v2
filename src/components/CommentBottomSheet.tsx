@@ -20,6 +20,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ReviewComment } from '../apis/review/types';
 import { CommentActionBottomSheet } from './CommentActionBottomSheet';
+import { AppColors } from '../constants';
 
 interface CommentBottomSheetProps {
   isVisible: boolean;
@@ -390,7 +391,7 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
                 style={[
                   styles.sendButton,
                   {
-                    backgroundColor: !isLoading ? '#16A34A' : '#D1D5DB',
+                    backgroundColor: !isLoading ? AppColors.primary : '#D1D5DB',
                   },
                 ]}
                 onPress={handleSubmit}

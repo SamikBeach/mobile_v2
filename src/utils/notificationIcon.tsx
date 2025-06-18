@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image } from 'react-native';
 import { Bell, BookOpen, MessageSquare, ThumbsUp, User } from 'lucide-react-native';
 import { Notification } from '../types/notification';
+import { AppColors } from '../constants';
 
 export function renderNotificationIcon(notification: Notification) {
   // 사용자가 있는 경우 항상 아바타 표시
@@ -69,7 +70,7 @@ export function renderNotificationIcon(notification: Notification) {
             width: 40,
             height: 40,
             borderRadius: 20,
-            backgroundColor: '#dcfce7',
+            backgroundColor: AppColors.backgroundMedium,
             alignItems: 'center',
             justifyContent: 'center',
           }}

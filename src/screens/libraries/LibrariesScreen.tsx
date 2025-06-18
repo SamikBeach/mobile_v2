@@ -20,6 +20,7 @@ import { CreateLibraryBottomSheet } from '../../components/CreateLibraryBottomSh
 import { getLibraries, getLibraryTags, LibraryListItem } from '../../apis/library';
 import { SortBottomSheet } from './components/SortBottomSheet';
 import { TimeRangeBottomSheet } from './components/TimeRangeBottomSheet';
+import { AppColors } from '../../constants';
 
 // Sort options
 const sortOptions = [
@@ -636,7 +637,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#16A34A',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

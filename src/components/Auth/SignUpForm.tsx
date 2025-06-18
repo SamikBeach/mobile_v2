@@ -16,6 +16,7 @@ import { checkEmail } from '../../apis/auth';
 import { openSocialLoginPopup } from '../../utils/oauth';
 import { AuthProvider } from '../../apis/auth/types';
 import { SocialLoginButtons } from './SocialLoginButtons';
+import { AppColors } from '../../constants';
 
 interface SignUpFormProps {
   onClickLogin: () => void;
@@ -488,7 +489,7 @@ const styles = StyleSheet.create({
     width: '100%', // 웹의 w-full
     height: 40,
     borderRadius: 12, // 웹의 rounded-xl
-    backgroundColor: '#16A34A', // 웹의 bg-green-600
+    backgroundColor: AppColors.primary, // Tailwind green-600
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 4,

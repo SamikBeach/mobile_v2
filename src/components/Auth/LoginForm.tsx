@@ -19,6 +19,7 @@ import { authUtils } from '../../apis/axios';
 import { userAtom } from '../../atoms/user';
 import { openSocialLoginPopup } from '../../utils/oauth';
 import { SocialLoginButtons } from './SocialLoginButtons';
+import { AppColors } from '../../constants';
 
 interface LoginFormProps {
   onClickSignUp: () => void;
@@ -416,7 +417,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#16A34A',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 4,

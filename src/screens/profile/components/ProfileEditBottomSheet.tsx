@@ -17,6 +17,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import { UserDetailResponseDto, UpdateUserInfoRequest } from '../../../apis/user/types';
 import { updateUserInfoWithImage } from '../../../apis/user/user';
+import { AppColors } from '../../../constants';
 
 interface ProfileEditBottomSheetProps {
   isVisible: boolean;
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   saveButton: {
-    backgroundColor: '#16A34A',
+    backgroundColor: AppColors.primary,
   },
   saveButtonText: {
     fontSize: 16,

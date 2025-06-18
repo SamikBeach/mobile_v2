@@ -19,7 +19,7 @@ export const getTagColor = (index: number): string => {
     '#F1F5F9', // slate-100
     '#FECACA', // red-200
     '#FEF3C7', // yellow-200
-    '#D1FAE5', // green-200
+    '#BBF7D0', // green-200
     '#DBEAFE', // blue-200
     '#E0E7FF', // indigo-200
     '#E9D5FF', // purple-200

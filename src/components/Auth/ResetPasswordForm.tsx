@@ -10,6 +10,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import { requestPasswordReset } from '../../apis/auth';
+import { AppColors } from '../../constants';
 
 interface ResetPasswordFormProps {
   onSuccess: () => void;
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
   submitButton: {
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#16A34A',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 4,

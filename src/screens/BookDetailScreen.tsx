@@ -63,6 +63,7 @@ import {
   deleteReadingStatusByBookId,
 } from '../apis/reading-status/reading-status';
 import { addBookToLibraryWithIsbn, getLibrariesByBookId } from '../apis/library/library';
+import { AppColors } from '../constants';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
@@ -1633,7 +1634,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6', // bg-blue-500
   },
   greenBackground: {
-    backgroundColor: '#10B981', // bg-green-500
+    backgroundColor: AppColors.success, // bg-green-500
   },
   statTextContainer: {
     flexDirection: 'column',
@@ -1927,7 +1928,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   reviewActionButtonLiked: {
-    borderColor: '#10B981',
+    borderColor: AppColors.success,
     backgroundColor: '#ECFDF5',
   },
   reviewActionText: {

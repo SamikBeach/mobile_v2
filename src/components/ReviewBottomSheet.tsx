@@ -14,6 +14,7 @@ import { Star, X, ChevronDown, Trash2, PenLine } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { ReadingStatusType, StatusTexts } from '../constants';
+import { AppColors } from '../constants';
 
 interface ReviewBottomSheetProps {
   isVisible: boolean;
@@ -495,7 +496,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
             styles.button,
             styles.submitButton,
             {
-              backgroundColor: isDeleteMode ? '#EF4444' : '#16A34A',
+              backgroundColor: isDeleteMode ? '#EF4444' : AppColors.primary,
               opacity: rating === 0 || isSubmitting ? 0.5 : 1,
             },
           ]}
@@ -805,7 +806,7 @@ const styles = StyleSheet.create({
   },
   selectedOption: {
     backgroundColor: '#F0FDF4',
-    borderColor: '#16A34A',
+    borderColor: AppColors.primary,
   },
   readingStatusContainer: {
     padding: 20,

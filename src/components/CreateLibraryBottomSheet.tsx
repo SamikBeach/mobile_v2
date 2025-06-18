@@ -14,6 +14,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createLibrary, CreateLibraryDto, getLibraryTags } from '../apis/library';
 import { getTagColor } from '../utils/tags';
 import Toast from 'react-native-toast-message';
+import { AppColors } from '../constants';
 
 interface CreateLibraryBottomSheetProps {
   isVisible: boolean;
@@ -280,7 +281,7 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
           <Switch
             value={isPublic}
             onValueChange={setIsPublic}
-            trackColor={{ false: '#F3F4F6', true: '#10B981' }}
+            trackColor={{ false: '#F3F4F6', true: AppColors.success }}
             thumbColor={isPublic ? '#FFFFFF' : '#FFFFFF'}
           />
         </View>
@@ -472,7 +473,7 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   submitButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: AppColors.success,
   },
   submitButtonText: {
     fontSize: 16,

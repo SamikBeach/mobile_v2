@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { BookOpen, CheckCircle2, Clock, MessageSquare, Star, X } from 'lucide-react-native';
 import { ReadingStatusType } from '../apis/reading-status/types';
 import { UserRating } from '../apis/search/types';
+import { AppColors } from '../constants';
 
 interface SearchItemProps {
   item: {
@@ -112,7 +113,7 @@ export function SearchItem({ item, onPress, onDelete, query }: SearchItemProps) 
         textColor: '#2563EB',
       },
       [ReadingStatusType.READ]: {
-        icon: <CheckCircle2 size={10} color='#10B981' />,
+        icon: <CheckCircle2 size={10} color={AppColors.success} />,
         text: '읽었어요',
         bgColor: '#F0FDF4',
         textColor: '#059669',
@@ -244,7 +245,7 @@ export function SearchItem({ item, onPress, onDelete, query }: SearchItemProps) 
           ]}
         >
           <View style={styles.statusContent}>
-            <CheckCircle2 size={10} color='#10B981' />
+            <CheckCircle2 size={10} color={AppColors.success} />
             <Text
               style={[
                 styles.statusText,

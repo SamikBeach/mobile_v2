@@ -14,6 +14,7 @@ import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createLibrary, CreateLibraryDto, getLibraryTags } from '../apis/library';
 import { getTagColor } from '../utils/tags';
+import { AppColors } from '../constants';
 
 interface CreateLibraryModalProps {
   isVisible: boolean;
@@ -257,7 +258,7 @@ export const CreateLibraryModal: React.FC<CreateLibraryModalProps> = ({
           <Switch
             value={formData.isPublic}
             onValueChange={value => setFormData(prev => ({ ...prev, isPublic: value }))}
-            trackColor={{ false: '#F3F4F6', true: '#10B981' }}
+            trackColor={{ false: '#F3F4F6', true: AppColors.success }}
             thumbColor={formData.isPublic ? '#FFFFFF' : '#FFFFFF'}
           />
         </View>
@@ -438,7 +439,7 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   submitButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: AppColors.success,
   },
   submitButtonText: {
     fontSize: 16,

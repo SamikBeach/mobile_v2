@@ -30,6 +30,7 @@ import { createReview } from '../../apis/review';
 import { createOrUpdateRating } from '../../apis/rating';
 import { createOrUpdateReadingStatus, ReadingStatusType } from '../../apis/reading-status';
 import Toast from 'react-native-toast-message';
+import { AppColors } from '../../constants';
 
 type CommunityScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -49,7 +50,7 @@ const categoryOptions: CategoryOption[] = [
   { id: 'all', name: '전체', color: '#F1F5F9' },
   { id: 'general', name: '일반', color: '#FECACA' },
   { id: 'discussion', name: '토론', color: '#FEF3C7' },
-  { id: 'review', name: '리뷰', color: '#D1FAE5' },
+  { id: 'review', name: '리뷰', color: AppColors.border },
   { id: 'question', name: '질문', color: '#DBEAFE' },
   { id: 'meetup', name: '모임', color: '#E0E7FF' },
 ];
@@ -967,7 +968,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: '#16A34A',
+    backgroundColor: AppColors.primary,
     height: 32,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1067,7 +1068,7 @@ const styles = StyleSheet.create({
     borderColor: '#60A5FA',
   },
   readStatus: {
-    backgroundColor: '#D1FAE5',
+    backgroundColor: AppColors.border,
     borderColor: '#34D399',
   },
   noneStatus: {

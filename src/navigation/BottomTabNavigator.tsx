@@ -6,6 +6,7 @@ import { useAtomValue } from 'jotai';
 import { AuthBottomSheet } from '../components/Auth';
 import { userAtom } from '../atoms/user';
 import { MainTabParamList } from './types';
+import { AppColors } from '../constants';
 import {
   HomeStackNavigator,
   PopularStackNavigator,
@@ -71,7 +72,7 @@ export const BottomTabNavigator: React.FC = () => {
 
             return <IconComponent size={22} color={color} strokeWidth={1.4} />;
           },
-          tabBarActiveTintColor: '#166534', // green-800
+          tabBarActiveTintColor: AppColors.textPrimary, // green-800
           tabBarInactiveTintColor: '#6B7280', // gray-500
           tabBarHideOnKeyboard: true,
           tabBarStyle: {

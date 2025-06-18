@@ -39,3 +39,6 @@ export const StatusColors = {
     border: '#6EE7B7',
   },
 } as const;
+
+// Colors
+export * from './colors';
