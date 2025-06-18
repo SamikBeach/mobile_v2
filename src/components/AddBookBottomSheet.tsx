@@ -23,6 +23,7 @@ import { SearchBook } from '../apis/search/types';
 import { HomeBookPreview } from '../apis/book/types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ReadingStatusType } from '../constants';
 
 interface AddBookBottomSheetProps {
   bottomSheetRef: React.RefObject<BottomSheetModal>;
@@ -144,12 +145,9 @@ export const AddBookBottomSheet: React.FC<AddBookBottomSheetProps> = ({
       author: book.author || '저자 미상',
       coverImage: book.coverImage || book.image || '',
       isbn: book.isbn || book.isbn13 || '',
-      publishedDate: book.publishDate,
-      description: book.description,
-      averageRating: book.rating || 0,
-      totalRatings: book.totalRatings || 0,
-      totalReviews: book.reviews || 0,
-      totalLibraries: 0,
+      rating: book.rating || 0,
+      reviews: book.reviews || 0,
+      publisher: book.publisher,
     }));
 
     // 부모에게 선택된 책들 전달
@@ -342,19 +340,19 @@ export const AddBookBottomSheet: React.FC<AddBookBottomSheetProps> = ({
             {/* 읽기 상태 배지들 */}
             {item.userReadingStatus && (
               <View style={styles.statusContainer}>
-                {item.userReadingStatus === 'WANT_TO_READ' && (
+                {item.userReadingStatus === ReadingStatusType.WANT_TO_READ && (
                   <View style={styles.statusBadgeWantToRead}>
                     <Clock size={12} color='#7C3AED' />
                     <Text style={styles.statusTextWantToRead}>읽고 싶어요</Text>
                   </View>
                 )}
-                {item.userReadingStatus === 'READING' && (
+                {item.userReadingStatus === ReadingStatusType.READING && (
                   <View style={styles.statusBadgeReading}>
                     <BookOpen size={12} color='#2563EB' />
                     <Text style={styles.statusTextReading}>읽는 중</Text>
                   </View>
                 )}
-                {item.userReadingStatus === 'read' && (
+                {item.userReadingStatus === ReadingStatusType.READ && (
                   <View style={styles.statusBadgeRead}>
                     <Check size={12} color='#059669' />
                     <Text style={styles.statusTextRead}>읽었어요</Text>

@@ -1,6 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getDiscoverBooks } from '../apis/book';
-import { DiscoverBooksParams, HomeBookPreview } from '../apis/book/types';
+import {
+  DiscoverBooksParams,
+  HomeBookPreview,
+  PopularBooksSortOptions,
+  TimeRangeOptions,
+} from '../apis/book/types';
 
 interface UseDiscoverBooksOptions extends DiscoverBooksParams {
   enabled?: boolean;
@@ -9,8 +14,8 @@ interface UseDiscoverBooksOptions extends DiscoverBooksParams {
 export function useDiscoverBooks({
   discoverCategoryId,
   discoverSubCategoryId,
-  sort = 'rating-desc',
-  timeRange = 'all',
+  sort = PopularBooksSortOptions.RATING_DESC,
+  timeRange = TimeRangeOptions.ALL,
   limit = 20,
   enabled = true,
 }: UseDiscoverBooksOptions = {}) {

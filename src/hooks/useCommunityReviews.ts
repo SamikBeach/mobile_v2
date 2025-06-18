@@ -2,7 +2,7 @@ import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { getReviews } from '../apis/review';
 import { ReviewType, ReviewResponseDto } from '../apis/review/types';
 
-export type SortOption = 'popular' | 'recent' | 'following';
+export type SortOption = 'popular' | 'recent' | 'following' | 'latest';
 
 interface UseCommunityReviewsParams {
   category: ReviewType | 'all';

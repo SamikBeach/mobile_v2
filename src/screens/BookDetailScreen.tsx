@@ -1219,7 +1219,14 @@ const ReviewBottomSheetWithData: React.FC<{
   const { handleReviewSubmit, isSubmitting, openEditMode } = useReviewDialog({
     book,
     isbn,
-    userRating: book?.userRating,
+    userRating: book?.userRating
+      ? {
+          id: 0,
+          rating: book.userRating,
+          bookId: book.id,
+          comment: '',
+        }
+      : null,
     userReadingStatus: book?.userReadingStatus as ReadingStatusType | null,
   });
 
