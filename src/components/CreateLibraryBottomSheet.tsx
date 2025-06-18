@@ -31,7 +31,7 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
   const descriptionInputRef = useRef<TextInput>(null);
   const queryClient = useQueryClient();
 
-  const [isPublic, setIsPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [nameText, setNameText] = useState('');
   const [descriptionText, setDescriptionText] = useState('');
@@ -109,7 +109,7 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
     descriptionInputRef.current?.clear();
     setNameText('');
     setDescriptionText('');
-    setIsPublic(false);
+    setIsPublic(true);
     setSelectedTagIds([]);
     bottomSheetModalRef.current?.dismiss();
     onClose(); // 부모 컴포넌트에 닫힘을 알림
@@ -244,6 +244,7 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
             style={styles.textInput}
             onChangeText={setNameText}
             placeholder='서재 이름을 입력하세요'
+            placeholderTextColor='#9CA3AF'
             maxLength={50}
           />
         </View>
@@ -256,6 +257,7 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
             style={[styles.textInput, styles.textArea]}
             onChangeText={setDescriptionText}
             placeholder='서재에 대한 간단한 설명을 입력하세요'
+            placeholderTextColor='#9CA3AF'
             multiline
             numberOfLines={4}
             textAlignVertical='top'
@@ -377,8 +379,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
+    lineHeight: 20,
     color: '#111827',
     backgroundColor: '#FFFFFF',
+    minHeight: 48, // 최소 높이 고정으로 레이아웃 시프트 방지
   },
   textArea: {
     height: 100,

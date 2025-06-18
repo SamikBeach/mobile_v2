@@ -24,30 +24,27 @@ interface ProfileEditBottomSheetProps {
   profileData: UserDetailResponseDto;
 }
 
-interface ProfileFormData {
-  username: string;
-  bio: string;
-  profileImage?: { uri: string; type: string; name: string } | null;
-  removeProfileImage?: boolean;
-}
-
 export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
   isVisible,
   onClose,
   profileData,
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const usernameInputRef = useRef<TextInput>(null);
+  const bioInputRef = useRef<TextInput>(null);
   const queryClient = useQueryClient();
 
   const { user } = profileData;
   const displayName = user.username || user.email?.split('@')[0] || '';
 
-  const [formData, setFormData] = useState<ProfileFormData>({
-    username: displayName,
-    bio: user.bio || '',
-    profileImage: undefined,
-    removeProfileImage: false,
-  });
+  const [usernameText, setUsernameText] = useState(displayName);
+  const [bioText, setBioText] = useState(user.bio || '');
+  const [profileImage, setProfileImage] = useState<{
+    uri: string;
+    type: string;
+    name: string;
+  } | null>(null);
+  const [removeProfileImage, setRemoveProfileImage] = useState(false);
 
   const [imagePreview, setImagePreview] = useState<string | null>(
     user.profileImage && user.profileImage.length > 0 ? user.profileImage : null
@@ -113,42 +110,39 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
   // 프로필 데이터가 변경되면 폼 데이터 업데이트
   useEffect(() => {
     const displayName = user.username || user.email?.split('@')[0] || '';
-    setFormData({
-      username: displayName,
-      bio: user.bio || '',
-      profileImage: undefined,
-      removeProfileImage: false,
-    });
+    setUsernameText(displayName);
+    setBioText(user.bio || '');
+    setProfileImage(null);
+    setRemoveProfileImage(false);
     setImagePreview(user.profileImage && user.profileImage.length > 0 ? user.profileImage : null);
   }, [user]);
 
   const handleClose = () => {
     const displayName = user.username || user.email?.split('@')[0] || '';
-    setFormData({
-      username: displayName,
-      bio: user.bio || '',
-      profileImage: undefined,
-      removeProfileImage: false,
-    });
+    setUsernameText(displayName);
+    setBioText(user.bio || '');
+    setProfileImage(null);
+    setRemoveProfileImage(false);
     setImagePreview(user.profileImage && user.profileImage.length > 0 ? user.profileImage : null);
+
     bottomSheetModalRef.current?.dismiss();
   };
 
   // src_frontend와 완전히 동일한 handleSubmit 함수
-  const handleSubmit = async (formData: ProfileFormData) => {
+  const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
 
       // 프로필 정보 및 이미지 업데이트 (src_frontend와 완전히 동일)
       await updateProfile({
         userData: {
-          username: formData.username,
-          bio: formData.bio,
-          // formData.removeProfileImage가 true인 경우에만 이미지 삭제 요청
-          ...(formData.removeProfileImage && { removeProfileImage: true }),
+          username: usernameText,
+          bio: bioText,
+          // removeProfileImage가 true인 경우에만 이미지 삭제 요청
+          ...(removeProfileImage && { removeProfileImage: true }),
         },
         // 파일이 제공된 경우에만 전달 (undefined는 기존 이미지 유지)
-        file: formData.profileImage instanceof Object ? formData.profileImage : undefined,
+        file: profileImage instanceof Object ? profileImage : undefined,
       });
     } catch (error) {
       console.error('프로필 업데이트 오류:', error);
@@ -157,7 +151,7 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
   };
 
   const handleSave = () => {
-    handleSubmit(formData);
+    handleSubmit();
   };
 
   const handleProfileImageChange = async () => {
@@ -190,11 +184,8 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
                 name: `profile_${Date.now()}.jpg`,
               };
 
-              setFormData(prev => ({
-                ...prev,
-                profileImage: imageData,
-                removeProfileImage: false,
-              }));
+              setProfileImage(imageData);
+              setRemoveProfileImage(false);
               setImagePreview(asset.uri);
             }
           },
@@ -205,11 +196,8 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
                 text: '사진 삭제',
                 style: 'destructive' as const,
                 onPress: () => {
-                  setFormData(prev => ({
-                    ...prev,
-                    profileImage: null,
-                    removeProfileImage: true,
-                  }));
+                  setProfileImage(null);
+                  setRemoveProfileImage(true);
                   setImagePreview(null);
                 },
               },
@@ -260,7 +248,7 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
             <Image source={{ uri: imagePreview }} style={styles.profileImage} />
           ) : (
             <View style={styles.defaultImage}>
-              <Text style={styles.imageText}>{formData.username.charAt(0).toUpperCase()}</Text>
+              <Text style={styles.imageText}>{usernameText.charAt(0).toUpperCase()}</Text>
             </View>
           )}
           <TouchableOpacity
@@ -280,10 +268,13 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
         <View style={styles.inputGroup}>
           <Text style={styles.label}>닉네임</Text>
           <TextInput
+            key={`username-${user.id}-${user.username}`}
+            ref={usernameInputRef}
             style={[styles.textInput, isSubmitting && styles.disabledInput]}
-            value={formData.username}
-            onChangeText={text => setFormData(prev => ({ ...prev, username: text }))}
+            defaultValue={displayName}
+            onChangeText={setUsernameText}
             placeholder='변경할 닉네임을 입력하세요'
+            placeholderTextColor='#9CA3AF'
             maxLength={30}
             editable={!isSubmitting}
           />
@@ -293,10 +284,13 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
         <View style={styles.inputGroup}>
           <Text style={styles.label}>자기소개</Text>
           <TextInput
+            key={`bio-${user.id}-${user.bio}`}
+            ref={bioInputRef}
             style={[styles.textInput, styles.textArea, isSubmitting && styles.disabledInput]}
-            value={formData.bio}
-            onChangeText={text => setFormData(prev => ({ ...prev, bio: text }))}
+            defaultValue={user.bio || ''}
+            onChangeText={setBioText}
             placeholder='자기소개를 입력하세요 (최대 200자)'
+            placeholderTextColor='#9CA3AF'
             multiline
             numberOfLines={4}
             textAlignVertical='top'
@@ -304,7 +298,7 @@ export const ProfileEditBottomSheet: React.FC<ProfileEditBottomSheetProps> = ({
             editable={!isSubmitting}
           />
           <View style={styles.charCount}>
-            <Text style={styles.charCountText}>{formData.bio.length}/200</Text>
+            <Text style={styles.charCountText}>{bioText.length}/200</Text>
           </View>
         </View>
       </View>
@@ -451,8 +445,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
+    lineHeight: 20,
     color: '#111827',
     backgroundColor: '#FFFFFF',
+    minHeight: 48, // 최소 높이 고정으로 레이아웃 시프트 방지
   },
   textArea: {
     height: 120,

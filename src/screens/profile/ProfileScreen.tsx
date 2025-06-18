@@ -30,7 +30,7 @@ import { LoadingSpinner } from '../../components';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useIsMyProfile } from '../../hooks/useIsMyProfile';
 import { useUserFollow } from '../../hooks/useUserFollow';
-import { ProfileEditBottomSheet } from '../my/components/ProfileEditBottomSheet';
+import { ProfileEditBottomSheet } from './components/ProfileEditBottomSheet';
 import { ReadBooksSection } from './components/ReadBooksSection';
 import { ReviewsSection as ReviewsSectionComponent } from './components/ReviewsSection';
 import { LibrariesSection as LibrariesSectionComponent } from './components/LibrariesSection';
@@ -483,7 +483,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId: propUserId
 
   // userId가 없는 경우 로그인 필요 화면
   if (!userId) {
-    return <ErrorFallback onRetry={() => {}} />;
+    return (
+      <View style={styles.loginRequiredContainer}>
+        <Text style={styles.loginRequiredText}>로그인이 필요합니다</Text>
+      </View>
+    );
   }
 
   return (
@@ -666,6 +670,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     backgroundColor: 'white',
+  },
+  loginRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  loginRequiredText: {
+    fontSize: 16,
+    color: '#6B7280',
   },
   notFollowingButton: {
     backgroundColor: '#111827',
