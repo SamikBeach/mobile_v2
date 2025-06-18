@@ -19,6 +19,8 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../navigation/types';
 import { useAtomValue } from 'jotai';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
@@ -72,6 +74,7 @@ const BookLibrariesList: React.FC<{
   onLibraryCountChange?: (count: number) => void;
 }> = ({ isbn, bookId, onLibraryCountChange }) => {
   const currentUser = useAtomValue(userAtom);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const {
     data: librariesData,
@@ -90,8 +93,7 @@ const BookLibrariesList: React.FC<{
   }, [librariesData, onLibraryCountChange]);
 
   const handleLibraryPress = (library: any) => {
-    // TODO: LibraryDetail 네비게이션 구현 필요
-    console.log('Library pressed:', library.id);
+    navigation.navigate('LibraryDetail', { libraryId: library.id });
   };
 
   const handleOwnerPress = (ownerId: number) => {
