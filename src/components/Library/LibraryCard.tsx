@@ -230,8 +230,8 @@ const styles = StyleSheet.create({
     gap: 4, // gap-1 on mobile, gap-1.5 on sm
   },
   tag: {
-    paddingHorizontal: 6, // px-1.5 on mobile, px-2 on sm
-    paddingVertical: 2, // py-0.5
+    paddingHorizontal: 8, // px-2 on mobile, px-2.5 on sm
+    paddingVertical: 4, // py-1
     borderRadius: 12, // rounded-full
     flexShrink: 0, // flex-shrink-0
   },
