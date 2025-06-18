@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { useMutation } from '@tanstack/react-query';
@@ -37,6 +38,7 @@ interface AccountDeleteFormValues {
 
 export const AccountSettingsScreen: React.FC = () => {
   const navigation = useNavigation<AccountSettingsNavigationProp>();
+  const insets = useSafeAreaInsets();
   const [user, setUser] = useAtom(userAtom);
   const [isLocalProvider, setIsLocalProvider] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -251,12 +253,14 @@ export const AccountSettingsScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       {/* 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <ArrowLeft size={24} color='#111827' />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>계정 설정</Text>
-        <View style={styles.headerSpacer} />
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerContent}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <ArrowLeft size={24} color='#111827' />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>계정 설정</Text>
+          <View style={styles.headerSpacer} />
+        </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -513,13 +517,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   header: {
+    backgroundColor: 'white',
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(229, 231, 235, 0.5)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    paddingVertical: 8,
+    minHeight: 56,
   },
   backButton: {
     padding: 4,

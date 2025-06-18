@@ -27,20 +27,17 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
   // 서재 태그들
   const libraryTags = (library as LibraryListItem).tags || [];
 
-  // 태그 색상 생성 함수 (프론트엔드와 동일)
+  // 태그 색상 생성 함수 (서재 필터와 동일한 파스텔 색상)
   const getTagColor = (index: number) => {
     const colors = [
-      '#FDE68A',
-      '#FCA5A5',
-      '#A7F3D0',
-      '#93C5FD',
-      '#C7D2FE',
-      '#F9A8D4',
-      '#FED7AA',
-      '#D1FAE5',
-      '#DBEAFE',
-      '#F3E8FF',
-      '#FEF3C7',
+      '#FFF8E2', // 파스텔 옐로우
+      '#F2E2FF', // 파스텔 퍼플
+      '#FFE2EC', // 파스텔 코럴
+      '#E2FFFC', // 파스텔 민트
+      '#E2F0FF', // 파스텔 블루
+      '#FFECDA', // 파스텔 오렌지
+      '#ECFFE2', // 파스텔 그린
+      '#FFE2F7', // 파스텔 핑크
     ];
     return colors[index % colors.length];
   };

@@ -12,7 +12,7 @@ import {
   NativeScrollEvent,
   TextInput,
 } from 'react-native';
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Clock, Flame, Library, Calendar } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LoadingSpinner, LibraryCard } from '../../components';
@@ -222,6 +222,7 @@ const LibrariesScreenSkeleton = () => (
 // Main Libraries Screen Component
 export const LibrariesScreen = () => {
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
 
   // State - 모든 hooks를 최상단에 위치
   const [selectedTag, setSelectedTag] = useState('all');
@@ -360,10 +361,14 @@ export const LibrariesScreen = () => {
     setShowCreateLibraryBottomSheet(true);
   }, []);
 
-  const handleLibraryCreated = useCallback((libraryId: number) => {
-    // 새 서재가 생성된 후 목록 새로고침
-    // TODO: Query 무효화나 리프레시 로직 추가
-  }, []);
+  const handleLibraryCreated = useCallback(
+    (libraryId: number) => {
+      // 새 서재가 생성된 후 목록 새로고침
+      queryClient.invalidateQueries({ queryKey: ['libraries'] });
+      setShowCreateLibraryBottomSheet(false);
+    },
+    [queryClient]
+  );
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
