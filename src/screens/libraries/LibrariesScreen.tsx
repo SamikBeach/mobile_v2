@@ -241,11 +241,7 @@ export const LibrariesScreen = () => {
   const scrollDirection = useRef<'up' | 'down'>('up');
 
   // Tags query
-  const {
-    data: tags = [],
-    isLoading: tagsLoading,
-    error: tagsError,
-  } = useQuery({
+  const { data: tags = [] } = useQuery({
     queryKey: ['library-tags'],
     queryFn: async () => {
       const result = await getLibraryTags(50);
@@ -275,7 +271,7 @@ export const LibrariesScreen = () => {
         timeRange: timeRange,
         search: searchQuery || undefined,
       }),
-    getNextPageParam: (lastPage, pages) => {
+    getNextPageParam: lastPage => {
       if (lastPage.meta.page < lastPage.meta.totalPages) {
         return lastPage.meta.page + 1;
       }
@@ -361,14 +357,11 @@ export const LibrariesScreen = () => {
     setShowCreateLibraryBottomSheet(true);
   }, []);
 
-  const handleLibraryCreated = useCallback(
-    (libraryId: number) => {
-      // 새 서재가 생성된 후 목록 새로고침
-      queryClient.invalidateQueries({ queryKey: ['libraries'] });
-      setShowCreateLibraryBottomSheet(false);
-    },
-    [queryClient]
-  );
+  const handleLibraryCreated = useCallback(() => {
+    // 새 서재가 생성된 후 목록 새로고침
+    queryClient.invalidateQueries({ queryKey: ['libraries'] });
+    setShowCreateLibraryBottomSheet(false);
+  }, [queryClient]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

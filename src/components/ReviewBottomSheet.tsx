@@ -13,8 +13,7 @@ import {
 import { Star, X, ChevronDown, Trash2, PenLine } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { ReadingStatusType, StatusTexts } from '../constants';
-import { AppColors } from '../constants';
+import { ReadingStatusType, StatusTexts, AppColors } from '../constants';
 
 interface ReviewBottomSheetProps {
   isVisible: boolean;
