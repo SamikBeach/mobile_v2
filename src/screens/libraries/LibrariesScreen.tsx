@@ -13,10 +13,9 @@ import {
   TextInput,
 } from 'react-native';
 import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { Plus, BookOpen, Users, Clock, Flame, Library, Calendar } from 'lucide-react-native';
+import { Plus, Clock, Flame, Library, Calendar } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { LoadingSpinner } from '../../components';
-import { LibraryCard } from '../../components';
+import { LoadingSpinner, LibraryCard } from '../../components';
 import { CreateLibraryBottomSheet } from '../../components/CreateLibraryBottomSheet';
 import { getLibraries, getLibraryTags, LibraryListItem } from '../../apis/library';
 import { SortBottomSheet } from './components/SortBottomSheet';
@@ -28,6 +27,23 @@ const sortOptions = [
   { value: 'books', label: '담긴 책 많은 순', icon: Library },
   { value: 'latest', label: '최신순', icon: Clock },
 ];
+
+// Get sort icon based on sort option
+const getSortIcon = (sortOption: string, isActive: boolean) => {
+  const color = isActive ? '#1D4ED8' : '#6B7280';
+  const size = 12;
+
+  switch (sortOption) {
+    case 'popular':
+      return <Flame size={size} color={color} />;
+    case 'books':
+      return <Library size={size} color={color} />;
+    case 'latest':
+      return <Clock size={size} color={color} />;
+    default:
+      return <Flame size={size} color={color} />;
+  }
+};
 
 // Time range options
 const timeRangeOptions = [
@@ -169,7 +185,7 @@ const SortFilter = ({
       style={[styles.sortButton, selectedSort !== 'popular' && styles.activeSortButton]}
       onPress={onSortPress}
     >
-      <Flame size={12} color={selectedSort !== 'popular' ? '#1D4ED8' : '#6B7280'} />
+      {getSortIcon(selectedSort, selectedSort !== 'popular')}
       <Text
         style={[styles.sortButtonText, selectedSort !== 'popular' && styles.activeSortButtonText]}
       >
