@@ -79,9 +79,15 @@ export const getLibraryTags = async (limit?: number): Promise<LibraryTagResponse
 /**
  * 사용자 서재 목록 조회
  */
-export const getUserLibraries = async (userId: number): Promise<Library[]> => {
+export const getUserLibraries = async (userId: number, limit: number = 100): Promise<Library[]> => {
   const response = await axios.get<{ items: Library[]; total: number }>(
-    `/user/${userId}/libraries`
+    `/user/${userId}/libraries`,
+    {
+      params: {
+        page: 1,
+        limit: limit,
+      },
+    }
   );
 
   // src_frontend와 동일한 응답 구조 처리
