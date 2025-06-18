@@ -84,18 +84,13 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     if (isVisible) {
       // 다이얼로그가 열릴 때마다 초기값으로 설정
       setRating(initialRating);
-      if (isEditMode && initialContent) {
+
+      if (isEditMode) {
+        // 수정 모드일 때는 항상 초기값 설정 (내용이 빈 문자열이어도)
         setContent(initialContent);
-        // TextInput에 초기값 설정
-        if (textInputRef.current) {
-          textInputRef.current.setNativeProps({ text: initialContent });
-        }
-      } else if (!isEditMode) {
+      } else {
         // 새로 작성하는 경우 내용 초기화
         setContent('');
-        if (textInputRef.current) {
-          textInputRef.current.clear();
-        }
       }
     }
   }, [isVisible, initialRating, isEditMode, initialContent]);
@@ -114,9 +109,6 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
       setContent('');
       setRating(0);
       setReadingStatus(userReadingStatus || ReadingStatusType.READ);
-      if (textInputRef.current) {
-        textInputRef.current.clear();
-      }
     }
   }, [isVisible, userReadingStatus]);
 
@@ -469,6 +461,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
       <View style={styles.textInputSection}>
         <TextInput
           ref={textInputRef}
+          value={content}
           style={[
             styles.textInput,
             {

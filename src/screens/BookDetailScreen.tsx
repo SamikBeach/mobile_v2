@@ -298,11 +298,12 @@ const BookInfo: React.FC<{ book: BookDetails }> = ({ book }) => {
 };
 
 // 탭 섹션 컴포넌트
-const TabSection: React.FC<{ isbn: string; bookId: number; onReviewPress?: () => void }> = ({
-  isbn,
-  bookId,
-  onReviewPress,
-}) => {
+const TabSection: React.FC<{
+  isbn: string;
+  bookId: number;
+  onReviewPress?: () => void;
+  onEditReviewPress?: (review: Review) => void;
+}> = ({ isbn, bookId, onReviewPress, onEditReviewPress }) => {
   const [activeTab, setActiveTab] = useState<'reviews' | 'libraries'>('reviews');
   const [reviewCount, setReviewCount] = useState(0);
   const [libraryCount, setLibraryCount] = useState(0);
@@ -349,6 +350,7 @@ const TabSection: React.FC<{ isbn: string; bookId: number; onReviewPress?: () =>
             isbn={isbn}
             onReviewCountChange={setReviewCount}
             onReviewPress={onReviewPress}
+            onEditReviewPress={onEditReviewPress}
           />
         )}
         {activeTab === 'libraries' && (
@@ -374,6 +376,7 @@ interface BookDetailContentProps {
   onReadingStatusPress: () => void;
   onLibraryPress: () => void;
   onReviewPress: () => void;
+  onEditReviewPress: (review: Review) => void;
 }
 
 // 메인 책 상세 컴포넌트
@@ -382,6 +385,7 @@ const BookDetailContent: React.FC<BookDetailContentProps> = ({
   onReadingStatusPress,
   onLibraryPress,
   onReviewPress,
+  onEditReviewPress,
 }) => {
   const navigation = useNavigation();
 
@@ -529,7 +533,12 @@ const BookDetailContent: React.FC<BookDetailContentProps> = ({
         <Text style={styles.dataProvider}>정보제공: 알라딘</Text>
 
         {/* 탭 섹션 */}
-        <TabSection isbn={isbn} bookId={book.id} onReviewPress={onReviewPress} />
+        <TabSection
+          isbn={isbn}
+          bookId={book.id}
+          onReviewPress={onReviewPress}
+          onEditReviewPress={onEditReviewPress}
+        />
       </View>
     </ScrollView>
   );
@@ -801,7 +810,8 @@ const BookReviewsList: React.FC<{
   isbn: string;
   onReviewCountChange?: (count: number) => void;
   onReviewPress?: () => void;
-}> = ({ isbn, onReviewCountChange, onReviewPress }) => {
+  onEditReviewPress?: (review: Review) => void;
+}> = ({ isbn, onReviewCountChange, onReviewPress, onEditReviewPress }) => {
   const currentUser = useAtomValue(userAtom);
   const queryClient = useQueryClient();
   const navigation = useNavigation();
@@ -1078,16 +1088,10 @@ const BookReviewsList: React.FC<{
 
   // 리뷰 수정 핸들러
   const handleEditReview = useCallback(() => {
-    if (selectedReview) {
-      // TODO: 리뷰 수정 기능 구현
-      console.log('리뷰 수정:', selectedReview.id);
-      Toast.show({
-        type: 'info',
-        text1: '알림',
-        text2: '리뷰 수정 기능은 준비 중입니다.',
-      });
+    if (selectedReview && onEditReviewPress) {
+      onEditReviewPress(selectedReview);
     }
-  }, [selectedReview]);
+  }, [selectedReview, onEditReviewPress]);
 
   // 리뷰 삭제 핸들러
   const handleDeleteReview = useCallback(() => {
@@ -1204,18 +1208,26 @@ const ReviewBottomSheetWithData: React.FC<{
   initialRating: number;
   initialContent: string;
   isEditMode: boolean;
-}> = ({ isbn, isVisible, onClose, initialRating, initialContent, isEditMode }) => {
+  editingReview?: Review | null;
+}> = ({ isbn, isVisible, onClose, initialRating, initialContent, isEditMode, editingReview }) => {
   const { data: book } = useSuspenseQuery({
     queryKey: ['book-detail', isbn],
     queryFn: () => getBookByIsbn(isbn),
   });
 
-  const { handleReviewSubmit, isSubmitting } = useReviewDialog({
+  const { handleReviewSubmit, isSubmitting, openEditMode } = useReviewDialog({
     book,
     isbn,
     userRating: book?.userRating,
     userReadingStatus: book?.userReadingStatus as ReadingStatusType | null,
   });
+
+  // 리뷰 수정 모드로 설정
+  React.useEffect(() => {
+    if (isVisible && editingReview && isEditMode) {
+      openEditMode(editingReview);
+    }
+  }, [isVisible, editingReview, isEditMode, openEditMode]);
 
   const handleSubmitAndClose = async (
     rating: number,
@@ -1252,6 +1264,10 @@ export const BookDetailScreen: React.FC = () => {
   const [libraryBottomSheetVisible, setLibraryBottomSheetVisible] = useState(false);
   const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
   const [reviewBottomSheetVisible, setReviewBottomSheetVisible] = useState(false);
+
+  // 리뷰 수정을 위한 상태 추가
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [reviewEditBottomSheetVisible, setReviewEditBottomSheetVisible] = useState(false);
 
   // 현재 책 데이터 가져오기
   const { data: book } = useSuspenseQuery({
@@ -1375,6 +1391,12 @@ export const BookDetailScreen: React.FC = () => {
     setReviewBottomSheetVisible(true);
   };
 
+  // 리뷰 수정 핸들러 추가
+  const handleEditReviewPress = (review: Review) => {
+    setEditingReview(review);
+    setReviewEditBottomSheetVisible(true);
+  };
+
   return (
     <>
       <View style={styles.safeArea}>
@@ -1384,6 +1406,7 @@ export const BookDetailScreen: React.FC = () => {
             onReadingStatusPress={handleReadingStatusPress}
             onLibraryPress={handleLibraryPress}
             onReviewPress={handleReviewPress}
+            onEditReviewPress={handleEditReviewPress}
           />
         </Suspense>
       </View>
@@ -1420,6 +1443,22 @@ export const BookDetailScreen: React.FC = () => {
           initialRating={userRating}
           initialContent={userRatingData?.comment || ''}
           isEditMode={!!userRatingData}
+        />
+      </Suspense>
+
+      {/* 리뷰 수정 바텀시트 */}
+      <Suspense fallback={null}>
+        <ReviewBottomSheetWithData
+          isbn={isbn}
+          isVisible={reviewEditBottomSheetVisible}
+          onClose={() => {
+            setReviewEditBottomSheetVisible(false);
+            setEditingReview(null);
+          }}
+          initialRating={editingReview ? getReviewRating(editingReview) : 0}
+          initialContent={editingReview?.content || ''}
+          isEditMode={true}
+          editingReview={editingReview}
         />
       </Suspense>
     </>
