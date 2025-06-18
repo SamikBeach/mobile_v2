@@ -26,7 +26,18 @@ import { useAtomValue } from 'jotai';
 import Toast from 'react-native-toast-message';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { userAtom } from '../../atoms/user';
-import { LoadingSpinner } from '../../components';
+import {
+  LoadingSpinner,
+  ReadingStatusChart,
+  GenreAnalysisChart,
+  RatingStatsChart,
+  ReviewStatsChart,
+  UserInteractionChart,
+  ActivityFrequencyChart,
+  FollowerStatsChart,
+  ReadingStatusByPeriodChart,
+  AuthorPublisherChart,
+} from '../../components';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useIsMyProfile } from '../../hooks/useIsMyProfile';
 import { useUserFollow } from '../../hooks/useUserFollow';
@@ -336,14 +347,122 @@ const ProfileSummary: React.FC<{
   );
 };
 
-// Section Content Components (placeholders)
+// 통계 섹션 타입 정의
+type StatsSectionId = 'reading' | 'activity' | 'community' | 'library' | 'etc';
 
-const StatsSection: React.FC = () => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>통계</Text>
-    <Text style={styles.sectionPlaceholder}>통계 정보가 여기에 표시됩니다.</Text>
-  </View>
-);
+// 통계 섹션 메뉴 정의
+const profileSections = [
+  { id: 'reading' as StatsSectionId, name: '읽기 상태' },
+  { id: 'activity' as StatsSectionId, name: '리뷰와 평점' },
+  { id: 'community' as StatsSectionId, name: '커뮤니티 활동' },
+  { id: 'library' as StatsSectionId, name: '서재' },
+  { id: 'etc' as StatsSectionId, name: '기타' },
+];
+
+const StatsSection: React.FC<{ userId: number }> = ({ userId }) => {
+  const [selectedSection, setSelectedSection] = useState<StatsSectionId>('reading');
+
+  // 선택된 섹션에 따라 차트 렌더링
+  const renderSectionContent = () => {
+    switch (selectedSection) {
+      case 'reading':
+        return (
+          <View style={styles.chartsContainer}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ReadingStatusChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ReadingStatusByPeriodChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <GenreAnalysisChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <AuthorPublisherChart userId={userId} />
+            </Suspense>
+          </View>
+        );
+      case 'activity':
+        return (
+          <View style={styles.chartsContainer}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ReviewStatsChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <RatingStatsChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ActivityFrequencyChart userId={userId} />
+            </Suspense>
+          </View>
+        );
+      case 'community':
+        return (
+          <View style={styles.chartsContainer}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <UserInteractionChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <FollowerStatsChart userId={userId} />
+            </Suspense>
+          </View>
+        );
+      case 'library':
+        return (
+          <View style={styles.chartsContainer}>
+            <View style={styles.comingSoonContainer}>
+              <Text style={styles.comingSoonText}>서재 통계</Text>
+              <Text style={styles.comingSoonSubtext}>곧 출시 예정입니다</Text>
+            </View>
+          </View>
+        );
+      case 'etc':
+        return (
+          <View style={styles.chartsContainer}>
+            <View style={styles.comingSoonContainer}>
+              <Text style={styles.comingSoonText}>기타 통계</Text>
+              <Text style={styles.comingSoonSubtext}>곧 출시 예정입니다</Text>
+            </View>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={styles.statsContainer}>
+      {/* 탭 메뉴 */}
+      <View style={styles.tabsContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabsScroll}
+          contentContainerStyle={styles.tabsScrollContent}
+        >
+          {profileSections.map(section => (
+            <TouchableOpacity
+              key={section.id}
+              style={[styles.tabButton, selectedSection === section.id && styles.activeTabButton]}
+              onPress={() => setSelectedSection(section.id)}
+            >
+              <Text
+                style={[styles.tabText, selectedSection === section.id && styles.activeTabText]}
+              >
+                {section.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* 선택된 섹션 콘텐츠 */}
+      <ScrollView style={styles.chartsScrollContainer} showsVerticalScrollIndicator={false}>
+        {renderSectionContent()}
+      </ScrollView>
+    </View>
+  );
+};
 
 // Loading Skeletons
 const HeaderSkeleton: React.FC = () => (
@@ -435,7 +554,7 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
       case 'stats':
         return (
           <Suspense fallback={sectionLoadingFallback}>
-            <StatsSection />
+            <StatsSection userId={userId} />
           </Suspense>
         );
       default:
@@ -787,5 +906,75 @@ const styles = StyleSheet.create({
   },
   skeletonIcon: {
     backgroundColor: '#E5E7EB',
+  },
+  statsContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  tabsContainer: {
+    backgroundColor: 'white',
+    paddingTop: 2,
+    paddingBottom: 4,
+  },
+  tabsScroll: {
+    paddingHorizontal: 20,
+  },
+  tabsScrollContent: {
+    paddingRight: 20,
+  },
+  tabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: 'white',
+    marginRight: 8,
+    flexShrink: 0,
+  },
+  activeTabButton: {
+    borderColor: '#BFDBFE',
+    backgroundColor: '#EFF6FF',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  activeTabText: {
+    color: '#1D4ED8',
+  },
+  chartsScrollContainer: {
+    flex: 1,
+  },
+  chartsContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  comingSoonContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 80,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  comingSoonText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  comingSoonSubtext: {
+    fontSize: 14,
+    color: '#6B7280',
   },
 });

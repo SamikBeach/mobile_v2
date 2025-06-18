@@ -81,4 +81,33 @@ export const LegacyColorMapping = {
   '#D1FAE5': TailwindGreen[200], // 기존 태그 색상
 } as const;
 
+// 차트용 파스텔 색상 배열
+export const ChartColors = {
+  PASTEL_COLORS: [
+    '#93c5fd', // blue-300
+    '#a7f3d0', // green-200
+    '#fcd34d', // amber-300
+    '#f9a8d4', // pink-300
+    '#c4b5fd', // violet-300
+    '#fda4af', // rose-300
+    '#a5f3fc', // cyan-200
+    '#99f6e4', // teal-200
+    '#bef264', // lime-300
+    '#fdba74', // orange-300
+  ],
+
+  // 독서 상태별 색상
+  READING_STATUS: {
+    READ: '#86efac', // green-300
+    reading: '#93c5fd', // blue-300
+    wantToRead: '#c4b5fd', // violet-300
+  },
+
+  // 차트 배경색
+  background: '#ffffff',
+  grid: '#f3f4f6',
+  text: '#374151',
+  lightText: '#6b7280',
+};
+
 export default AppColors;

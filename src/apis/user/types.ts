@@ -358,49 +358,37 @@ export enum TimeRangeOptions {
   YEAR = 'year',
 }
 
-// 통계 관련 인터페이스들 (간소화)
+/**
+ * 통계 설정 업데이트 요청
+ */
 export interface UpdateStatisticsSettingRequest {
   isReadingStatusPublic?: boolean;
-  isReadingTimePatternPublic?: boolean;
-  isReadingStatusByPeriodPublic?: boolean;
   isGenreAnalysisPublic?: boolean;
-  isAuthorPublisherStatsPublic?: boolean;
-  isReviewStatsPublic?: boolean;
   isRatingStatsPublic?: boolean;
+  isReviewStatsPublic?: boolean;
   isActivityFrequencyPublic?: boolean;
-  isRatingHabitsPublic?: boolean;
   isUserInteractionPublic?: boolean;
   isFollowerStatsPublic?: boolean;
   isCommunityActivityPublic?: boolean;
-  isReviewInfluencePublic?: boolean;
-  isLibraryCompositionPublic?: boolean;
-  isLibraryPopularityPublic?: boolean;
-  isLibraryUpdatePatternPublic?: boolean;
-  isSearchActivityPublic?: boolean;
-  isBookMetadataStatsPublic?: boolean;
 }
 
+/**
+ * 통계 설정 응답
+ */
 export interface StatisticsSettingResponse {
   isReadingStatusPublic: boolean;
-  isReadingTimePatternPublic: boolean;
-  isReadingStatusByPeriodPublic: boolean;
   isGenreAnalysisPublic: boolean;
-  isAuthorPublisherStatsPublic: boolean;
-  isReviewStatsPublic: boolean;
   isRatingStatsPublic: boolean;
+  isReviewStatsPublic: boolean;
   isActivityFrequencyPublic: boolean;
-  isRatingHabitsPublic: boolean;
   isUserInteractionPublic: boolean;
   isFollowerStatsPublic: boolean;
   isCommunityActivityPublic: boolean;
-  isReviewInfluencePublic: boolean;
-  isLibraryCompositionPublic: boolean;
-  isLibraryPopularityPublic: boolean;
-  isLibraryUpdatePatternPublic: boolean;
-  isSearchActivityPublic: boolean;
-  isBookMetadataStatsPublic: boolean;
 }
 
+/**
+ * 독서 상태별 통계 응답
+ */
 export interface ReadingStatusStatsResponse {
   wantToReadCount: number;
   readingCount: number;
@@ -409,7 +397,69 @@ export interface ReadingStatusStatsResponse {
   isPublic: boolean;
 }
 
-export interface RecentPopularSearchResponse {
-  term: string;
-  count: number;
+/**
+ * 장르/카테고리 분석 통계 응답
+ */
+export interface GenreAnalysisResponse {
+  categoryCounts: { category: string; count: number }[];
+  subCategoryCounts: { subCategory: string; count: number }[];
+  mostReadCategory: string;
+  isPublic: boolean;
+}
+
+/**
+ * 평점 통계 응답
+ */
+export interface RatingStatsResponse {
+  averageRating: number;
+  ratingDistribution: { rating: number; count: number }[];
+  categoryRatings: { category: string; averageRating: number }[];
+  monthlyAverageRatings: { month: string; averageRating: number }[];
+  isPublic: boolean;
+}
+
+/**
+ * 리뷰 통계 응답
+ */
+export interface ReviewStatsResponse {
+  totalReviews: number;
+  monthlyReviewCounts: { month: string; count: number }[];
+  reviewTypeDistribution: { type: string; percentage: number }[];
+  averageReviewLength: number;
+  isPublic: boolean;
+}
+
+/**
+ * 활동 빈도 통계 응답
+ */
+export interface ActivityFrequencyResponse {
+  averageReviewInterval: number;
+  averageRatingInterval: number;
+  mostActiveHour: string;
+  mostActiveDay: string;
+  isPublic: boolean;
+}
+
+/**
+ * 사용자 상호작용 통계 응답
+ */
+export interface UserInteractionResponse {
+  totalLikesReceived: number;
+  totalCommentsReceived: number;
+  totalCommentsCreated: number;
+  totalLikesGiven: number;
+  engagementRate: number;
+  monthlyLikesReceived: { month: string; count: number }[];
+  monthlyCommentsReceived: { month: string; count: number }[];
+  isPublic: boolean;
+}
+
+/**
+ * 팔로워/팔로잉 통계 응답
+ */
+export interface FollowerStatsResponse {
+  followersCount: number;
+  followingCount: number;
+  followerGrowth: { date: string; count: number }[];
+  isPublic: boolean;
 }
