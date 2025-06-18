@@ -395,46 +395,52 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
   }
 
   const renderSectionContent = () => {
+    const sectionLoadingFallback = (
+      <View style={styles.sectionLoadingContainer}>
+        <LoadingSpinner />
+      </View>
+    );
+
     switch (selectedSection) {
       case 'read':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <ReadBooksSection userId={userId} />
           </Suspense>
         );
       case 'reviews':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <ReviewsSectionComponent userId={userId} />
           </Suspense>
         );
       case 'libraries':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <LibrariesSectionComponent userId={userId} />
           </Suspense>
         );
       case 'community':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <CommunitySectionComponent userId={userId} />
           </Suspense>
         );
       case 'subscriptions':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <SubscribedLibrariesSection userId={userId} isMyProfile={isMyProfile} />
           </Suspense>
         );
       case 'stats':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <StatsSection />
           </Suspense>
         );
       default:
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <ReadBooksSection userId={userId} />
           </Suspense>
         );
@@ -495,8 +501,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId: propUserId
       <Suspense
         fallback={
           <View style={styles.loadingContainer}>
-            <HeaderSkeleton />
-            <SummarySkeleton />
             <LoadingSpinner />
           </View>
         }
@@ -518,6 +522,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'white',
   },
   errorContainer: {
@@ -745,6 +751,13 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
+  },
+  sectionLoadingContainer: {
+    flex: 1,
+    minHeight: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 40,
   },
   sectionContainer: {
     padding: 16,
