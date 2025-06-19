@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Switch } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
+import { Globe } from 'lucide-react-native';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getGenreAnalysis } from '../../apis/user/user';
 import { ChartColors } from '../../constants/colors';
@@ -15,6 +16,7 @@ type ChartType = 'authors' | 'publishers';
 
 export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ userId }) => {
   const [selectedChart, setSelectedChart] = useState<ChartType>('authors');
+  const [isPublic, setIsPublic] = useState(true);
 
   const { data } = useSuspenseQuery({
     queryKey: ['genreAnalysis', userId],
@@ -90,7 +92,22 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>작가 & 출판사 통계</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>작가 & 출판사 통계</Text>
+        <View style={styles.switchContainer}>
+          <View style={styles.switchWrapper}>
+            <Globe size={16} color='#64748B' />
+            <Switch
+              value={isPublic}
+              onValueChange={setIsPublic}
+              trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
+              thumbColor={isPublic ? '#FFFFFF' : '#F8FAFC'}
+              ios_backgroundColor='#F1F5F9'
+              style={styles.switch}
+            />
+          </View>
+        </View>
+      </View>
 
       {/* 차트 선택 탭 */}
       <View style={styles.tabContainer}>
@@ -125,10 +142,18 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
         <Text style={styles.detailTitle}>
           {selectedChart === 'authors' ? '선호 작가 TOP 5' : '선호 출판사 TOP 5'}
         </Text>
-        <ScrollView style={styles.detailList}>
+        <View style={styles.detailList}>
           {(selectedChart === 'authors' ? favoriteAuthors : favoritePublishers).map(
             (item, index) => (
-              <View key={index} style={styles.detailItem}>
+              <View
+                key={index}
+                style={[
+                  styles.detailItem,
+                  index ===
+                    (selectedChart === 'authors' ? favoriteAuthors : favoritePublishers).length -
+                      1 && styles.lastDetailItem,
+                ]}
+              >
                 <View style={styles.detailInfo}>
                   <Text style={styles.detailName}>{item.name}</Text>
                   <Text style={styles.detailMeta}>
@@ -141,7 +166,7 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
               </View>
             )
           )}
-        </ScrollView>
+        </View>
       </View>
     </View>
   );
@@ -153,17 +178,37 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     color: ChartColors.text,
-    marginBottom: 16,
+  },
+  switchContainer: {
+    justifyContent: 'flex-end',
+  },
+  switchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  switch: {
+    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+    marginLeft: 2,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -171,25 +216,26 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 8,
-    marginHorizontal: 4,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginHorizontal: 2,
     borderRadius: 16,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
   },
   activeTabButton: {
-    backgroundColor: '#8B5CF6',
-    borderColor: '#8B5CF6',
+    backgroundColor: '#EFF6FF',
+    borderColor: '#3B82F6',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
-    color: '#6B7280',
+    color: '#64748B',
   },
   activeTabText: {
-    color: 'white',
+    color: '#3B82F6',
     fontWeight: '600',
   },
   chartContainer: {
@@ -211,7 +257,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   detailList: {
-    maxHeight: 200,
+    // maxHeight 제거로 모든 항목이 스크롤 없이 표시됨
   },
   detailItem: {
     flexDirection: 'row',
@@ -220,6 +266,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+  },
+  lastDetailItem: {
+    borderBottomWidth: 0,
   },
   detailInfo: {
     flex: 1,

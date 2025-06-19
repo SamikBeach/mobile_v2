@@ -398,12 +398,63 @@ export interface ReadingStatusStatsResponse {
 }
 
 /**
+ * 기간별 독서 상태 통계 응답
+ */
+export interface ReadingStatusByPeriodResponse {
+  yearly: {
+    year: string;
+    wantToReadCount: number;
+    readingCount: number;
+    readCount: number;
+  }[];
+  monthly: {
+    month: string;
+    wantToReadCount: number;
+    readingCount: number;
+    readCount: number;
+  }[];
+  weekly: {
+    week: string;
+    wantToReadCount: number;
+    readingCount: number;
+    readCount: number;
+  }[];
+  daily: {
+    date: string;
+    wantToReadCount: number;
+    readingCount: number;
+    readCount: number;
+  }[];
+  isPublic: boolean;
+}
+
+/**
  * 장르/카테고리 분석 통계 응답
  */
 export interface GenreAnalysisResponse {
   categoryCounts: { category: string; count: number }[];
   subCategoryCounts: { subCategory: string; count: number }[];
   mostReadCategory: string;
+  yearly: {
+    year: string;
+    categories: { category: string; count: number }[];
+    subCategories: { subCategory: string; count: number }[];
+  }[];
+  monthly: {
+    month: string;
+    categories: { category: string; count: number }[];
+    subCategories: { subCategory: string; count: number }[];
+  }[];
+  weekly: {
+    week: string;
+    categories: { category: string; count: number }[];
+    subCategories: { subCategory: string; count: number }[];
+  }[];
+  daily: {
+    date: string;
+    categories: { category: string; count: number }[];
+    subCategories: { subCategory: string; count: number }[];
+  }[];
   isPublic: boolean;
 }
 

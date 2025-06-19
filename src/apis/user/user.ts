@@ -16,6 +16,7 @@ import {
   UpdateStatisticsSettingRequest,
   StatisticsSettingResponse,
   ReadingStatusStatsResponse,
+  ReadingStatusByPeriodResponse,
   GenreAnalysisResponse,
   RatingStatsResponse,
   ReviewStatsResponse,
@@ -254,6 +255,17 @@ export const getReadingStatusStats = async (
   userId: number
 ): Promise<ReadingStatusStatsResponse> => {
   const response = await axios.get(`/user/${userId}/statistics/reading-status`);
+  return response.data;
+};
+
+/**
+ * 기간별 독서 상태 통계를 조회합니다.
+ * @param userId 사용자 ID
+ */
+export const getReadingStatusByPeriod = async (
+  userId: number
+): Promise<ReadingStatusByPeriodResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/reading-status-by-period`);
   return response.data;
 };
 

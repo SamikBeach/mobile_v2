@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  ScrollView,
+  Switch,
+} from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
+import { Globe } from 'lucide-react-native';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getRatingStats } from '../../apis/user/user';
 import { ChartColors } from '../../constants/colors';
@@ -15,6 +24,7 @@ type TabType = 'distribution' | 'categories' | 'monthly';
 
 export const RatingStatsChart: React.FC<RatingStatsChartProps> = ({ userId }) => {
   const [activeTab, setActiveTab] = useState<TabType>('distribution');
+  const [isPublic, setIsPublic] = useState(true);
 
   const { data, isLoading } = useSuspenseQuery({
     queryKey: ['ratingStats', userId],
@@ -165,7 +175,22 @@ export const RatingStatsChart: React.FC<RatingStatsChartProps> = ({ userId }) =>
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>평점 통계</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>평점 통계</Text>
+        <View style={styles.switchContainer}>
+          <View style={styles.switchWrapper}>
+            <Globe size={16} color='#64748B' />
+            <Switch
+              value={isPublic}
+              onValueChange={setIsPublic}
+              trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
+              thumbColor={isPublic ? '#FFFFFF' : '#F8FAFC'}
+              ios_backgroundColor='#F1F5F9'
+              style={styles.switch}
+            />
+          </View>
+        </View>
+      </View>
 
       {/* 평균 평점 표시 */}
       <View style={styles.averageContainer}>
@@ -200,17 +225,37 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     color: ChartColors.text,
-    marginBottom: 16,
+  },
+  switchContainer: {
+    justifyContent: 'flex-end',
+  },
+  switchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  switch: {
+    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+    marginLeft: 2,
   },
   averageContainer: {
     backgroundColor: ChartColors.grid,
@@ -233,22 +278,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   tabButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 12,
-    borderRadius: 20,
-    backgroundColor: ChartColors.grid,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 6,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   activeTabButton: {
-    backgroundColor: '#fcd34d', // amber-300
+    backgroundColor: '#EFF6FF',
+    borderColor: '#3B82F6',
   },
   tabText: {
-    fontSize: 14,
-    color: ChartColors.lightText,
+    fontSize: 12,
+    color: '#64748B',
     fontWeight: '500',
   },
   activeTabText: {
-    color: ChartColors.text,
+    color: '#3B82F6',
     fontWeight: '600',
   },
   chartContainer: {

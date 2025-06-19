@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, Switch } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import { Globe } from 'lucide-react-native';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getFollowerStats } from '../../apis/user/user';
 import { ChartColors } from '../../constants/colors';
@@ -12,6 +13,8 @@ interface FollowerStatsChartProps {
 const { width: screenWidth } = Dimensions.get('window');
 
 export const FollowerStatsChart: React.FC<FollowerStatsChartProps> = ({ userId }) => {
+  const [isPublic, setIsPublic] = useState(true);
+
   const { data } = useSuspenseQuery({
     queryKey: ['followerStats', userId],
     queryFn: () => getFollowerStats(userId),
@@ -55,7 +58,22 @@ export const FollowerStatsChart: React.FC<FollowerStatsChartProps> = ({ userId }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>팔로워 통계</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>팔로워 통계</Text>
+        <View style={styles.switchContainer}>
+          <View style={styles.switchWrapper}>
+            <Globe size={16} color='#64748B' />
+            <Switch
+              value={isPublic}
+              onValueChange={setIsPublic}
+              trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
+              thumbColor={isPublic ? '#FFFFFF' : '#F8FAFC'}
+              ios_backgroundColor='#F1F5F9'
+              style={styles.switch}
+            />
+          </View>
+        </View>
+      </View>
 
       {/* 주요 지표 */}
       <View style={styles.metricsContainer}>
@@ -97,17 +115,37 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
     color: ChartColors.text,
-    marginBottom: 16,
+  },
+  switchContainer: {
+    justifyContent: 'flex-end',
+  },
+  switchWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  switch: {
+    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+    marginLeft: 2,
   },
   metricsContainer: {
     flexDirection: 'row',
