@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { getReadingStatusByPeriod } from '../../apis/user/user';
 import { ReadingStatusType } from '../../constants';
 import { ChartColors } from '../../constants/colors';
+import { useCurrentUser, useStatisticsSettings } from '../../hooks';
+import { LoadingSpinner } from '../LoadingSpinner';
 
 interface ReadingStatusByPeriodChartProps {
   userId: number;
@@ -222,22 +224,30 @@ const CustomStackedBarChart: React.FC<CustomStackedBarChartProps> = ({ data, wid
   );
 };
 
-export const ReadingStatusByPeriodChart: React.FC<ReadingStatusByPeriodChartProps> = ({
-  userId,
-}) => {
+const ReadingStatusByPeriodChart: React.FC<ReadingStatusByPeriodChartProps> = ({ userId }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('monthly');
-  const [isPublic, setIsPublic] = useState(true);
+
+  const currentUser = useCurrentUser();
+  const isMyProfile = currentUser?.id === userId;
+
+  // 항상 useStatisticsSettings를 호출하되 isMyProfile이 아닐 때는 결과를 무시
+  const statisticsHook = useStatisticsSettings(userId);
+  const { settings, handleUpdateSetting } = isMyProfile
+    ? statisticsHook
+    : { settings: null, handleUpdateSetting: () => {} };
 
   const { data } = useSuspenseQuery({
     queryKey: ['readingStatusByPeriod', userId],
-    queryFn: () => userApi.getReadingStatusByPeriod(userId),
+    queryFn: () => getReadingStatusByPeriod(userId),
   });
 
   // 데이터가 비공개인 경우
-  if (!data.isPublic) {
+  if (!data.isPublic && !isMyProfile) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>기간별 독서</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>기간별 독서</Text>
+        </View>
         <View style={styles.privateContainer}>
           <Text style={styles.privateText}>이 통계는 비공개 설정되어 있습니다.</Text>
         </View>
@@ -257,9 +267,28 @@ export const ReadingStatusByPeriodChart: React.FC<ReadingStatusByPeriodChartProp
   ) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>기간별 독서</Text>
-        <View style={styles.privateContainer}>
-          <Text style={styles.privateText}>표시할 데이터가 없습니다.</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>기간별 독서</Text>
+          {isMyProfile && (
+            <View style={styles.switchContainer}>
+              <View style={styles.switchWrapper}>
+                <Globe size={16} color='#64748B' />
+                <Switch
+                  value={settings?.isReadingStatusByPeriodPublic || false}
+                  onValueChange={value =>
+                    handleUpdateSetting('isReadingStatusByPeriodPublic', value)
+                  }
+                  trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
+                  thumbColor={settings?.isReadingStatusByPeriodPublic ? '#FFFFFF' : '#F8FAFC'}
+                  ios_backgroundColor='#F1F5F9'
+                  style={styles.switch}
+                />
+              </View>
+            </View>
+          )}
+        </View>
+        <View style={styles.noDataContainer}>
+          <Text style={styles.noDataText}>표시할 데이터가 없습니다.</Text>
         </View>
       </View>
     );
@@ -372,19 +401,21 @@ export const ReadingStatusByPeriodChart: React.FC<ReadingStatusByPeriodChartProp
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>기간별 독서</Text>
-        <View style={styles.switchContainer}>
-          <View style={styles.switchWrapper}>
-            <Globe size={16} color='#64748B' />
-            <Switch
-              value={isPublic}
-              onValueChange={setIsPublic}
-              trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
-              thumbColor={isPublic ? '#FFFFFF' : '#F8FAFC'}
-              ios_backgroundColor='#F1F5F9'
-              style={styles.switch}
-            />
+        {isMyProfile && (
+          <View style={styles.switchContainer}>
+            <View style={styles.switchWrapper}>
+              <Globe size={16} color='#64748B' />
+              <Switch
+                value={settings?.isReadingStatusByPeriodPublic || false}
+                onValueChange={value => handleUpdateSetting('isReadingStatusByPeriodPublic', value)}
+                trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
+                thumbColor={settings?.isReadingStatusByPeriodPublic ? '#FFFFFF' : '#F8FAFC'}
+                ios_backgroundColor='#F1F5F9'
+                style={styles.switch}
+              />
+            </View>
           </View>
-        </View>
+        )}
       </View>
 
       {/* 기간 선택 탭 */}
@@ -548,16 +579,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginHorizontal: 4,
   },
-  noDataContainer: {
-    height: 260,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  noDataText: {
-    fontSize: 14,
-    color: ChartColors.lightText,
-    textAlign: 'center',
-  },
+
   legendContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -620,4 +642,22 @@ const styles = StyleSheet.create({
     color: ChartColors.lightText,
     textAlign: 'center',
   },
+  noDataContainer: {
+    height: 260,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noDataText: {
+    fontSize: 14,
+    color: ChartColors.lightText,
+    textAlign: 'center',
+  },
 });
+
+const ReadingStatusByPeriodChartWrapper: React.FC<ReadingStatusByPeriodChartProps> = props => (
+  <Suspense fallback={<LoadingSpinner />}>
+    <ReadingStatusByPeriodChart {...props} />
+  </Suspense>
+);
+
+export { ReadingStatusByPeriodChartWrapper as ReadingStatusByPeriodChart };

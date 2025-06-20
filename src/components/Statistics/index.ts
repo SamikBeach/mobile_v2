@@ -1,7 +1,10 @@
 export { ActivityFrequencyChart } from './ActivityFrequencyChart';
 export { AuthorPublisherChart } from './AuthorPublisherChart';
-export { FollowerStatsChart } from './FollowerStatsChart';
+export { default as CommunityActivityChart } from './CommunityActivityChart';
+export { default as CommunityInfluenceChart } from './CommunityInfluenceChart';
+export { default as FollowerStatsChart } from './FollowerStatsChart';
 export { GenreAnalysisChart } from './GenreAnalysisChart';
+export { default as LikesAndCommentsChart } from './LikesAndCommentsChart';
 export { PriceStatsChart } from './PriceStatsChart';
 export { default as RatingStatsChart } from './RatingStatsChart';
 export { ReadingSpeedChart } from './ReadingSpeedChart';
@@ -9,4 +12,4 @@ export { ReadingStatusByPeriodChart } from './ReadingStatusByPeriodChart';
 export { ReadingStatusChart } from './ReadingStatusChart';
 export { default as ReviewStatsChart } from './ReviewStatsChart';
 export { default as ReviewSummaryStatsChart } from './ReviewSummaryStatsChart';
-export { UserInteractionChart } from './UserInteractionChart';
+export { default as UserInteractionChart } from './UserInteractionChart';

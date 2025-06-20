@@ -12,6 +12,20 @@ interface GenreAnalysisChartProps {
 const { width: screenWidth } = Dimensions.get('window');
 
 // 가로 막대 차트 컴포넌트
+// 파스텔 색상 배열 정의
+const PASTEL_COLORS = [
+  '#BFDBFE', // blue
+  '#A7F3D0', // green
+  '#FDE68A', // yellow
+  '#FECACA', // red
+  '#C4B5FD', // purple
+  '#F9A8D4', // pink
+  '#C7D2FE', // indigo
+  '#FDBA74', // orange
+  '#BEF264', // lime
+  '#A5F3FC', // cyan
+];
+
 const HorizontalBarChart: React.FC<{
   data: Array<{ category?: string; subCategory?: string; count: number }>;
   width: number;
@@ -19,7 +33,8 @@ const HorizontalBarChart: React.FC<{
   title: string;
   isSubCategory?: boolean;
 }> = ({ data, width, height, title, isSubCategory = false }) => {
-  if (!data || data.length === 0) {
+  // 안전한 데이터 체크
+  if (!data || !Array.isArray(data) || data.length === 0) {
     return (
       <View style={styles.chartSection}>
         <Text style={styles.chartTitle}>{title}</Text>
@@ -30,10 +45,23 @@ const HorizontalBarChart: React.FC<{
     );
   }
 
-  // 상위 8개 항목만 표시
-  const topData = [...data].sort((a, b) => b.count - a.count).slice(0, 8);
-  const maxValue = Math.max(...topData.map(item => item.count));
+  // 상위 8개 항목만 표시 - 안전한 배열 처리
+  const sortedData = data.filter(item => item && typeof item.count === 'number');
+  const topData = sortedData.sort((a, b) => b.count - a.count).slice(0, 8);
 
+  // 빈 배열인 경우 처리
+  if (topData.length === 0) {
+    return (
+      <View style={styles.chartSection}>
+        <Text style={styles.chartTitle}>{title}</Text>
+        <View style={{ width, height: height / 2, justifyContent: 'center', alignItems: 'center' }}>
+          <Text style={{ color: '#9CA3AF', fontSize: 14 }}>유효한 데이터가 없습니다</Text>
+        </View>
+      </View>
+    );
+  }
+
+  const maxValue = Math.max(...topData.map(item => item.count));
   const barHeight = 24;
   const spacing = 8;
   const leftPadding = 100;
@@ -45,7 +73,7 @@ const HorizontalBarChart: React.FC<{
         {topData.map((item, index) => {
           const barWidth = maxValue > 0 ? (item.count / maxValue) * (width - leftPadding - 60) : 0;
           const label = isSubCategory ? item.subCategory : item.category;
-          const color = ChartColors.PASTEL_COLORS[index % ChartColors.PASTEL_COLORS.length];
+          const color = PASTEL_COLORS[index % PASTEL_COLORS.length];
 
           return (
             <View
@@ -119,9 +147,9 @@ export const GenreAnalysisChart: React.FC<GenreAnalysisChartProps> = ({ userId }
     );
   }
 
-  // 메인 카테고리와 서브 카테고리 데이터
-  const mainCategories = data.categoryCounts || [];
-  const subCategories = data.subCategoryCounts || [];
+  // 메인 카테고리와 서브 카테고리 데이터 - 안전한 처리
+  const mainCategories = Array.isArray(data.categoryCounts) ? data.categoryCounts : [];
+  const subCategories = Array.isArray(data.subCategoryCounts) ? data.subCategoryCounts : [];
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>

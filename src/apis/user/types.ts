@@ -363,13 +363,23 @@ export enum TimeRangeOptions {
  */
 export interface UpdateStatisticsSettingRequest {
   isReadingStatusPublic?: boolean;
+  isReadingTimePatternPublic?: boolean;
+  isReadingStatusByPeriodPublic?: boolean;
   isGenreAnalysisPublic?: boolean;
-  isRatingStatsPublic?: boolean;
+  isAuthorPublisherStatsPublic?: boolean;
   isReviewStatsPublic?: boolean;
+  isRatingStatsPublic?: boolean;
   isActivityFrequencyPublic?: boolean;
+  isRatingHabitsPublic?: boolean;
   isUserInteractionPublic?: boolean;
   isFollowerStatsPublic?: boolean;
   isCommunityActivityPublic?: boolean;
+  isReviewInfluencePublic?: boolean;
+  isLibraryCompositionPublic?: boolean;
+  isLibraryPopularityPublic?: boolean;
+  isLibraryUpdatePatternPublic?: boolean;
+  isSearchActivityPublic?: boolean;
+  isBookMetadataStatsPublic?: boolean;
 }
 
 /**
@@ -377,13 +387,23 @@ export interface UpdateStatisticsSettingRequest {
  */
 export interface StatisticsSettingResponse {
   isReadingStatusPublic: boolean;
+  isReadingTimePatternPublic: boolean;
+  isReadingStatusByPeriodPublic: boolean;
   isGenreAnalysisPublic: boolean;
-  isRatingStatsPublic: boolean;
+  isAuthorPublisherStatsPublic: boolean;
   isReviewStatsPublic: boolean;
+  isRatingStatsPublic: boolean;
   isActivityFrequencyPublic: boolean;
+  isRatingHabitsPublic: boolean;
   isUserInteractionPublic: boolean;
   isFollowerStatsPublic: boolean;
   isCommunityActivityPublic: boolean;
+  isReviewInfluencePublic: boolean;
+  isLibraryCompositionPublic: boolean;
+  isLibraryPopularityPublic: boolean;
+  isLibraryUpdatePatternPublic: boolean;
+  isSearchActivityPublic: boolean;
+  isBookMetadataStatsPublic: boolean;
 }
 
 /**
@@ -551,8 +571,23 @@ export interface UserInteractionResponse {
   totalCommentsCreated: number;
   totalLikesGiven: number;
   engagementRate: number;
+  yearlyLikesReceived: { year: string; count: number }[];
   monthlyLikesReceived: { month: string; count: number }[];
+  weeklyLikesReceived: { week: string; count: number }[];
+  dailyLikesReceived: { date: string; count: number }[];
+  yearlyCommentsReceived: { year: string; count: number }[];
   monthlyCommentsReceived: { month: string; count: number }[];
+  weeklyCommentsReceived: { week: string; count: number }[];
+  dailyCommentsReceived: { date: string; count: number }[];
+  yearlyCommentsCreated: { year: string; count: number }[];
+  monthlyCommentsCreated: { month: string; count: number }[];
+  weeklyCommentsCreated: { week: string; count: number }[];
+  dailyCommentsCreated: { date: string; count: number }[];
+  yearlyLikesGiven: { year: string; count: number }[];
+  monthlyLikesGiven: { month: string; count: number }[];
+  weeklyLikesGiven: { week: string; count: number }[];
+  dailyLikesGiven: { date: string; count: number }[];
+  monthlyLikes: { month: string; count: number }[];
   isPublic: boolean;
 }
 
@@ -563,5 +598,71 @@ export interface FollowerStatsResponse {
   followersCount: number;
   followingCount: number;
   followerGrowth: { date: string; count: number }[];
+  yearly: {
+    year: string;
+    followers: number;
+    following: number;
+  }[];
+  monthly: {
+    month: string;
+    followers: number;
+    following: number;
+  }[];
+  weekly: {
+    week: string;
+    followers: number;
+    following: number;
+  }[];
+  daily: {
+    date: string;
+    followers: number;
+    following: number;
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 커뮤니티 활동 응답
+ */
+export interface CommunityActivityResponse {
+  totalReviews: number;
+  yearly: {
+    year: string;
+    general: number;
+    discussion: number;
+    question: number;
+    meetup: number;
+  }[];
+  monthly: {
+    month: string;
+    general: number;
+    discussion: number;
+    question: number;
+    meetup: number;
+  }[];
+  weekly: {
+    week: string;
+    general: number;
+    discussion: number;
+    question: number;
+    meetup: number;
+  }[];
+  daily: {
+    date: string;
+    general: number;
+    discussion: number;
+    question: number;
+    meetup: number;
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 리뷰 영향력 응답
+ */
+export interface ReviewInfluenceResponse {
+  averageLikesPerReview: number;
+  popularReviews: { id: number; content: string; likes: number }[];
+  communityContributionScore: number;
   isPublic: boolean;
 }

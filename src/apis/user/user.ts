@@ -23,6 +23,8 @@ import {
   ActivityFrequencyResponse,
   UserInteractionResponse,
   FollowerStatsResponse,
+  CommunityActivityResponse,
+  ReviewInfluenceResponse,
 } from './types';
 
 /**
@@ -313,7 +315,44 @@ export const getUserInteraction = async (userId: number): Promise<UserInteractio
  * 팔로워 통계 조회
  */
 export const getFollowerStats = async (userId: number): Promise<FollowerStatsResponse> => {
-  const response = await axios.get(`/user/${userId}/statistics/follower-stats`);
+  const response = await axios.get(`/user/${userId}/statistics/follower`);
+  return response.data;
+};
+
+/**
+ * 커뮤니티 활동 통계 조회
+ */
+export const getCommunityActivity = async (userId: number): Promise<CommunityActivityResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/community-activity`);
+  return response.data;
+};
+
+/**
+ * 리뷰 영향력 통계 조회
+ */
+export const getReviewInfluence = async (userId: number): Promise<ReviewInfluenceResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/review-influence`);
+  return response.data;
+};
+
+/**
+ * 통계 설정 조회 (특정 사용자용)
+ */
+export const getUserStatisticsSettings = async (
+  userId: number
+): Promise<StatisticsSettingResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics-settings`);
+  return response.data;
+};
+
+/**
+ * 통계 설정 업데이트 (특정 사용자용)
+ */
+export const updateUserStatisticsSettings = async (
+  userId: number,
+  data: UpdateStatisticsSettingRequest
+): Promise<StatisticsSettingResponse> => {
+  const response = await axios.put(`/user/${userId}/statistics-settings`, data);
   return response.data;
 };
 

@@ -83,31 +83,28 @@ export const LegacyColorMapping = {
 
 // 차트용 파스텔 색상 배열
 export const ChartColors = {
-  PASTEL_COLORS: [
-    '#93c5fd', // blue-300
-    '#a7f3d0', // green-200
-    '#fcd34d', // amber-300
-    '#f9a8d4', // pink-300
-    '#c4b5fd', // violet-300
-    '#fda4af', // rose-300
-    '#a5f3fc', // cyan-200
-    '#99f6e4', // teal-200
-    '#bef264', // lime-300
-    '#fdba74', // orange-300
-  ],
-
-  // 독서 상태별 색상
-  READING_STATUS: {
-    READ: '#86efac', // green-300
-    reading: '#93c5fd', // blue-300
-    wantToRead: '#c4b5fd', // violet-300
+  primary: '#3B82F6',
+  secondary: '#10B981',
+  tertiary: '#F59E0B',
+  quaternary: '#EF4444',
+  text: '#1F2937',
+  lightText: '#6B7280',
+  grid: '#F3F4F6',
+  background: '#FFFFFF',
+  // 파스텔톤 색상들
+  pastel: {
+    blue: '#BFDBFE',
+    green: '#A7F3D0',
+    yellow: '#FDE68A',
+    red: '#FECACA',
+    purple: '#C4B5FD',
+    pink: '#F9A8D4',
+    indigo: '#C7D2FE',
+    orange: '#FDBA74',
+    lime: '#BEF264',
+    cyan: '#A5F3FC',
+    violet: '#C4B5FD',
   },
-
-  // 차트 배경색
-  background: '#ffffff',
-  grid: '#f3f4f6',
-  text: '#374151',
-  lightText: '#6b7280',
 };
 
 export default AppColors;

@@ -30,8 +30,10 @@ import {
   RatingStatsChart,
   ReviewStatsChart,
   ReviewSummaryStatsChart,
-  UserInteractionChart,
+  LikesAndCommentsChart,
   FollowerStatsChart,
+  CommunityActivityChart,
+  CommunityInfluenceChart,
   ReadingStatusByPeriodChart,
   AuthorPublisherChart,
 } from '../../components';
@@ -397,10 +399,16 @@ const StatsSection: React.FC<{ userId: number }> = ({ userId }) => {
         return (
           <View style={styles.chartsContainer}>
             <Suspense fallback={<LoadingSpinner />}>
-              <UserInteractionChart userId={userId} />
+              <LikesAndCommentsChart userId={userId} />
             </Suspense>
             <Suspense fallback={<LoadingSpinner />}>
               <FollowerStatsChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <CommunityActivityChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <CommunityInfluenceChart userId={userId} />
             </Suspense>
           </View>
         );

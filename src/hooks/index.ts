@@ -10,3 +10,4 @@ export * from './useUserProfile';
 export * from './useIsMyProfile';
 export * from './useUserFollow';
 export * from './useCurrentUser';
+export * from './useStatisticsSettings';
