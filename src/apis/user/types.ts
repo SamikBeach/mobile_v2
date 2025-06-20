@@ -666,3 +666,55 @@ export interface ReviewInfluenceResponse {
   communityContributionScore: number;
   isPublic: boolean;
 }
+
+/**
+ * 서재 구성 통계 응답
+ */
+export interface LibraryCompositionResponse {
+  totalLibraries: number;
+  booksPerLibrary: { name: string; count: number }[];
+  tagsDistribution: {
+    library: string;
+    tags: { tag: string; count: number }[];
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 서재 인기도 통계 응답
+ */
+export interface LibraryPopularityResponse {
+  subscribersPerLibrary: { library: string; subscribers: number }[];
+  mostPopularLibrary: string;
+  popularityTrend: {
+    library: string;
+    trend: { date: string; subscribers: number }[];
+  }[];
+  yearly: {
+    year: string;
+    libraries: { library: string; subscribers: number }[];
+  }[];
+  monthly: {
+    month: string;
+    libraries: { library: string; subscribers: number }[];
+  }[];
+  weekly: {
+    week: string;
+    libraries: { library: string; subscribers: number }[];
+  }[];
+  daily: {
+    date: string;
+    libraries: { library: string; subscribers: number }[];
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 서재 업데이트 패턴 통계 응답
+ */
+export interface LibraryUpdatePatternResponse {
+  updateFrequency: { library: string; updatesPerMonth: number }[];
+  mostActiveLibrary: string;
+  weekdayActivity: { day: string; count: number }[];
+  isPublic: boolean;
+}

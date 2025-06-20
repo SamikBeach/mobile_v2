@@ -25,6 +25,9 @@ import {
   FollowerStatsResponse,
   CommunityActivityResponse,
   ReviewInfluenceResponse,
+  LibraryCompositionResponse,
+  LibraryPopularityResponse,
+  LibraryUpdatePatternResponse,
 } from './types';
 
 /**
@@ -331,7 +334,7 @@ export const getCommunityActivity = async (userId: number): Promise<CommunityAct
  * 리뷰 영향력 통계 조회
  */
 export const getReviewInfluence = async (userId: number): Promise<ReviewInfluenceResponse> => {
-  const response = await axios.get(`/user/${userId}/statistics/review-influence`);
+  const response = await axios.get(`/user/${userId}/stats/review-influence`);
   return response.data;
 };
 
@@ -369,5 +372,33 @@ export const deactivateAccount = async (): Promise<AccountActionResponse> => {
  */
 export const deleteAccount = async (): Promise<AccountActionResponse> => {
   const response = await axios.delete('/user/me');
+  return response.data;
+};
+
+/**
+ * 서재 구성 통계 조회
+ */
+export const getLibraryComposition = async (
+  userId: number
+): Promise<LibraryCompositionResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/library-composition`);
+  return response.data;
+};
+
+/**
+ * 서재 인기도 통계 조회
+ */
+export const getLibraryPopularity = async (userId: number): Promise<LibraryPopularityResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/library-popularity`);
+  return response.data;
+};
+
+/**
+ * 서재 업데이트 패턴 통계 조회
+ */
+export const getLibraryUpdatePattern = async (
+  userId: number
+): Promise<LibraryUpdatePatternResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/library-update-pattern`);
   return response.data;
 };

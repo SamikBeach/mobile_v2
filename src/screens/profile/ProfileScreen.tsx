@@ -36,6 +36,9 @@ import {
   CommunityInfluenceChart,
   ReadingStatusByPeriodChart,
   AuthorPublisherChart,
+  LibraryCompositionChart,
+  LibraryPopularityChart,
+  LibraryUpdatePatternChart,
 } from '../../components';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useIsMyProfile } from '../../hooks/useIsMyProfile';
@@ -415,10 +418,15 @@ const StatsSection: React.FC<{ userId: number }> = ({ userId }) => {
       case 'library':
         return (
           <View style={styles.chartsContainer}>
-            <View style={styles.comingSoonContainer}>
-              <Text style={styles.comingSoonText}>서재 통계</Text>
-              <Text style={styles.comingSoonSubtext}>곧 출시 예정입니다</Text>
-            </View>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LibraryCompositionChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LibraryPopularityChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LibraryUpdatePatternChart userId={userId} />
+            </Suspense>
           </View>
         );
       case 'etc':

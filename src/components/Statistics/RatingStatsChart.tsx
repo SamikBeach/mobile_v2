@@ -14,13 +14,6 @@ interface RatingStatsChartProps {
 
 type TabType = 'distribution' | 'categories' | 'monthly';
 
-// 차트 색상 정의 (노란색 계열)
-const CHART_COLORS = {
-  distribution: '#fcd34d', // amber-300
-  categories: '#fcd34d',
-  monthly: '#fcd34d',
-};
-
 // 날짜 포맷팅 함수: YYYY-MM -> YYYY년 M월
 const formatMonth = (monthStr: string): string => {
   try {
@@ -42,7 +35,7 @@ const RatingStatsChart: React.FC<RatingStatsChartProps> = ({ userId }) => {
   const isMyProfile = currentUser?.id === userId;
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useSuspenseQuery<RatingStatsResponse>({
+  const { data } = useSuspenseQuery<RatingStatsResponse>({
     queryKey: ['ratingStats', userId],
     queryFn: () => getRatingStats(userId),
   });
@@ -294,15 +287,15 @@ const RatingStatsChart: React.FC<RatingStatsChartProps> = ({ userId }) => {
                 fontSize: 11,
               },
             }}
-            yAxisMin={0}
-            yAxisMax={5}
-            bezier
             style={styles.chart}
-            withVerticalLines={false}
-            withHorizontalLines
+            bezier
+            withDots={false}
+            withShadow={false}
+            withHorizontalLabels
+            withVerticalLabels
             yAxisLabel=''
             yAxisSuffix=''
-            yAxisInterval={1}
+            fromZero
           />
         ) : (
           <View style={styles.noDataContainer}>

@@ -105,6 +105,17 @@ export const ChartColors = {
     cyan: '#A5F3FC',
     violet: '#C4B5FD',
   },
+  // 차트용 색상 배열
+  charts: [
+    '#3B82F6', // blue
+    '#10B981', // green
+    '#F59E0B', // yellow
+    '#EF4444', // red
+    '#8B5CF6', // purple
+    '#EC4899', // pink
+    '#06B6D4', // cyan
+    '#F97316', // orange
+  ],
 };
 
 export default AppColors;

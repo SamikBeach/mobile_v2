@@ -13,3 +13,8 @@ export { ReadingStatusChart } from './ReadingStatusChart';
 export { default as ReviewStatsChart } from './ReviewStatsChart';
 export { default as ReviewSummaryStatsChart } from './ReviewSummaryStatsChart';
 export { default as UserInteractionChart } from './UserInteractionChart';
+
+// 서재 통계 차트들
+export { default as LibraryCompositionChart } from './LibraryCompositionChart';
+export { default as LibraryPopularityChart } from './LibraryPopularityChart';
+export { default as LibraryUpdatePatternChart } from './LibraryUpdatePatternChart';
