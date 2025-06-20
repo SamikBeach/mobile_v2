@@ -473,10 +473,61 @@ export interface RatingStatsResponse {
  * 리뷰 통계 응답
  */
 export interface ReviewStatsResponse {
+  /**
+   * 작성한 총 리뷰 수
+   */
   totalReviews: number;
+
+  /**
+   * 월별 리뷰 작성 수
+   */
   monthlyReviewCounts: { month: string; count: number }[];
+
+  /**
+   * 리뷰 유형별 작성 비율
+   */
   reviewTypeDistribution: { type: string; percentage: number }[];
+
+  /**
+   * 리뷰당 평균 글자 수
+   */
   averageReviewLength: number;
+
+  /**
+   * 연도별 리뷰 통계
+   */
+  yearly: {
+    year: string;
+    count: number;
+  }[];
+
+  /**
+   * 월별 리뷰 통계 (최근 12개월)
+   */
+  monthly: {
+    month: string;
+    count: number;
+  }[];
+
+  /**
+   * 주간별 리뷰 통계
+   */
+  weekly: {
+    week: string;
+    count: number;
+  }[];
+
+  /**
+   * 일별 리뷰 통계 (최근 30일)
+   */
+  daily: {
+    date: string;
+    count: number;
+  }[];
+
+  /**
+   * 공개 여부
+   */
   isPublic: boolean;
 }
 

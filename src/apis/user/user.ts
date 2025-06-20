@@ -281,7 +281,7 @@ export const getGenreAnalysis = async (userId: number): Promise<GenreAnalysisRes
  * 평점 통계 조회
  */
 export const getRatingStats = async (userId: number): Promise<RatingStatsResponse> => {
-  const response = await axios.get(`/user/${userId}/statistics/rating-stats`);
+  const response = await axios.get(`/user/${userId}/statistics/ratings`);
   return response.data;
 };
 
@@ -289,7 +289,7 @@ export const getRatingStats = async (userId: number): Promise<RatingStatsRespons
  * 리뷰 통계 조회
  */
 export const getReviewStats = async (userId: number): Promise<ReviewStatsResponse> => {
-  const response = await axios.get(`/user/${userId}/statistics/review-stats`);
+  const response = await axios.get(`/user/${userId}/statistics/reviews`);
   return response.data;
 };
 

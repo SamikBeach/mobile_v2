@@ -10,7 +10,6 @@ import {
   Dimensions,
 } from 'react-native';
 import {
-  User,
   UserCircle,
   UserPlus,
   Check,
@@ -20,10 +19,8 @@ import {
   Users,
   AreaChart,
   Bell,
-  ChevronRight,
 } from 'lucide-react-native';
 import { useAtomValue } from 'jotai';
-import Toast from 'react-native-toast-message';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { userAtom } from '../../atoms/user';
 import {
@@ -32,8 +29,8 @@ import {
   GenreAnalysisChart,
   RatingStatsChart,
   ReviewStatsChart,
+  ReviewSummaryStatsChart,
   UserInteractionChart,
-  ActivityFrequencyChart,
   FollowerStatsChart,
   ReadingStatusByPeriodChart,
   AuthorPublisherChart,
@@ -392,7 +389,7 @@ const StatsSection: React.FC<{ userId: number }> = ({ userId }) => {
               <RatingStatsChart userId={userId} />
             </Suspense>
             <Suspense fallback={<LoadingSpinner />}>
-              <ActivityFrequencyChart userId={userId} />
+              <ReviewSummaryStatsChart userId={userId} />
             </Suspense>
           </View>
         );
@@ -505,7 +502,6 @@ const SummarySkeleton: React.FC = () => (
 // Profile Content Component with Error Boundary
 const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
   const [selectedSection, setSelectedSection] = useState('read');
-  const { profileData } = useUserProfile(userId);
   const isMyProfile = useIsMyProfile(userId);
 
   // userId가 유효하지 않은 경우 처리
@@ -599,12 +595,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId: propUserId
 
   // props로 전달된 userId가 있으면 사용하고, 없으면 route params, 마지막으로 현재 사용자 ID 사용
   const userId = propUserId || route.params?.userId || currentUser?.id;
-  const section = route.params?.section || 'read';
-
-  const handleRetry = () => {
-    // 페이지 새로고침 로직
-    // React Navigation에서는 리로드 대신 refetch 등을 사용
-  };
 
   // userId가 없는 경우 로그인 필요 화면
   if (!userId) {

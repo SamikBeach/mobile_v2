@@ -9,3 +9,4 @@ export * from './useReviewComments';
 export * from './useUserProfile';
 export * from './useIsMyProfile';
 export * from './useUserFollow';
+export * from './useCurrentUser';

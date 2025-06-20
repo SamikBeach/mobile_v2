@@ -1,42 +1,72 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  ScrollView,
-  Switch,
-} from 'react-native';
+import React, { useState, Suspense } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Switch } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
-import { Globe } from 'lucide-react-native';
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { getRatingStats } from '../../apis/user/user';
-import { ChartColors } from '../../constants/colors';
+import { Star, Lock, Globe } from 'lucide-react-native';
+import { useSuspenseQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getRatingStats, updateStatisticsSetting } from '../../apis/user';
+import { RatingStatsResponse } from '../../apis/user/types';
+import { useCurrentUser } from '../../hooks';
+import { LoadingSpinner } from '../LoadingSpinner';
 
 interface RatingStatsChartProps {
   userId: number;
 }
 
-const { width: screenWidth } = Dimensions.get('window');
-
 type TabType = 'distribution' | 'categories' | 'monthly';
 
-export const RatingStatsChart: React.FC<RatingStatsChartProps> = ({ userId }) => {
+// 차트 색상 정의 (노란색 계열)
+const CHART_COLORS = {
+  distribution: '#fcd34d', // amber-300
+  categories: '#fcd34d',
+  monthly: '#fcd34d',
+};
+
+// 날짜 포맷팅 함수: YYYY-MM -> YYYY년 M월
+const formatMonth = (monthStr: string): string => {
+  try {
+    if (!monthStr || !monthStr.includes('-')) return monthStr;
+
+    const [year, month] = monthStr.split('-');
+    return `${year}년 ${month}월`;
+  } catch {
+    return monthStr;
+  }
+};
+
+const RatingStatsChart: React.FC<RatingStatsChartProps> = ({ userId }) => {
   const [activeTab, setActiveTab] = useState<TabType>('distribution');
   const [isPublic, setIsPublic] = useState(true);
+  const CHART_TITLE = '평점';
 
-  const { data, isLoading } = useSuspenseQuery({
+  const currentUser = useCurrentUser();
+  const isMyProfile = currentUser?.id === userId;
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useSuspenseQuery<RatingStatsResponse>({
     queryKey: ['ratingStats', userId],
     queryFn: () => getRatingStats(userId),
   });
 
+  const updatePrivacyMutation = useMutation({
+    mutationFn: (isPublic: boolean) => updateStatisticsSetting({ isRatingStatsPublic: isPublic }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ratingStats', userId] });
+    },
+  });
+
+  React.useEffect(() => {
+    setIsPublic(data.isPublic);
+  }, [data.isPublic]);
+
   // 데이터가 비공개인 경우
-  if (!data.isPublic) {
+  if (!data.isPublic && !isMyProfile) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>평점 통계</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{CHART_TITLE}</Text>
+        </View>
         <View style={styles.privateContainer}>
+          <Lock size={48} color='#9CA3AF' />
           <Text style={styles.privateText}>이 통계는 비공개 설정되어 있습니다.</Text>
         </View>
       </View>
@@ -51,195 +81,282 @@ export const RatingStatsChart: React.FC<RatingStatsChartProps> = ({ userId }) =>
   ) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>평점 통계</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{CHART_TITLE}</Text>
+          {isMyProfile && (
+            <View style={styles.privacyToggle}>
+              <Text style={styles.privacyLabel}>공개</Text>
+              <Switch
+                value={isPublic}
+                onValueChange={value => {
+                  setIsPublic(value);
+                  updatePrivacyMutation.mutate(value);
+                }}
+              />
+            </View>
+          )}
+        </View>
         <View style={styles.noDataContainer}>
-          <Text style={styles.noDataText}>평점 데이터가 없습니다.</Text>
+          <Text style={styles.noDataText}>평점 데이터가 없습니다</Text>
         </View>
       </View>
     );
   }
 
-  const chartConfig = {
-    backgroundGradientFrom: ChartColors.background,
-    backgroundGradientTo: ChartColors.background,
-    color: (opacity = 1) => `rgba(252, 211, 77, ${opacity})`, // amber-300
-    strokeWidth: 2,
-    barPercentage: 0.5,
-    useShadowColorFromDataset: false,
-  };
-
-  // 평점 분포 데이터 전처리
+  // 평점 분포 데이터 전처리 (빈 평점 채우기)
   const fullRatingDistribution = Array.from({ length: 5 }, (_, i) => {
     const rating = i + 1;
     const existingData = data.ratingDistribution.find(item => item.rating === rating);
     return existingData ? existingData : { rating, count: 0 };
   });
 
-  const distributionChartData = {
-    labels: ['1점', '2점', '3점', '4점', '5점'],
-    datasets: [
-      {
-        data: fullRatingDistribution.map(item => item.count),
-        color: (opacity = 1) => `rgba(252, 211, 77, ${opacity})`,
-      },
-    ],
-  };
-
-  // 카테고리별 평점 데이터 (상위 8개)
+  // 카테고리 평점 상위 표시
   const sortedCategoryRatings = [...data.categoryRatings]
     .sort((a, b) => b.averageRating - a.averageRating)
     .slice(0, 8);
 
-  const categoryChartData = {
-    labels: sortedCategoryRatings.map(item =>
-      item.category.length > 6 ? item.category.substring(0, 6) + '..' : item.category
-    ),
-    datasets: [
-      {
-        data: sortedCategoryRatings.map(item => item.averageRating),
-        color: (opacity = 1) => `rgba(252, 211, 77, ${opacity})`,
-      },
-    ],
-  };
+  // 월별 데이터 처리
+  const formattedMonthlyData = data.monthlyAverageRatings.map(item => ({
+    ...item,
+    formattedMonth: formatMonth(item.month),
+  }));
 
-  // 월별 추이 데이터
-  const monthlyChartData = {
-    labels: data.monthlyAverageRatings.slice(-6).map(item => {
-      const [year, month] = item.month.split('-');
-      return `${month}월`;
-    }),
-    datasets: [
-      {
-        data: data.monthlyAverageRatings.slice(-6).map(item => item.averageRating),
-        color: (opacity = 1) => `rgba(252, 211, 77, ${opacity})`,
-        strokeWidth: 2,
-      },
-    ],
-  };
-
+  // 탭 옵션
   const tabOptions = [
     { id: 'distribution' as TabType, name: '평점 분포' },
     { id: 'categories' as TabType, name: '카테고리별' },
     { id: 'monthly' as TabType, name: '월별 추이' },
   ];
 
-  const renderChart = () => {
-    switch (activeTab) {
-      case 'distribution':
-        return (
-          <View style={styles.chartContainer}>
-            <BarChart
-              data={distributionChartData}
-              width={screenWidth - 64}
-              height={220}
-              chartConfig={chartConfig}
-              style={styles.chart}
-              showValuesOnTopOfBars
-              yAxisLabel=''
-              yAxisSuffix=''
-            />
-          </View>
-        );
-      case 'categories':
-        return (
-          <View style={styles.chartContainer}>
-            <BarChart
-              data={categoryChartData}
-              width={screenWidth - 64}
-              height={220}
-              chartConfig={chartConfig}
-              style={styles.chart}
-              showValuesOnTopOfBars
-              yAxisLabel=''
-              yAxisSuffix=''
-            />
-          </View>
-        );
-      case 'monthly':
-        return (
-          <View style={styles.chartContainer}>
-            <LineChart
-              data={monthlyChartData}
-              width={screenWidth - 64}
-              height={220}
-              chartConfig={chartConfig}
-              style={styles.chart}
-              bezier
-            />
-          </View>
-        );
-      default:
-        return null;
-    }
-  };
+  const screenWidth = Dimensions.get('window').width;
+  const chartWidth = screenWidth - 40;
 
   return (
     <View style={styles.container}>
+      {/* 헤더 */}
       <View style={styles.header}>
-        <Text style={styles.title}>평점 통계</Text>
-        <View style={styles.switchContainer}>
-          <View style={styles.switchWrapper}>
-            <Globe size={16} color='#64748B' />
-            <Switch
-              value={isPublic}
-              onValueChange={setIsPublic}
-              trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
-              thumbColor={isPublic ? '#FFFFFF' : '#F8FAFC'}
-              ios_backgroundColor='#F1F5F9'
-              style={styles.switch}
-            />
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>{CHART_TITLE}</Text>
+          <View style={styles.subtitleContainer}>
+            <Star size={14} color='#fcd34d' fill='#fcd34d' />
+            <Text style={styles.subtitle}>평균 {data.averageRating.toFixed(1)}점</Text>
           </View>
         </View>
+        {isMyProfile && (
+          <View style={styles.privacyToggle}>
+            <View style={styles.switchWrapper}>
+              <Globe size={16} color='#64748B' />
+              <Switch
+                value={isPublic}
+                onValueChange={value => {
+                  setIsPublic(value);
+                  updatePrivacyMutation.mutate(value);
+                }}
+                trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
+                thumbColor={isPublic ? '#FFFFFF' : '#F8FAFC'}
+                ios_backgroundColor='#F1F5F9'
+                style={styles.switch}
+              />
+            </View>
+          </View>
+        )}
       </View>
 
-      {/* 평균 평점 표시 */}
-      <View style={styles.averageContainer}>
-        <Text style={styles.averageLabel}>평균 평점</Text>
-        <Text style={styles.averageValue}>{data.averageRating.toFixed(1)}점</Text>
-      </View>
-
-      {/* 탭 버튼들 */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabContainer}>
-        {tabOptions.map(tab => (
+      {/* 탭 선택 */}
+      <View style={styles.tabContainer}>
+        {tabOptions.map(option => (
           <TouchableOpacity
-            key={tab.id}
-            style={[styles.tabButton, activeTab === tab.id && styles.activeTabButton]}
-            onPress={() => setActiveTab(tab.id)}
+            key={option.id}
+            style={[styles.tabButton, activeTab === option.id && styles.tabButtonActive]}
+            onPress={() => setActiveTab(option.id)}
           >
-            <Text style={[styles.tabText, activeTab === tab.id && styles.activeTabText]}>
-              {tab.name}
+            <Text
+              style={[styles.tabButtonText, activeTab === option.id && styles.tabButtonTextActive]}
+            >
+              {option.name}
             </Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
-      {/* 차트 */}
-      {renderChart()}
+      {/* 차트 영역 */}
+      <View style={styles.chartContainer}>
+        {activeTab === 'distribution' ? (
+          fullRatingDistribution.length > 0 ? (
+            <BarChart
+              data={{
+                labels: fullRatingDistribution.map(item => `${item.rating}점`),
+                datasets: [
+                  {
+                    data: fullRatingDistribution.map(item => item.count),
+                    color: (opacity = 1) => `rgba(245, 158, 11, ${opacity})`,
+                  },
+                ],
+              }}
+              width={chartWidth}
+              height={250}
+              chartConfig={{
+                backgroundColor: '#ffffff',
+                backgroundGradientFrom: '#ffffff',
+                backgroundGradientTo: '#ffffff',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(245, 158, 11, ${opacity})`,
+                labelColor: (opacity = 1) => `rgba(55, 65, 81, ${opacity})`,
+                style: {
+                  borderRadius: 16,
+                },
+                propsForBackgroundLines: {
+                  strokeDasharray: '',
+                  strokeWidth: 1,
+                  stroke: '#f3f4f6',
+                },
+                propsForLabels: {
+                  fontSize: 11,
+                },
+                barPercentage: 0.7,
+              }}
+              style={styles.chart}
+              showValuesOnTopOfBars
+              withHorizontalLabels
+              withVerticalLabels
+              yAxisLabel=''
+              yAxisSuffix=''
+              fromZero
+            />
+          ) : (
+            <View style={styles.noDataContainer}>
+              <Text style={styles.noDataText}>평점 분포 데이터가 없습니다</Text>
+            </View>
+          )
+        ) : activeTab === 'categories' ? (
+          sortedCategoryRatings.length > 0 ? (
+            <View style={styles.categoryChartContainer}>
+              {sortedCategoryRatings.map((item, index) => (
+                <View key={index} style={styles.categoryItem}>
+                  <Text style={styles.categoryName}>{item.category}</Text>
+                  <View style={styles.categoryRatingContainer}>
+                    <View style={styles.categoryBar}>
+                      <View
+                        style={[
+                          styles.categoryBarFill,
+                          { width: `${(item.averageRating / 5) * 100}%` },
+                        ]}
+                      />
+                    </View>
+                    <Text style={styles.categoryRating}>{item.averageRating.toFixed(1)}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : (
+            <View style={styles.noDataContainer}>
+              <Text style={styles.noDataText}>카테고리별 평점 데이터가 없습니다</Text>
+            </View>
+          )
+        ) : formattedMonthlyData.length > 0 ? (
+          <LineChart
+            data={{
+              labels: formattedMonthlyData.slice(-10).map(item => {
+                const [, month] = item.month.split('-');
+                return `${Number(month)}월`;
+              }),
+              datasets: [
+                {
+                  data: formattedMonthlyData.slice(-10).map(item => item.averageRating),
+                  color: (opacity = 1) => `rgba(245, 158, 11, ${opacity})`,
+                  strokeWidth: 2,
+                },
+              ],
+            }}
+            width={chartWidth}
+            height={250}
+            chartConfig={{
+              backgroundColor: '#ffffff',
+              backgroundGradientFrom: '#ffffff',
+              backgroundGradientTo: '#ffffff',
+              decimalPlaces: 1,
+              color: (opacity = 1) => `rgba(245, 158, 11, ${opacity})`,
+              labelColor: (opacity = 1) => `rgba(55, 65, 81, ${opacity})`,
+              style: {
+                borderRadius: 16,
+              },
+              propsForDots: {
+                r: '4',
+                strokeWidth: '2',
+                stroke: '#f59e0b',
+              },
+              propsForBackgroundLines: {
+                strokeDasharray: '',
+                strokeWidth: 1,
+                stroke: '#f3f4f6',
+              },
+              propsForLabels: {
+                fontSize: 11,
+              },
+            }}
+            yAxisMin={0}
+            yAxisMax={5}
+            bezier
+            style={styles.chart}
+            withVerticalLines={false}
+            withHorizontalLines
+            yAxisLabel=''
+            yAxisSuffix=''
+            yAxisInterval={1}
+          />
+        ) : (
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataText}>월별 평점 데이터가 없습니다</Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 };
 
+const RatingStatsChartWrapper: React.FC<RatingStatsChartProps> = props => (
+  <Suspense fallback={<LoadingSpinner />}>
+    <RatingStatsChart {...props} />
+  </Suspense>
+);
+
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 20,
     marginVertical: 8,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 16,
+  },
+  titleContainer: {
+    flex: 1,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: ChartColors.text,
+    color: '#374151',
+    marginBottom: 4,
   },
-  switchContainer: {
+  subtitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  privacyToggle: {
     justifyContent: 'flex-end',
   },
   switchWrapper: {
@@ -257,72 +374,99 @@ const styles = StyleSheet.create({
     transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
     marginLeft: 2,
   },
-  averageContainer: {
-    backgroundColor: ChartColors.grid,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  averageLabel: {
+  privacyLabel: {
     fontSize: 12,
-    color: ChartColors.lightText,
-    marginBottom: 4,
-  },
-  averageValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#f59e0b', // amber-500
+    color: '#64748B',
   },
   tabContainer: {
+    flexDirection: 'row',
+    gap: 8,
     marginBottom: 16,
   },
   tabButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    marginRight: 6,
     borderRadius: 16,
-    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#E5E7EB',
+    backgroundColor: '#ffffff',
   },
-  activeTabButton: {
+  tabButtonActive: {
     backgroundColor: '#EFF6FF',
-    borderColor: '#3B82F6',
+    borderColor: '#DBEAFE',
   },
-  tabText: {
+  tabButtonText: {
     fontSize: 12,
-    color: '#64748B',
     fontWeight: '500',
+    color: '#6B7280',
   },
-  activeTabText: {
-    color: '#3B82F6',
-    fontWeight: '600',
+  tabButtonTextActive: {
+    color: '#2563EB',
   },
   chartContainer: {
     alignItems: 'center',
   },
   chart: {
-    borderRadius: 8,
+    borderRadius: 16,
+  },
+  categoryChartContainer: {
+    width: '100%',
+    paddingVertical: 10,
+  },
+  categoryItem: {
+    marginBottom: 16,
+  },
+  categoryName: {
+    fontSize: 12,
+    color: '#374151',
+    marginBottom: 6,
+    fontWeight: '500',
+  },
+  categoryRatingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  categoryBar: {
+    flex: 1,
+    height: 18,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 9,
+    overflow: 'hidden',
+  },
+  categoryBarFill: {
+    height: '100%',
+    backgroundColor: '#f59e0b',
+    borderRadius: 9,
+  },
+  categoryRating: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#374151',
+    minWidth: 35,
+    textAlign: 'right',
   },
   privateContainer: {
-    padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    height: 200,
+    gap: 12,
   },
   privateText: {
     fontSize: 14,
-    color: ChartColors.lightText,
+    color: '#6B7280',
     textAlign: 'center',
   },
   noDataContainer: {
-    padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    height: 200,
   },
   noDataText: {
     fontSize: 14,
-    color: ChartColors.lightText,
+    color: '#9CA3AF',
     textAlign: 'center',
   },
 });
+
+export default RatingStatsChartWrapper;
