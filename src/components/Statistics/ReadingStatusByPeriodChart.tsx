@@ -36,70 +36,187 @@ const STATUS_LABELS = {
   [ReadingStatusType.WANT_TO_READ]: '읽고 싶어요',
 };
 
-// 커스텀 스택형 바 차트 컴포넌트
-const CustomStackedBarChart: React.FC<{
+// 커스텀 스택형 막대 차트 컴포넌트
+interface CustomStackedBarChartProps {
   data: any;
   width: number;
   height: number;
-}> = ({ data, width, height }) => {
-  if (!data || !data.data || data.data.length === 0) {
-    return (
-      <View style={[styles.customChartContainer, { width, height }]}>
-        <Text style={styles.noDataText}>데이터가 없습니다</Text>
-      </View>
-    );
-  }
+}
 
-  const chartWidth = width - 40;
-  const chartHeight = height - 60;
-  const barWidth = Math.max(20, chartWidth / data.labels.length - 16);
-  const maxValue = Math.max(...data.data.map((item: number[]) => item.reduce((a, b) => a + b, 0)));
-  const scale = maxValue > 0 ? chartHeight / maxValue : 1;
+const CustomStackedBarChart: React.FC<CustomStackedBarChartProps> = ({ data, width, height }) => {
+  const totals = data.data.map((d: any) => d.read + d.reading + d.wantToRead);
+  const maxValue = totals.length > 0 ? Math.max(...totals) : 1;
+  const chartPadding = 50;
+  const availableWidth = width - chartPadding * 2;
+  const barWidth = Math.min(Math.max(availableWidth / data.data.length - 12, 20), 40);
+  const chartHeight = height - 100;
+
+  // Y축 구간을 더 명확하게 설정
+  const yAxisSteps = 4;
+  const stepValue = Math.ceil(maxValue / yAxisSteps);
 
   return (
-    <View style={[styles.customChartContainer, { width, height }]}>
-      <View style={styles.chartArea}>
-        {data.labels.map((label: string, index: number) => {
-          const values = data.data[index];
-          const total = values.reduce((a: number, b: number) => a + b, 0);
-
-          if (total === 0) {
-            return (
-              <View key={index} style={styles.barContainer}>
-                <View style={[styles.emptyBar, { width: barWidth }]} />
-                <Text style={styles.xAxisLabel}>{label}</Text>
-              </View>
-            );
-          }
-
-          let currentHeight = 0;
+    <View style={{ width, height, backgroundColor: 'transparent' }}>
+      {/* Y축 라벨과 격자선 */}
+      <View style={{ position: 'absolute', left: 0, top: 30, height: chartHeight }}>
+        {Array.from({ length: yAxisSteps + 1 }, (_, i) => {
+          const value = stepValue * (yAxisSteps - i);
+          const isZeroLine = i === yAxisSteps; // 맨 아래가 0점
           return (
-            <View key={index} style={styles.barContainer}>
-              <View style={[styles.bar, { width: barWidth }]}>
-                {values.map((value: number, valueIndex: number) => {
-                  if (value === 0) return null;
-                  const segmentHeight = value * scale;
-                  currentHeight += segmentHeight;
-
-                  return (
-                    <View
-                      key={valueIndex}
-                      style={[
-                        styles.barSegment,
-                        {
-                          height: segmentHeight,
-                          backgroundColor: data.barColors[valueIndex],
-                        },
-                      ]}
-                    />
-                  );
-                })}
-                {total > 0 && <Text style={styles.barValueText}>{total}</Text>}
-              </View>
-              <Text style={styles.xAxisLabel}>{label}</Text>
+            <View
+              key={i}
+              style={{
+                position: 'absolute',
+                top: (chartHeight * i) / yAxisSteps - 6,
+                alignItems: 'flex-end',
+                width: 35,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: isZeroLine ? '#374151' : '#6B7280',
+                  fontWeight: isZeroLine ? '600' : '500',
+                }}
+              >
+                {value}
+              </Text>
             </View>
           );
         })}
+      </View>
+
+      {/* 차트 영역 */}
+      <View style={{ marginLeft: 45, marginTop: 30, paddingRight: 10 }}>
+        {/* 차트와 X축을 분리 */}
+        <View style={{ height: chartHeight }}>
+          {/* 막대 차트 */}
+          <View style={{ flexDirection: 'row', height: chartHeight, alignItems: 'flex-end' }}>
+            {data.data.map((item: any, index: number) => {
+              const total = item.read + item.reading + item.wantToRead;
+              const totalHeight = maxValue > 0 ? (total / maxValue) * chartHeight : 0;
+              const readHeight = maxValue > 0 ? (item.read / maxValue) * chartHeight : 0;
+              const readingHeight = maxValue > 0 ? (item.reading / maxValue) * chartHeight : 0;
+              const wantToReadHeight =
+                maxValue > 0 ? (item.wantToRead / maxValue) * chartHeight : 0;
+
+              return (
+                <View
+                  key={index}
+                  style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    height: chartHeight,
+                    justifyContent: 'flex-end',
+                  }}
+                >
+                  {/* 총합 숫자 (막대 위) */}
+                  {total > 0 && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: totalHeight + 8,
+                        alignItems: 'center',
+                        width: '100%',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '700',
+                          color: '#1F2937',
+                          textAlign: 'center',
+                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                          paddingHorizontal: 4,
+                          paddingVertical: 2,
+                          borderRadius: 4,
+                        }}
+                      >
+                        {total}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* 스택형 막대 - 0점 기준 */}
+                  <View
+                    style={{
+                      width: barWidth,
+                      height: Math.max(totalHeight, total > 0 ? 8 : 4),
+                      backgroundColor: total > 0 ? 'transparent' : '#F3F4F6',
+                      borderRadius: 6,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {total > 0 && (
+                      <>
+                        {/* 읽었어요 (초록) - 맨 아래 */}
+                        {item.read > 0 && (
+                          <View
+                            style={{
+                              height: readHeight,
+                              backgroundColor: data.barColors[0],
+                            }}
+                          />
+                        )}
+                        {/* 읽는 중 (파랑) - 중간 */}
+                        {item.reading > 0 && (
+                          <View
+                            style={{
+                              height: readingHeight,
+                              backgroundColor: data.barColors[1],
+                            }}
+                          />
+                        )}
+                        {/* 읽고 싶어요 (보라) - 맨 위 */}
+                        {item.wantToRead > 0 && (
+                          <View
+                            style={{
+                              height: wantToReadHeight,
+                              backgroundColor: data.barColors[2],
+                            }}
+                          />
+                        )}
+                      </>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* X축 기준선과 라벨 - 0점 위치 */}
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: '#E5E7EB',
+            marginTop: 0,
+            paddingTop: 8,
+          }}
+        >
+          <View style={{ flexDirection: 'row' }}>
+            {data.data.map((item: any, index: number) => (
+              <View
+                key={index}
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: '#6B7280',
+                    textAlign: 'center',
+                    fontWeight: '600',
+                  }}
+                >
+                  {item.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -113,7 +230,7 @@ export const ReadingStatusByPeriodChart: React.FC<ReadingStatusByPeriodChartProp
 
   const { data } = useSuspenseQuery({
     queryKey: ['readingStatusByPeriod', userId],
-    queryFn: () => getReadingStatusByPeriod(userId),
+    queryFn: () => userApi.getReadingStatusByPeriod(userId),
   });
 
   // 데이터가 비공개인 경우
@@ -154,7 +271,7 @@ export const ReadingStatusByPeriodChart: React.FC<ReadingStatusByPeriodChartProp
       return {
         labels: ['데이터 없음'],
         legend: ['읽었어요', '읽는 중', '읽고 싶어요'],
-        data: [[0, 0, 0]],
+        data: [{ read: 0, reading: 0, wantToRead: 0, label: '데이터 없음' }],
         barColors: [
           STATUS_COLORS[ReadingStatusType.READ],
           STATUS_COLORS[ReadingStatusType.READING],
@@ -203,17 +320,17 @@ export const ReadingStatusByPeriodChart: React.FC<ReadingStatusByPeriodChartProp
     };
 
     const dataKey = getDataKey();
-    const labels = periodData.map((item: any) => formatXAxisLabel(item[dataKey]));
 
-    // 스택형 차트를 위한 데이터 변환
-    const data = periodData.map((item: any) => [
-      item.readCount || 0,
-      item.readingCount || 0,
-      item.wantToReadCount || 0,
-    ]);
+    // 커스텀 차트를 위한 데이터 변환
+    const data = periodData.map((item: any) => ({
+      read: item.readCount || 0,
+      reading: item.readingCount || 0,
+      wantToRead: item.wantToReadCount || 0,
+      label: formatXAxisLabel(item[dataKey]),
+    }));
 
     return {
-      labels,
+      labels: data.map(item => item.label),
       legend: ['읽었어요', '읽는 중', '읽고 싶어요'],
       data,
       barColors: [
@@ -288,7 +405,7 @@ export const ReadingStatusByPeriodChart: React.FC<ReadingStatusByPeriodChartProp
       {/* 차트 */}
       <View style={styles.chartContainer}>
         {periodData && periodData.length > 0 ? (
-          <CustomStackedBarChart data={chartData} width={screenWidth - 64} height={240} />
+          <CustomStackedBarChart data={chartData} width={screenWidth - 48} height={260} />
         ) : (
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataText}>
@@ -424,66 +541,15 @@ const styles = StyleSheet.create({
   },
   chartContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 24,
     backgroundColor: '#FAFBFC',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  customChartContainer: {
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  chartArea: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-around',
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-  },
-  barContainer: {
-    alignItems: 'center',
-    flex: 1,
-    maxWidth: 60,
-  },
-  bar: {
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginBottom: 8,
-    borderRadius: 4,
-    overflow: 'hidden',
-    minHeight: 20,
-    position: 'relative',
-  },
-  barSegment: {
-    width: '100%',
-    borderRadius: 2,
-  },
-  emptyBar: {
-    height: 4,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 2,
-    marginBottom: 8,
-  },
-  barValueText: {
-    position: 'absolute',
-    top: -20,
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-  },
-  xAxisLabel: {
-    fontSize: 10,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 4,
-    fontWeight: '500',
+    borderRadius: 16,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    marginHorizontal: 4,
   },
   noDataContainer: {
-    height: 240,
+    height: 260,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -494,43 +560,55 @@ const styles = StyleSheet.create({
   },
   legendContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    marginBottom: 16,
-    gap: 16,
+    marginBottom: 20,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    marginHorizontal: 4,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    flex: 1,
+    justifyContent: 'center',
   },
   legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 8,
   },
   legendText: {
-    fontSize: 12,
-    color: ChartColors.text,
+    fontSize: 11,
+    color: '#374151',
+    fontWeight: '500',
   },
   metricsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingTop: 16,
+    paddingTop: 20,
+    paddingBottom: 4,
     borderTopWidth: 1,
-    borderTopColor: ChartColors.grid,
+    borderTopColor: '#F1F5F9',
+    marginHorizontal: 4,
   },
   metricItem: {
     alignItems: 'center',
+    flex: 1,
   },
   metricValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
+    letterSpacing: -0.5,
   },
   metricLabel: {
-    fontSize: 12,
-    color: ChartColors.lightText,
-    marginTop: 4,
+    fontSize: 11,
+    color: '#6B7280',
+    marginTop: 6,
+    fontWeight: '500',
   },
   privateContainer: {
     padding: 32,

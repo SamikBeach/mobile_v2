@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, TouchableOpacity, Switch } from 'react-native';
-import { BarChart } from 'react-native-chart-kit';
 import { Globe } from 'lucide-react-native';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { getGenreAnalysis } from '../../apis/user/user';
@@ -13,6 +12,156 @@ interface AuthorPublisherChartProps {
 const { width: screenWidth } = Dimensions.get('window');
 
 type ChartType = 'authors' | 'publishers';
+
+// 커스텀 막대 차트 컴포넌트
+interface CustomBarChartProps {
+  data: any;
+  width: number;
+  height: number;
+  color: string;
+}
+
+const CustomBarChart: React.FC<CustomBarChartProps> = ({ data, width, height, color }) => {
+  const maxValue = data.datasets[0].data.length > 0 ? Math.max(...data.datasets[0].data) : 1;
+  const chartPadding = 50;
+  const availableWidth = width - chartPadding * 2;
+  const barWidth = Math.min(Math.max(availableWidth / data.labels.length - 12, 30), 50);
+  const chartHeight = height - 80;
+
+  // Y축 구간을 더 명확하게 설정
+  const yAxisSteps = 4;
+  const stepValue = Math.ceil(maxValue / yAxisSteps);
+
+  return (
+    <View style={{ width, height, backgroundColor: 'transparent' }}>
+      {/* Y축 라벨 */}
+      <View style={{ position: 'absolute', left: 0, top: 20, height: chartHeight }}>
+        {Array.from({ length: yAxisSteps + 1 }, (_, i) => {
+          const value = stepValue * (yAxisSteps - i);
+          const isZeroLine = i === yAxisSteps;
+          return (
+            <View
+              key={i}
+              style={{
+                position: 'absolute',
+                top: (chartHeight * i) / yAxisSteps - 6,
+                alignItems: 'flex-end',
+                width: 35,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 11,
+                  color: isZeroLine ? '#374151' : '#6B7280',
+                  fontWeight: isZeroLine ? '600' : '500',
+                }}
+              >
+                {value}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* 차트 영역 */}
+      <View style={{ marginLeft: 45, marginTop: 20, paddingRight: 10 }}>
+        {/* 차트와 X축을 분리 */}
+        <View style={{ height: chartHeight }}>
+          {/* 막대 차트 */}
+          <View style={{ flexDirection: 'row', height: chartHeight, alignItems: 'flex-end' }}>
+            {data.datasets[0].data.map((value: number, index: number) => {
+              const barHeight = maxValue > 0 ? (value / maxValue) * chartHeight : 0;
+
+              return (
+                <View
+                  key={index}
+                  style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    height: chartHeight,
+                    justifyContent: 'flex-end',
+                  }}
+                >
+                  {/* 값 표시 (막대 위) */}
+                  {value > 0 && (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        bottom: barHeight + 8,
+                        alignItems: 'center',
+                        width: '100%',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '700',
+                          color: '#1F2937',
+                          textAlign: 'center',
+                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                          paddingHorizontal: 4,
+                          paddingVertical: 2,
+                          borderRadius: 4,
+                        }}
+                      >
+                        {value}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* 막대 */}
+                  <View
+                    style={{
+                      width: barWidth,
+                      height: Math.max(barHeight, value > 0 ? 8 : 4),
+                      backgroundColor: value > 0 ? color : '#F3F4F6',
+                      borderRadius: 6,
+                      overflow: 'hidden',
+                    }}
+                  />
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* X축 기준선과 라벨 */}
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: '#E5E7EB',
+            marginTop: 0,
+            paddingTop: 8,
+          }}
+        >
+          <View style={{ flexDirection: 'row' }}>
+            {data.labels.map((label: string, index: number) => (
+              <View
+                key={index}
+                style={{
+                  flex: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: '#6B7280',
+                    textAlign: 'center',
+                    fontWeight: '500',
+                  }}
+                  numberOfLines={2}
+                >
+                  {label}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
 
 export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ userId }) => {
   const [selectedChart, setSelectedChart] = useState<ChartType>('authors');
@@ -42,7 +191,6 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
       datasets: [
         {
           data: [8, 6, 5, 4, 3],
-          color: (opacity = 1) => `rgba(168, 85, 247, ${opacity})`,
         },
       ],
     },
@@ -51,7 +199,6 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
       datasets: [
         {
           data: [14, 11, 9, 8, 7],
-          color: (opacity = 1) => `rgba(245, 158, 11, ${opacity})`,
         },
       ],
     },
@@ -73,16 +220,11 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
     { name: '열린책들', books: 7, categories: ['해외문학', '고전'] },
   ];
 
-  const chartConfig = {
-    backgroundGradientFrom: ChartColors.background,
-    backgroundGradientTo: ChartColors.background,
-    color: (opacity = 1) =>
-      selectedChart === 'authors'
-        ? `rgba(168, 85, 247, ${opacity})`
-        : `rgba(245, 158, 11, ${opacity})`,
-    strokeWidth: 2,
-    barPercentage: 0.5,
-    useShadowColorFromDataset: false,
+  // 차트 색상 정의
+  const getChartColor = () => {
+    return selectedChart === 'authors'
+      ? '#86efac' // green-300 (기간별 독서와 동일한 색상)
+      : '#93c5fd'; // blue-300 (기간별 독서와 동일한 색상)
   };
 
   const chartOptions = [
@@ -126,14 +268,11 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
 
       {/* 차트 */}
       <View style={styles.chartContainer}>
-        <BarChart
+        <CustomBarChart
           data={chartData[selectedChart]}
           width={screenWidth - 64}
-          height={200}
-          chartConfig={chartConfig}
-          style={styles.chart}
-          yAxisLabel=''
-          yAxisSuffix=''
+          height={220}
+          color={getChartColor()}
         />
       </View>
 
@@ -241,9 +380,6 @@ const styles = StyleSheet.create({
   chartContainer: {
     alignItems: 'center',
     marginBottom: 16,
-  },
-  chart: {
-    borderRadius: 8,
   },
   detailContainer: {
     paddingTop: 16,
