@@ -39,6 +39,7 @@ import {
   LibraryCompositionChart,
   LibraryPopularityChart,
   LibraryUpdatePatternChart,
+  SearchActivityChart,
 } from '../../components';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useIsMyProfile } from '../../hooks/useIsMyProfile';
@@ -432,10 +433,9 @@ const StatsSection: React.FC<{ userId: number }> = ({ userId }) => {
       case 'etc':
         return (
           <View style={styles.chartsContainer}>
-            <View style={styles.comingSoonContainer}>
-              <Text style={styles.comingSoonText}>기타 통계</Text>
-              <Text style={styles.comingSoonSubtext}>곧 출시 예정입니다</Text>
-            </View>
+            <Suspense fallback={<LoadingSpinner />}>
+              <SearchActivityChart userId={userId} />
+            </Suspense>
           </View>
         );
       default:
@@ -958,29 +958,5 @@ const styles = StyleSheet.create({
   chartsContainer: {
     flex: 1,
     paddingHorizontal: 16,
-  },
-  comingSoonContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 80,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  comingSoonText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  comingSoonSubtext: {
-    fontSize: 14,
-    color: '#6B7280',
   },
 });

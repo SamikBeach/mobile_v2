@@ -28,6 +28,7 @@ import {
   LibraryCompositionResponse,
   LibraryPopularityResponse,
   LibraryUpdatePatternResponse,
+  SearchActivityResponse,
 } from './types';
 
 /**
@@ -400,5 +401,13 @@ export const getLibraryUpdatePattern = async (
   userId: number
 ): Promise<LibraryUpdatePatternResponse> => {
   const response = await axios.get(`/user/${userId}/statistics/library-update-pattern`);
+  return response.data;
+};
+
+/**
+ * 검색 활동 통계 조회
+ */
+export const getSearchActivity = async (userId: number): Promise<SearchActivityResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/search-activity`);
   return response.data;
 };

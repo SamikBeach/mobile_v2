@@ -718,3 +718,30 @@ export interface LibraryUpdatePatternResponse {
   weekdayActivity: { day: string; count: number }[];
   isPublic: boolean;
 }
+
+/**
+ * 검색 활동 통계 응답
+ */
+export interface SearchActivityResponse {
+  searchCount: number;
+  topSearchTerms: { count: number }[];
+  frequentlySearchedTerms: { term: string; count: number }[];
+  searchPattern: string;
+  yearly: {
+    year: string;
+    count: number;
+  }[];
+  monthly: {
+    month: string;
+    count: number;
+  }[];
+  weekly: {
+    week: string;
+    count: number;
+  }[];
+  daily: {
+    date: string;
+    count: number;
+  }[];
+  isPublic: boolean;
+}

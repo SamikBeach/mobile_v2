@@ -18,3 +18,6 @@ export { default as UserInteractionChart } from './UserInteractionChart';
 export { default as LibraryCompositionChart } from './LibraryCompositionChart';
 export { default as LibraryPopularityChart } from './LibraryPopularityChart';
 export { default as LibraryUpdatePatternChart } from './LibraryUpdatePatternChart';
+
+// 기타 통계 차트들
+export { default as SearchActivityChart } from './SearchActivityChart';
