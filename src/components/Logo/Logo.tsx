@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
+import { AppColors } from '../../constants';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
@@ -31,6 +32,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontWeight: 'bold',
-    color: '#166534', // green-800
+    color: AppColors.textPrimary, // green-800
   },
 });

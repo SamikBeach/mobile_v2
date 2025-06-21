@@ -8,7 +8,7 @@ import {
   FlatList,
   Animated,
 } from 'react-native';
-import { Calendar, Star, ChevronRight } from 'lucide-react-native';
+import { Calendar, Star, ChevronRight, Users, Bookmark, ArrowDownAZ } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SortBottomSheet } from '../popular/SortBottomSheet';
 import { TimeRangeBottomSheet } from '../popular/TimeRangeBottomSheet';
@@ -17,7 +17,7 @@ import { useDiscoverBooks, useDiscoverCategories } from '../../hooks';
 import { DiscoverCategory, DiscoverSubCategory } from '../../apis/discover-category/types';
 import { HomeBookPreview } from '../../apis/book/types';
 
-// Sort options
+// Sort options with icons
 const sortOptions = [
   { value: 'rating-desc', label: '평점 높은순' },
   { value: 'reviews-desc', label: '리뷰 많은순' },
@@ -25,6 +25,27 @@ const sortOptions = [
   { value: 'publishDate-desc', label: '출간일순' },
   { value: 'title-asc', label: '제목순' },
 ];
+
+// Get sort icon based on sort option
+const getSortIcon = (sortOption: string, isActive: boolean) => {
+  const color = isActive ? '#1D4ED8' : '#6B7280';
+  const size = 14;
+
+  switch (sortOption) {
+    case 'rating-desc':
+      return <Star size={size} color={color} />;
+    case 'reviews-desc':
+      return <Users size={size} color={color} />;
+    case 'library-desc':
+      return <Bookmark size={size} color={color} />;
+    case 'publishDate-desc':
+      return <Calendar size={size} color={color} />;
+    case 'title-asc':
+      return <ArrowDownAZ size={size} color={color} />;
+    default:
+      return <Star size={size} color={color} />;
+  }
+};
 
 // Time range options
 const timeRangeOptions = [
@@ -408,7 +429,7 @@ export const DiscoverScreen = () => {
               style={[styles.sortButton, sortOption !== 'rating-desc' && styles.activeSortButton]}
               onPress={handleSortPress}
             >
-              <Star size={14} color={sortOption !== 'rating-desc' ? '#1D4ED8' : '#6B7280'} />
+              {getSortIcon(sortOption, sortOption !== 'rating-desc')}
               <Text
                 style={[
                   styles.sortButtonText,

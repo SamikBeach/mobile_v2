@@ -358,7 +358,9 @@ export enum TimeRangeOptions {
   YEAR = 'year',
 }
 
-// 통계 관련 인터페이스들 (간소화)
+/**
+ * 통계 설정 업데이트 요청
+ */
 export interface UpdateStatisticsSettingRequest {
   isReadingStatusPublic?: boolean;
   isReadingTimePatternPublic?: boolean;
@@ -380,6 +382,9 @@ export interface UpdateStatisticsSettingRequest {
   isBookMetadataStatsPublic?: boolean;
 }
 
+/**
+ * 통계 설정 응답
+ */
 export interface StatisticsSettingResponse {
   isReadingStatusPublic: boolean;
   isReadingTimePatternPublic: boolean;
@@ -401,6 +406,9 @@ export interface StatisticsSettingResponse {
   isBookMetadataStatsPublic: boolean;
 }
 
+/**
+ * 독서 상태별 통계 응답
+ */
 export interface ReadingStatusStatsResponse {
   wantToReadCount: number;
   readingCount: number;
@@ -409,7 +417,331 @@ export interface ReadingStatusStatsResponse {
   isPublic: boolean;
 }
 
-export interface RecentPopularSearchResponse {
-  term: string;
-  count: number;
+/**
+ * 기간별 독서 상태 통계 응답
+ */
+export interface ReadingStatusByPeriodResponse {
+  yearly: {
+    year: string;
+    wantToReadCount: number;
+    readingCount: number;
+    readCount: number;
+  }[];
+  monthly: {
+    month: string;
+    wantToReadCount: number;
+    readingCount: number;
+    readCount: number;
+  }[];
+  weekly: {
+    week: string;
+    wantToReadCount: number;
+    readingCount: number;
+    readCount: number;
+  }[];
+  daily: {
+    date: string;
+    wantToReadCount: number;
+    readingCount: number;
+    readCount: number;
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 장르/카테고리 분석 통계 응답
+ */
+export interface GenreAnalysisResponse {
+  categoryCounts: { category: string; count: number }[];
+  subCategoryCounts: { subCategory: string; count: number }[];
+  mostReadCategory: string;
+  yearly: {
+    year: string;
+    categories: { category: string; count: number }[];
+    subCategories: { subCategory: string; count: number }[];
+  }[];
+  monthly: {
+    month: string;
+    categories: { category: string; count: number }[];
+    subCategories: { subCategory: string; count: number }[];
+  }[];
+  weekly: {
+    week: string;
+    categories: { category: string; count: number }[];
+    subCategories: { subCategory: string; count: number }[];
+  }[];
+  daily: {
+    date: string;
+    categories: { category: string; count: number }[];
+    subCategories: { subCategory: string; count: number }[];
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 평점 통계 응답
+ */
+export interface RatingStatsResponse {
+  averageRating: number;
+  ratingDistribution: { rating: number; count: number }[];
+  categoryRatings: { category: string; averageRating: number }[];
+  monthlyAverageRatings: { month: string; averageRating: number }[];
+  isPublic: boolean;
+}
+
+/**
+ * 리뷰 통계 응답
+ */
+export interface ReviewStatsResponse {
+  /**
+   * 작성한 총 리뷰 수
+   */
+  totalReviews: number;
+
+  /**
+   * 월별 리뷰 작성 수
+   */
+  monthlyReviewCounts: { month: string; count: number }[];
+
+  /**
+   * 리뷰 유형별 작성 비율
+   */
+  reviewTypeDistribution: { type: string; percentage: number }[];
+
+  /**
+   * 리뷰당 평균 글자 수
+   */
+  averageReviewLength: number;
+
+  /**
+   * 연도별 리뷰 통계
+   */
+  yearly: {
+    year: string;
+    count: number;
+  }[];
+
+  /**
+   * 월별 리뷰 통계 (최근 12개월)
+   */
+  monthly: {
+    month: string;
+    count: number;
+  }[];
+
+  /**
+   * 주간별 리뷰 통계
+   */
+  weekly: {
+    week: string;
+    count: number;
+  }[];
+
+  /**
+   * 일별 리뷰 통계 (최근 30일)
+   */
+  daily: {
+    date: string;
+    count: number;
+  }[];
+
+  /**
+   * 공개 여부
+   */
+  isPublic: boolean;
+}
+
+/**
+ * 활동 빈도 통계 응답
+ */
+export interface ActivityFrequencyResponse {
+  averageReviewInterval: number;
+  averageRatingInterval: number;
+  mostActiveHour: string;
+  mostActiveDay: string;
+  isPublic: boolean;
+}
+
+/**
+ * 사용자 상호작용 통계 응답
+ */
+export interface UserInteractionResponse {
+  totalLikesReceived: number;
+  totalCommentsReceived: number;
+  totalCommentsCreated: number;
+  totalLikesGiven: number;
+  engagementRate: number;
+  yearlyLikesReceived: { year: string; count: number }[];
+  monthlyLikesReceived: { month: string; count: number }[];
+  weeklyLikesReceived: { week: string; count: number }[];
+  dailyLikesReceived: { date: string; count: number }[];
+  yearlyCommentsReceived: { year: string; count: number }[];
+  monthlyCommentsReceived: { month: string; count: number }[];
+  weeklyCommentsReceived: { week: string; count: number }[];
+  dailyCommentsReceived: { date: string; count: number }[];
+  yearlyCommentsCreated: { year: string; count: number }[];
+  monthlyCommentsCreated: { month: string; count: number }[];
+  weeklyCommentsCreated: { week: string; count: number }[];
+  dailyCommentsCreated: { date: string; count: number }[];
+  yearlyLikesGiven: { year: string; count: number }[];
+  monthlyLikesGiven: { month: string; count: number }[];
+  weeklyLikesGiven: { week: string; count: number }[];
+  dailyLikesGiven: { date: string; count: number }[];
+  monthlyLikes: { month: string; count: number }[];
+  isPublic: boolean;
+}
+
+/**
+ * 팔로워/팔로잉 통계 응답
+ */
+export interface FollowerStatsResponse {
+  followersCount: number;
+  followingCount: number;
+  followerGrowth: { date: string; count: number }[];
+  yearly: {
+    year: string;
+    followers: number;
+    following: number;
+  }[];
+  monthly: {
+    month: string;
+    followers: number;
+    following: number;
+  }[];
+  weekly: {
+    week: string;
+    followers: number;
+    following: number;
+  }[];
+  daily: {
+    date: string;
+    followers: number;
+    following: number;
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 커뮤니티 활동 응답
+ */
+export interface CommunityActivityResponse {
+  totalReviews: number;
+  yearly: {
+    year: string;
+    general: number;
+    discussion: number;
+    question: number;
+    meetup: number;
+  }[];
+  monthly: {
+    month: string;
+    general: number;
+    discussion: number;
+    question: number;
+    meetup: number;
+  }[];
+  weekly: {
+    week: string;
+    general: number;
+    discussion: number;
+    question: number;
+    meetup: number;
+  }[];
+  daily: {
+    date: string;
+    general: number;
+    discussion: number;
+    question: number;
+    meetup: number;
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 리뷰 영향력 응답
+ */
+export interface ReviewInfluenceResponse {
+  averageLikesPerReview: number;
+  popularReviews: { id: number; content: string; likes: number }[];
+  communityContributionScore: number;
+  isPublic: boolean;
+}
+
+/**
+ * 서재 구성 통계 응답
+ */
+export interface LibraryCompositionResponse {
+  totalLibraries: number;
+  booksPerLibrary: { name: string; count: number }[];
+  tagsDistribution: {
+    library: string;
+    tags: { tag: string; count: number }[];
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 서재 인기도 통계 응답
+ */
+export interface LibraryPopularityResponse {
+  subscribersPerLibrary: { library: string; subscribers: number }[];
+  mostPopularLibrary: string;
+  popularityTrend: {
+    library: string;
+    trend: { date: string; subscribers: number }[];
+  }[];
+  yearly: {
+    year: string;
+    libraries: { library: string; subscribers: number }[];
+  }[];
+  monthly: {
+    month: string;
+    libraries: { library: string; subscribers: number }[];
+  }[];
+  weekly: {
+    week: string;
+    libraries: { library: string; subscribers: number }[];
+  }[];
+  daily: {
+    date: string;
+    libraries: { library: string; subscribers: number }[];
+  }[];
+  isPublic: boolean;
+}
+
+/**
+ * 서재 업데이트 패턴 통계 응답
+ */
+export interface LibraryUpdatePatternResponse {
+  updateFrequency: { library: string; updatesPerMonth: number }[];
+  mostActiveLibrary: string;
+  weekdayActivity: { day: string; count: number }[];
+  isPublic: boolean;
+}
+
+/**
+ * 검색 활동 통계 응답
+ */
+export interface SearchActivityResponse {
+  searchCount: number;
+  topSearchTerms: { count: number }[];
+  frequentlySearchedTerms: { term: string; count: number }[];
+  searchPattern: string;
+  yearly: {
+    year: string;
+    count: number;
+  }[];
+  monthly: {
+    month: string;
+    count: number;
+  }[];
+  weekly: {
+    week: string;
+    count: number;
+  }[];
+  daily: {
+    date: string;
+    count: number;
+  }[];
+  isPublic: boolean;
 }

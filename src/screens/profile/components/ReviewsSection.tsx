@@ -1,108 +1,9 @@
-import React, { useState, Suspense, useRef, useCallback } from 'react';
+import React, { useState, Suspense, useRef } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { Star, Users, Clock, Calendar, ChevronDown, CalendarClock } from 'lucide-react-native';
 import { getUserReviews, getUserReviewTypeCounts } from '../../../apis/user/user';
 import { ReviewCard } from '../../../components/Review/ReviewCard';
 import { LoadingSpinner } from '../../../components';
-
-import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-
-// Lucide 아이콘들을 컴포넌트로 래핑
-const StarIcon = ({ size = 14, color = '#6B7280' }) => <Star size={size} color={color} />;
-const ChevronDownIcon = ({ size = 12, color = '#6B7280' }) => (
-  <ChevronDown size={size} color={color} />
-);
-const CalendarIcon = ({ size = 14, color = '#6B7280' }) => <Calendar size={size} color={color} />;
-const ClockIcon = ({ size = 14, color = '#6B7280' }) => <Clock size={size} color={color} />;
-const UsersIcon = ({ size = 14, color = '#6B7280' }) => <Users size={size} color={color} />;
-
-const CalendarClockIcon = ({ size = 14, color = '#6B7280' }) => (
-  <CalendarClock size={size} color={color} />
-);
-
-// 정렬 옵션 정의 (리뷰용)
-enum ReviewSortOptions {
-  RECENT = 'recent',
-  POPULAR = 'popular',
-  OLDEST = 'oldest',
-  RATING_DESC = 'rating_desc',
-}
-
-// 시간 범위 옵션 정의
-enum TimeRangeOptions {
-  ALL = 'all',
-  TODAY = 'today',
-  WEEK = 'week',
-  MONTH = 'month',
-  YEAR = 'year',
-}
-
-// 정렬 옵션 정의 (리뷰용)
-const reviewSortOptions = [
-  {
-    id: ReviewSortOptions.RECENT,
-    label: '최신순',
-    icon: (isActive: boolean) => <ClockIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />,
-    supportsTimeRange: true,
-  },
-  {
-    id: ReviewSortOptions.POPULAR,
-    label: '인기순',
-    icon: (isActive: boolean) => <UsersIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />,
-    supportsTimeRange: true,
-  },
-  {
-    id: ReviewSortOptions.RATING_DESC,
-    label: '별점 높은순',
-    icon: (isActive: boolean) => <StarIcon size={14} color={isActive ? '#2563EB' : '#FFAB00'} />,
-    supportsTimeRange: true,
-  },
-  {
-    id: ReviewSortOptions.OLDEST,
-    label: '오래된순',
-    icon: (isActive: boolean) => (
-      <CalendarIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />
-    ),
-    supportsTimeRange: false,
-  },
-];
-
-// 시간 범위 옵션 (src_frontend와 동일)
-const timeRangeOptions = [
-  {
-    id: TimeRangeOptions.ALL,
-    label: '전체 기간',
-    icon: (isActive: boolean) => (
-      <CalendarIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />
-    ),
-  },
-  {
-    id: TimeRangeOptions.TODAY,
-    label: '오늘',
-    icon: (isActive: boolean) => <ClockIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />,
-  },
-  {
-    id: TimeRangeOptions.WEEK,
-    label: '최근 1주',
-    icon: (isActive: boolean) => <ClockIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />,
-  },
-  {
-    id: TimeRangeOptions.MONTH,
-    label: '최근 1개월',
-    icon: (isActive: boolean) => (
-      <CalendarIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />
-    ),
-  },
-  {
-    id: TimeRangeOptions.YEAR,
-    label: '최근 1년',
-    icon: (isActive: boolean) => (
-      <CalendarClockIcon size={14} color={isActive ? '#2563EB' : '#6B7280'} />
-    ),
-  },
-];
 
 // 리뷰 필터 (src_frontend와 동일한 순서)
 const reviewFilters = [
@@ -113,8 +14,8 @@ const reviewFilters = [
 
 // 기본값 정의 (src_frontend와 동일)
 const DEFAULT_FILTER = undefined;
-const DEFAULT_SORT = ReviewSortOptions.RECENT;
-const DEFAULT_TIME_RANGE = TimeRangeOptions.ALL;
+const DEFAULT_SORT = 'recent';
+const DEFAULT_TIME_RANGE = 'all';
 
 // 리뷰 타입별 카운트 조회 Hook
 const useReviewTypeCounts = (userId: number) => {
@@ -170,232 +71,14 @@ const useUserReviewsInfinite = (
   };
 };
 
-// BottomSheet를 사용한 SortDropdown 컴포넌트
-interface SortDropdownProps {
-  selectedSort: string;
-  selectedTimeRange: string;
-  onSortChange: (sort: string) => void;
-  onTimeRangeChange: (range: string) => void;
-  showTimeRangeFilter: boolean;
-}
-
-const SortDropdown: React.FC<SortDropdownProps> = ({
-  selectedSort,
-  selectedTimeRange,
-  onSortChange,
-  onTimeRangeChange,
-  showTimeRangeFilter,
-}) => {
-  const [sortBottomSheetVisible, setSortBottomSheetVisible] = useState(false);
-  const [timeBottomSheetVisible, setTimeBottomSheetVisible] = useState(false);
-  const insets = useSafeAreaInsets();
-
-  const sortBottomSheetRef = useRef<BottomSheetModal>(null);
-  const timeBottomSheetRef = useRef<BottomSheetModal>(null);
-
-  const selectedSortOption = reviewSortOptions.find(opt => opt.id === selectedSort);
-  const selectedTimeOption = timeRangeOptions.find(opt => opt.id === selectedTimeRange);
-
-  const isSortActive = selectedSort !== DEFAULT_SORT;
-  const isTimeRangeActive = selectedTimeRange !== DEFAULT_TIME_RANGE;
-
-  // Handle sort bottom sheet visibility
-  React.useEffect(() => {
-    if (sortBottomSheetVisible) {
-      sortBottomSheetRef.current?.present();
-    } else {
-      sortBottomSheetRef.current?.dismiss();
-    }
-  }, [sortBottomSheetVisible]);
-
-  // Handle time bottom sheet visibility
-  React.useEffect(() => {
-    if (timeBottomSheetVisible) {
-      timeBottomSheetRef.current?.present();
-    } else {
-      timeBottomSheetRef.current?.dismiss();
-    }
-  }, [timeBottomSheetVisible]);
-
-  const handleSortPress = useCallback(() => {
-    setSortBottomSheetVisible(true);
-  }, []);
-
-  const handleTimePress = useCallback(() => {
-    setTimeBottomSheetVisible(true);
-  }, []);
-
-  const handleSortSelect = useCallback(
-    (sortId: string) => {
-      onSortChange(sortId);
-      setSortBottomSheetVisible(false);
-    },
-    [onSortChange]
-  );
-
-  const handleTimeSelect = useCallback(
-    (timeId: string) => {
-      onTimeRangeChange(timeId);
-      setTimeBottomSheetVisible(false);
-    },
-    [onTimeRangeChange]
-  );
-
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-        enableTouchThrough={false}
-      />
-    ),
-    []
-  );
-
-  const handleSortSheetChange = useCallback((index: number) => {
-    if (index === -1) {
-      setSortBottomSheetVisible(false);
-    }
-  }, []);
-
-  const handleTimeSheetChange = useCallback((index: number) => {
-    if (index === -1) {
-      setTimeBottomSheetVisible(false);
-    }
-  }, []);
-
-  return (
-    <>
-      <View style={styles.sortContainer}>
-        {/* 시간 범위 버튼 (조건부 렌더링) */}
-        {showTimeRangeFilter && (
-          <TouchableOpacity
-            style={[styles.sortButton, isTimeRangeActive && styles.sortButtonActive]}
-            onPress={handleTimePress}
-          >
-            <View style={styles.sortButtonIcon}>{selectedTimeOption?.icon(isTimeRangeActive)}</View>
-            <Text style={[styles.sortButtonText, isTimeRangeActive && styles.sortButtonTextActive]}>
-              {selectedTimeOption?.label}
-            </Text>
-            <ChevronDownIcon size={12} color={isTimeRangeActive ? '#2563EB' : '#6B7280'} />
-          </TouchableOpacity>
-        )}
-
-        {/* 정렬 버튼 */}
-        <TouchableOpacity
-          style={[styles.sortButton, isSortActive && styles.sortButtonActive]}
-          onPress={handleSortPress}
-        >
-          <View style={styles.sortButtonIcon}>{selectedSortOption?.icon(isSortActive)}</View>
-          <Text style={[styles.sortButtonText, isSortActive && styles.sortButtonTextActive]}>
-            {selectedSortOption?.label}
-          </Text>
-          <ChevronDownIcon size={12} color={isSortActive ? '#2563EB' : '#6B7280'} />
-        </TouchableOpacity>
-      </View>
-
-      {/* 정렬 옵션 BottomSheet */}
-      <BottomSheetModal
-        ref={sortBottomSheetRef}
-        snapPoints={['50%']}
-        enablePanDownToClose
-        backdropComponent={renderBackdrop}
-        onChange={handleSortSheetChange}
-        handleIndicatorStyle={{ backgroundColor: '#D1D5DB', width: 36, height: 4 }}
-        backgroundStyle={{
-          backgroundColor: 'white',
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-        }}
-      >
-        <BottomSheetView style={[styles.bottomSheetContent, { paddingBottom: insets.bottom + 16 }]}>
-          {reviewSortOptions.map(option => {
-            const isActive = option.id === selectedSort;
-            return (
-              <TouchableOpacity
-                key={option.id}
-                style={[styles.bottomSheetItem, isActive && styles.bottomSheetItemActive]}
-                onPress={() => handleSortSelect(option.id)}
-              >
-                <View style={styles.bottomSheetItemIcon}>{option.icon(isActive)}</View>
-                <Text
-                  style={[styles.bottomSheetItemText, isActive && styles.bottomSheetItemTextActive]}
-                >
-                  {option.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </BottomSheetView>
-      </BottomSheetModal>
-
-      {/* 시간 범위 BottomSheet */}
-      {showTimeRangeFilter && (
-        <BottomSheetModal
-          ref={timeBottomSheetRef}
-          snapPoints={['45%']}
-          enablePanDownToClose
-          backdropComponent={renderBackdrop}
-          onChange={handleTimeSheetChange}
-          handleIndicatorStyle={{ backgroundColor: '#D1D5DB', width: 36, height: 4 }}
-          backgroundStyle={{
-            backgroundColor: 'white',
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-          }}
-        >
-          <BottomSheetView
-            style={[styles.bottomSheetContent, { paddingBottom: insets.bottom + 16 }]}
-          >
-            {timeRangeOptions.map(option => {
-              const isActive = option.id === selectedTimeRange;
-              return (
-                <TouchableOpacity
-                  key={option.id}
-                  style={[styles.bottomSheetItem, isActive && styles.bottomSheetItemActive]}
-                  onPress={() => handleTimeSelect(option.id)}
-                >
-                  <View style={styles.bottomSheetItemIcon}>{option.icon(isActive)}</View>
-                  <Text
-                    style={[
-                      styles.bottomSheetItemText,
-                      isActive && styles.bottomSheetItemTextActive,
-                    ]}
-                  >
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </BottomSheetView>
-        </BottomSheetModal>
-      )}
-    </>
-  );
-};
-
-// FilterMenu 컴포넌트 (ReadBooksSection과 완전히 동일)
+// FilterMenu 컴포넌트 (정렬 필터 제거됨)
 interface FilterMenuProps {
   userId: number;
   selectedFilter: string | undefined;
-  selectedSort: string;
-  selectedTimeRange: string;
   onFilterChange: (filter: string | undefined) => void;
-  onSortChange: (sort: string) => void;
-  onTimeRangeChange: (range: string) => void;
 }
 
-const FilterMenu: React.FC<FilterMenuProps> = ({
-  userId,
-  selectedFilter,
-  selectedSort,
-  selectedTimeRange,
-  onFilterChange,
-  onSortChange,
-  onTimeRangeChange,
-}) => {
+const FilterMenu: React.FC<FilterMenuProps> = ({ userId, selectedFilter, onFilterChange }) => {
   const { typeCounts } = useReviewTypeCounts(userId);
 
   const getCountForFilter = (filterType: string | undefined) => {
@@ -405,12 +88,6 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
     if (filterType === 'rating') return 0; // 별점만 카운트는 별도 API 필요
     return 0;
   };
-
-  const showTimeRangeFilter = [
-    ReviewSortOptions.RECENT,
-    ReviewSortOptions.POPULAR,
-    ReviewSortOptions.RATING_DESC,
-  ].includes(selectedSort as ReviewSortOptions);
 
   return (
     <View style={styles.filterContainer}>
@@ -446,15 +123,6 @@ const FilterMenu: React.FC<FilterMenuProps> = ({
           ))}
         </ScrollView>
       </View>
-
-      {/* 정렬 드롭다운 */}
-      <SortDropdown
-        selectedSort={selectedSort}
-        selectedTimeRange={selectedTimeRange}
-        onSortChange={onSortChange}
-        onTimeRangeChange={onTimeRangeChange}
-        showTimeRangeFilter={showTimeRangeFilter}
-      />
     </View>
   );
 };
@@ -473,19 +141,17 @@ const EmptyState: React.FC = () => (
 interface ReviewsListProps {
   userId: number;
   filter: string | undefined;
-  sort: string;
-  timeRange: string;
 }
 
-const ReviewsList: React.FC<ReviewsListProps> = ({ userId, filter, sort, timeRange }) => {
+const ReviewsList: React.FC<ReviewsListProps> = ({ userId, filter }) => {
   const flatListRef = useRef<FlatList>(null);
   const previousFilterRef = useRef<string | undefined>(filter);
 
   const { reviews, fetchNextPage, hasNextPage, isFetchingNextPage } = useUserReviewsInfinite(
     userId,
     filter,
-    sort,
-    timeRange
+    DEFAULT_SORT,
+    DEFAULT_TIME_RANGE
   );
 
   // 필터가 변경될 때만 스크롤을 맨 위로 이동
@@ -551,8 +217,6 @@ interface ReviewsSectionProps {
 
 export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ userId }) => {
   const [selectedFilter, setSelectedFilter] = useState<string | undefined>(DEFAULT_FILTER);
-  const [selectedSort, setSelectedSort] = useState<string>(DEFAULT_SORT);
-  const [selectedTimeRange, setSelectedTimeRange] = useState<string>(DEFAULT_TIME_RANGE);
 
   return (
     <View style={styles.container}>
@@ -561,22 +225,16 @@ export const ReviewsSection: React.FC<ReviewsSectionProps> = ({ userId }) => {
         <FilterMenu
           userId={userId}
           selectedFilter={selectedFilter}
-          selectedSort={selectedSort}
-          selectedTimeRange={selectedTimeRange}
           onFilterChange={setSelectedFilter}
-          onSortChange={setSelectedSort}
-          onTimeRangeChange={setSelectedTimeRange}
         />
       </Suspense>
 
       {/* 리뷰 목록 */}
       <Suspense fallback={<LoadingSpinner />}>
         <ReviewsList
-          key={`${selectedFilter || 'undefined'}_${selectedSort}_${selectedTimeRange}`}
+          key={`${selectedFilter || 'undefined'}`}
           userId={userId}
           filter={selectedFilter}
-          sort={selectedSort}
-          timeRange={selectedTimeRange}
         />
       </Suspense>
     </View>
@@ -589,7 +247,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
 
-  // FilterMenu 스타일 (ReadBooksSection과 완전히 동일)
+  // FilterMenu 스타일
   filterContainer: {
     backgroundColor: 'white',
     paddingTop: 2,
@@ -641,77 +299,6 @@ const styles = StyleSheet.create({
   statusFilterBadgeText: {
     fontSize: 11,
     color: '#6B7280',
-  },
-
-  // SortDropdown 스타일 (ReadBooksSection과 완전히 동일)
-  sortContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 4,
-    gap: 6,
-  },
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F8F9FA',
-    minHeight: 32,
-  },
-  sortButtonActive: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#BFDBFE',
-  },
-  sortButtonIcon: {
-    width: 12,
-    height: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 4,
-  },
-  sortButtonText: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginLeft: 5,
-    fontWeight: '500',
-  },
-  sortButtonTextActive: {
-    color: '#1D4ED8',
-  },
-
-  // BottomSheet 스타일
-  bottomSheetContent: {
-    padding: 16,
-  },
-  bottomSheetItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  bottomSheetItemActive: {
-    backgroundColor: '#EFF6FF',
-  },
-  bottomSheetItemIcon: {
-    width: 20,
-    height: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  bottomSheetItemText: {
-    fontSize: 16,
-    color: '#374151',
-    flex: 1,
-  },
-  bottomSheetItemTextActive: {
-    color: '#2563EB',
-    fontWeight: '600',
   },
 
   // 리뷰 목록 스타일 (ReadBooksSection과 동일)

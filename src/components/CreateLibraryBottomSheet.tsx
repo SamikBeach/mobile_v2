@@ -6,14 +6,15 @@ import {
   StyleSheet,
   TextInput,
   Switch,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { X } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createLibrary, CreateLibraryDto, getPopularLibraryTags } from '../apis';
+import { createLibrary, CreateLibraryDto, getLibraryTags } from '../apis/library';
 import { getTagColor } from '../utils/tags';
+import Toast from 'react-native-toast-message';
+import { AppColors } from '../constants';
 
 interface CreateLibraryBottomSheetProps {
   isVisible: boolean;
@@ -27,41 +28,60 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
   onSuccess,
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const nameInputRef = useRef<TextInput>(null);
+  const descriptionInputRef = useRef<TextInput>(null);
   const queryClient = useQueryClient();
 
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    isPublic: false,
-  });
-
+  const [isPublic, setIsPublic] = useState(true);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [nameText, setNameText] = useState('');
+  const [descriptionText, setDescriptionText] = useState('');
 
-  // 인기 태그 조회
-  const { data: popularTags, isLoading: isLoadingTags } = useQuery({
-    queryKey: ['popular-library-tags'],
-    queryFn: () => getPopularLibraryTags(20),
+  // 라이브러리 태그 조회
+  const {
+    data: popularTags,
+    isLoading: isLoadingTags,
+    error: tagsError,
+  } = useQuery({
+    queryKey: ['library-tags'],
+    queryFn: () => getLibraryTags(20),
     enabled: isVisible,
+    retry: 3,
+    staleTime: 5 * 60 * 1000, // 5분
   });
 
   // 서재 생성 mutation
   const { mutate: createLibraryMutation, isPending } = useMutation({
     mutationFn: createLibrary,
     onSuccess: response => {
+      console.log('서재 생성 성공:', response); // 디버깅용
+
       // 서재 목록 캐시 무효화
       queryClient.invalidateQueries({ queryKey: ['user-libraries'] });
 
-      Alert.alert('성공', '새 서재가 생성되었습니다.');
-
+      // onSuccess 콜백 먼저 실행
       if (onSuccess) {
         onSuccess(response.id);
       }
 
+      // bottomsheet 닫기
       handleClose();
+
+      // 약간의 지연 후 토스트 표시 (bottomsheet이 닫힌 후)
+      setTimeout(() => {
+        console.log('토스트 표시 시도'); // 디버깅용
+        Toast.show({
+          type: 'success',
+          text1: '새 서재가 생성되었습니다.',
+        });
+      }, 300);
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || '서재 생성에 실패했습니다.';
-      Alert.alert('오류', errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: errorMessage,
+      });
     },
   });
 
@@ -85,13 +105,15 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
   }, [isVisible]);
 
   const handleClose = () => {
-    setFormData({
-      name: '',
-      description: '',
-      isPublic: false,
-    });
+    // TextInput 내용 초기화
+    nameInputRef.current?.clear();
+    descriptionInputRef.current?.clear();
+    setNameText('');
+    setDescriptionText('');
+    setIsPublic(true);
     setSelectedTagIds([]);
     bottomSheetModalRef.current?.dismiss();
+    onClose(); // 부모 컴포넌트에 닫힘을 알림
   };
 
   const handleTagToggle = (tagId: number) => {
@@ -100,7 +122,10 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
         return prev.filter(id => id !== tagId);
       } else {
         if (prev.length >= 5) {
-          Alert.alert('알림', '태그는 최대 5개까지 선택할 수 있습니다.');
+          Toast.show({
+            type: 'info',
+            text1: '태그는 최대 5개까지 선택할 수 있습니다.',
+          });
           return prev;
         }
         return [...prev, tagId];
@@ -109,15 +134,18 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
   };
 
   const handleSubmit = () => {
-    if (!formData.name.trim()) {
-      Alert.alert('알림', '서재 이름을 입력해주세요.');
+    if (!nameText.trim()) {
+      Toast.show({
+        type: 'info',
+        text1: '서재 이름을 입력해주세요.',
+      });
       return;
     }
 
     const createData: CreateLibraryDto = {
-      name: formData.name.trim(),
-      description: formData.description.trim() || undefined,
-      isPublic: formData.isPublic,
+      name: nameText.trim(),
+      description: descriptionText.trim() || undefined,
+      isPublic: isPublic,
       tagIds: selectedTagIds.length > 0 ? selectedTagIds : undefined,
     };
 
@@ -143,13 +171,23 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size='small' color='#6B7280' />
-          <Text style={styles.loadingText}>태그를 불러오는 중입니다</Text>
+          <Text style={styles.loadingText}>태그를 불러오는 중...</Text>
+        </View>
+      );
+    }
+
+    if (tagsError) {
+      console.error('태그 조회 오류:', tagsError);
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.noTagsText}>태그를 불러올 수 없습니다</Text>
+          <Text style={styles.errorSubText}>네트워크 연결을 확인해주세요</Text>
         </View>
       );
     }
 
     if (!popularTags || popularTags.length === 0) {
-      return <Text style={styles.noTagsText}>태그를 불러올 수 없습니다</Text>;
+      return <Text style={styles.noTagsText}>사용 가능한 태그가 없습니다</Text>;
     }
 
     return (
@@ -203,10 +241,11 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
         <View style={styles.inputGroup}>
           <Text style={styles.label}>서재 이름</Text>
           <TextInput
+            ref={nameInputRef}
             style={styles.textInput}
-            value={formData.name}
-            onChangeText={text => setFormData(prev => ({ ...prev, name: text }))}
+            onChangeText={setNameText}
             placeholder='서재 이름을 입력하세요'
+            placeholderTextColor='#9CA3AF'
             maxLength={50}
           />
         </View>
@@ -215,10 +254,11 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
         <View style={styles.inputGroup}>
           <Text style={styles.label}>서재 설명</Text>
           <TextInput
+            ref={descriptionInputRef}
             style={[styles.textInput, styles.textArea]}
-            value={formData.description}
-            onChangeText={text => setFormData(prev => ({ ...prev, description: text }))}
+            onChangeText={setDescriptionText}
             placeholder='서재에 대한 간단한 설명을 입력하세요'
+            placeholderTextColor='#9CA3AF'
             multiline
             numberOfLines={4}
             textAlignVertical='top'
@@ -239,10 +279,10 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
             <Text style={styles.switchDescription}>공개 서재는 모든 사용자가 볼 수 있습니다</Text>
           </View>
           <Switch
-            value={formData.isPublic}
-            onValueChange={value => setFormData(prev => ({ ...prev, isPublic: value }))}
-            trackColor={{ false: '#F3F4F6', true: '#10B981' }}
-            thumbColor={formData.isPublic ? '#FFFFFF' : '#FFFFFF'}
+            value={isPublic}
+            onValueChange={setIsPublic}
+            trackColor={{ false: '#F3F4F6', true: AppColors.success }}
+            thumbColor={isPublic ? '#FFFFFF' : '#FFFFFF'}
           />
         </View>
       </View>
@@ -260,7 +300,7 @@ export const CreateLibraryBottomSheet: React.FC<CreateLibraryBottomSheetProps> =
         <TouchableOpacity
           style={[styles.button, styles.submitButton, isPending && styles.disabledButton]}
           onPress={handleSubmit}
-          disabled={isPending || !formData.name.trim()}
+          disabled={isPending || !nameText.trim()}
         >
           <Text style={styles.submitButtonText}>{isPending ? '생성 중...' : '생성'}</Text>
         </TouchableOpacity>
@@ -340,8 +380,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     fontSize: 16,
+    lineHeight: 20,
     color: '#111827',
     backgroundColor: '#FFFFFF',
+    minHeight: 48, // 최소 높이 고정으로 레이아웃 시프트 방지
   },
   textArea: {
     height: 100,
@@ -356,10 +398,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
   },
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
   noTagsText: {
     fontSize: 14,
     color: '#6B7280',
     fontStyle: 'italic',
+  },
+  errorSubText: {
+    fontSize: 12,
+    color: '#EF4444',
+    marginTop: 4,
   },
   tagContainer: {
     flexDirection: 'row',
@@ -422,7 +473,7 @@ const styles = StyleSheet.create({
     color: '#374151',
   },
   submitButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: AppColors.success,
   },
   submitButtonText: {
     fontSize: 16,

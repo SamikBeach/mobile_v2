@@ -19,3 +19,6 @@ export * from './ReviewBottomSheet';
 export * from './CommentBottomSheet';
 export * from './CommentActionBottomSheet';
 export * from './ReviewTypeBottomSheet';
+
+// Statistics Components
+export * from './Statistics';

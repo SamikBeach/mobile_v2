@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, Suspense } from 'react';
+import React, { useState, useCallback, useRef, Suspense, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,9 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
   Image,
+  TextInput,
 } from 'react-native';
-import { Plus, User } from 'lucide-react-native';
+import { Plus, User, Star, X, ChevronDown } from 'lucide-react-native';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useAtomValue } from 'jotai';
 import { useNavigation } from '@react-navigation/native';
@@ -20,9 +21,16 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ReviewType, ReviewResponseDto } from '../../apis/review/types';
 import { LoadingSpinner, ReviewCard } from '../../components';
 import { ReviewTypeBottomSheet } from '../../components/ReviewTypeBottomSheet';
+import { ReadingStatusBottomSheet } from '../../components/ReadingStatusBottomSheet';
 import { useCommunityReviews, SortOption } from '../../hooks';
 import { userAtom } from '../../atoms/user';
 import { RootStackParamList } from '../../navigation/types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createReview } from '../../apis/review';
+import { createOrUpdateRating } from '../../apis/rating';
+import { createOrUpdateReadingStatus, ReadingStatusType } from '../../apis/reading-status';
+import Toast from 'react-native-toast-message';
+import { AppColors } from '../../constants';
 
 type CommunityScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -42,7 +50,7 @@ const categoryOptions: CategoryOption[] = [
   { id: 'all', name: '전체', color: '#F1F5F9' },
   { id: 'general', name: '일반', color: '#FECACA' },
   { id: 'discussion', name: '토론', color: '#FEF3C7' },
-  { id: 'review', name: '리뷰', color: '#D1FAE5' },
+  { id: 'review', name: '리뷰', color: AppColors.border },
   { id: 'question', name: '질문', color: '#DBEAFE' },
   { id: 'meetup', name: '모임', color: '#E0E7FF' },
 ];
@@ -152,7 +160,31 @@ const CreateReviewCard = () => {
   const user = useAtomValue(userAtom);
   const navigation = useNavigation<CommunityScreenNavigationProp>();
   const [selectedType, setSelectedType] = useState<ReviewType>('general');
+  const [inputText, setInputText] = useState<string>('');
+  const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [rating, setRating] = useState<number>(0);
+  const [readingStatus, setReadingStatus] = useState<'WANT_TO_READ' | 'READING' | 'READ' | null>(
+    'READ'
+  );
   const reviewTypeBottomSheetRef = useRef<BottomSheetModal>(null as any);
+  const queryClient = useQueryClient();
+  const [isReadingStatusVisible, setIsReadingStatusVisible] = useState(false);
+
+  // 읽기 상태 텍스트 매핑
+  const statusTexts = {
+    [ReadingStatusType.WANT_TO_READ]: '읽고 싶어요',
+    [ReadingStatusType.READING]: '읽는 중',
+    [ReadingStatusType.READ]: '읽었어요',
+    NONE: '선택 안함',
+  };
+
+  // 읽기 상태 이모지 매핑
+  const statusEmojis = {
+    [ReadingStatusType.WANT_TO_READ]: '📚',
+    [ReadingStatusType.READING]: '📖',
+    [ReadingStatusType.READ]: '✅',
+    NONE: '❌',
+  };
 
   // 사용자 정보 처리
   const displayName = user?.username || user?.email?.split('@')[0] || '';
@@ -161,6 +193,116 @@ const CreateReviewCard = () => {
 
   // 리뷰 타입 정보
   const typeInfo = getTypeInfo(selectedType);
+
+  // AddBook 화면에서 돌아올 때 선택된 책 받기
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      // 전역 상태나 다른 방법으로 선택된 책을 받을 수 있도록 구현 예정
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  // 리뷰 생성 mutation
+  const createReviewMutation = useMutation({
+    mutationFn: async () => {
+      // 리뷰 타입이면서 책이 선택되지 않은 경우 오류
+      if (selectedType === 'review' && !selectedBook) {
+        throw new Error('리뷰 태그를 선택한 경우, 책을 추가해야 합니다.');
+      }
+
+      // 책이 선택되었는데 별점이 없는 경우 오류
+      if (selectedBook && rating === 0) {
+        throw new Error('책을 추가한 경우, 별점을 입력해야 합니다.');
+      }
+
+      let bookId: number | undefined = undefined;
+      let bookIsbn = undefined;
+      let isNegativeBookId = false;
+
+      if (selectedBook) {
+        // ID 추출
+        const rawId = selectedBook.bookId ?? selectedBook.id;
+        if (typeof rawId === 'number') {
+          bookId = rawId;
+        } else if (typeof rawId === 'string') {
+          const parsedId = parseInt(rawId, 10);
+          bookId = isNaN(parsedId) ? -1 : parsedId;
+        } else {
+          bookId = -1;
+        }
+
+        // ISBN 추출
+        bookIsbn = selectedBook.isbn13 || selectedBook.isbn || '';
+
+        // 북 ID가 음수인지 확인
+        isNegativeBookId = bookId < 0;
+        if (isNegativeBookId) {
+          bookId = -1;
+        }
+      }
+
+      // 기본 리뷰 데이터 설정
+      const reviewData = {
+        content: inputText,
+        type: selectedType,
+        bookId,
+        isbn: isNegativeBookId ? bookIsbn : undefined,
+      };
+
+      // 별점이 있는 경우 별점 API 호출
+      if (selectedBook && rating > 0 && bookId !== undefined) {
+        await createOrUpdateRating(bookId, { rating }, isNegativeBookId ? bookIsbn : undefined);
+      }
+
+      // 읽기 상태 API 호출 - 리뷰 타입이고 책이 선택된 경우에만
+      if (selectedType === 'review' && bookId !== undefined) {
+        if (readingStatus) {
+          await createOrUpdateReadingStatus(
+            bookId,
+            { status: readingStatus as ReadingStatusType },
+            isNegativeBookId ? bookIsbn : undefined
+          );
+        }
+      }
+
+      return createReview(reviewData);
+    },
+    onSuccess: () => {
+      // 성공 시 입력 초기화
+      setInputText('');
+      setSelectedBook(null);
+      setRating(0);
+      setSelectedType('general');
+      setReadingStatus(ReadingStatusType.READ);
+
+      // 토스트 표시
+      Toast.show({
+        type: 'success',
+        text1: '리뷰가 등록되었습니다.',
+      });
+
+      // 쿼리 무효화
+      queryClient.invalidateQueries({
+        queryKey: ['communityReviews'],
+        exact: false,
+      });
+    },
+    onError: (error: any) => {
+      let errorMessage = '리뷰 등록 중 오류가 발생했습니다.';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: errorMessage,
+      });
+    },
+  });
 
   // 리뷰 타입 선택 핸들러
   const handleTypeSelect = (type: ReviewType) => {
@@ -174,12 +316,60 @@ const CreateReviewCard = () => {
 
   // 책 추가 버튼 핸들러
   const handleAddBook = () => {
-    navigation.navigate('AddBook', {});
+    if (selectedType === 'review') {
+      navigation.navigate('AddBook', {
+        onBookSelect: (book: any) => {
+          setSelectedBook(book);
+          // 새 책 선택 시 별점과 읽기 상태 초기화
+          setRating(0);
+          setReadingStatus(ReadingStatusType.READ);
+        },
+      });
+    }
   };
 
-  // TODO: 실제 리뷰 작성 모달 열기 (향후 구현)
-  const handleOpenCreateReview = () => {
-    console.log('리뷰 작성 모달 열기');
+  // 읽기 상태 변경 핸들러
+  const handleReadingStatusSelect = (status: ReadingStatusType | null) => {
+    setReadingStatus(status);
+    setIsReadingStatusVisible(false);
+  };
+
+  // 읽기 상태 Bottom Sheet 열기
+  const handleOpenReadingStatusSelector = () => {
+    setIsReadingStatusVisible(true);
+  };
+
+  // 리뷰 제출 핸들러
+  const handleSubmitReview = async () => {
+    if (!inputText.trim()) {
+      return;
+    }
+
+    // 리뷰 타입이면서 책이 선택되지 않은 경우
+    if (selectedType === 'review' && !selectedBook) {
+      Toast.show({
+        type: 'info',
+        text1: '알림',
+        text2: '리뷰 태그를 선택한 경우, 책을 추가해야 합니다.',
+      });
+      return;
+    }
+
+    // 책이 선택되었는데 별점이 없는 경우
+    if (selectedBook && rating === 0) {
+      Toast.show({
+        type: 'info',
+        text1: '알림',
+        text2: '책을 추가한 경우, 별점을 입력해야 합니다.',
+      });
+      return;
+    }
+
+    try {
+      await createReviewMutation.mutateAsync();
+    } catch {
+      // 오류는 mutation에서 처리됨
+    }
   };
 
   return (
@@ -202,15 +392,109 @@ const CreateReviewCard = () => {
             )}
           </View>
           <View style={styles.createReviewInput}>
-            <TouchableOpacity
-              style={styles.createTextInputTouchable}
-              onPress={handleOpenCreateReview}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.createTextInputPlaceholder}>
-                어떤 책에 대해 이야기하고 싶으신가요?
-              </Text>
-            </TouchableOpacity>
+            <TextInput
+              style={styles.createTextInput}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder='어떤 책에 대해 이야기하고 싶으신가요?'
+              placeholderTextColor='#9CA3AF'
+              multiline
+              numberOfLines={3}
+              textAlignVertical='top'
+            />
+
+            {/* 선택된 책 정보 표시 */}
+            {selectedType === 'review' && selectedBook && (
+              <View style={styles.selectedBookContainer}>
+                <View style={styles.selectedBookInfo}>
+                  <Image
+                    source={{ uri: selectedBook.coverImage || selectedBook.image }}
+                    style={styles.selectedBookCover}
+                    resizeMode='cover'
+                  />
+                  <View style={styles.selectedBookDetails}>
+                    <View style={styles.selectedBookHeader}>
+                      <Text style={styles.selectedBookTitle} numberOfLines={1}>
+                        {selectedBook.title}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.removeBookButton}
+                        onPress={() => {
+                          setSelectedBook(null);
+                          setRating(0);
+                        }}
+                      >
+                        <X size={16} color='#6B7280' />
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={styles.selectedBookAuthor} numberOfLines={1}>
+                      {selectedBook.author}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* 별점과 읽기 상태 */}
+                <View style={styles.selectedBookActions}>
+                  <View style={styles.ratingSection}>
+                    <Text style={styles.ratingLabel}>별점:</Text>
+                    <View style={styles.stars}>
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                          <Star
+                            size={16}
+                            color={star <= rating ? '#FBBF24' : '#E5E7EB'}
+                            fill={star <= rating ? '#FBBF24' : '#E5E7EB'}
+                          />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    {rating > 0 && (
+                      <Text style={styles.createRatingText}>
+                        {rating === 1
+                          ? '별로예요'
+                          : rating === 2
+                            ? '아쉬워요'
+                            : rating === 3
+                              ? '보통이에요'
+                              : rating === 4
+                                ? '좋아요'
+                                : '최고예요'}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* 읽기 상태 드롭다운 */}
+                  <TouchableOpacity
+                    style={[
+                      styles.readingStatusButton,
+                      readingStatus === ReadingStatusType.WANT_TO_READ && styles.wantToReadStatus,
+                      readingStatus === ReadingStatusType.READING && styles.readingStatus,
+                      readingStatus === ReadingStatusType.READ && styles.readStatus,
+                      readingStatus === null && styles.noneStatus,
+                    ]}
+                    onPress={handleOpenReadingStatusSelector}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.readingStatusEmoji}>
+                      {readingStatus ? statusEmojis[readingStatus] : statusEmojis.NONE}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.readingStatusText,
+                        readingStatus === ReadingStatusType.WANT_TO_READ && styles.wantToReadText,
+                        readingStatus === ReadingStatusType.READING && styles.readingText,
+                        readingStatus === ReadingStatusType.READ && styles.readText,
+                        readingStatus === null && styles.noneText,
+                      ]}
+                    >
+                      {readingStatus ? statusTexts[readingStatus] : statusTexts.NONE}
+                    </Text>
+                    <ChevronDown size={12} color='#6B7280' />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
             <View style={styles.createReviewActions}>
               <View style={styles.createLeftActions}>
                 <TouchableOpacity
@@ -222,20 +506,44 @@ const CreateReviewCard = () => {
                   <Text style={styles.categorySelectorText}>{typeInfo.name}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={styles.bookAddButton}
+                  style={[
+                    styles.bookAddButton,
+                    selectedType !== 'review' && styles.bookAddButtonDisabled,
+                  ]}
                   onPress={handleAddBook}
                   activeOpacity={0.7}
+                  disabled={selectedType !== 'review'}
                 >
-                  <Plus size={12} color='#6B7280' />
-                  <Text style={styles.bookAddButtonText}>책 추가</Text>
+                  <Plus size={12} color={selectedType === 'review' ? '#6B7280' : '#D1D5DB'} />
+                  <Text
+                    style={[
+                      styles.bookAddButtonText,
+                      selectedType !== 'review' && styles.bookAddButtonTextDisabled,
+                    ]}
+                  >
+                    책 추가
+                  </Text>
                 </TouchableOpacity>
               </View>
               <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleOpenCreateReview}
+                style={[
+                  styles.submitButton,
+                  (!inputText.trim() || createReviewMutation.isPending) &&
+                    styles.submitButtonDisabled,
+                ]}
+                onPress={handleSubmitReview}
                 activeOpacity={0.7}
+                disabled={!inputText.trim() || createReviewMutation.isPending}
               >
-                <Text style={styles.submitButtonText}>제출하기</Text>
+                <Text
+                  style={[
+                    styles.submitButtonText,
+                    (!inputText.trim() || createReviewMutation.isPending) &&
+                      styles.submitButtonTextDisabled,
+                  ]}
+                >
+                  {createReviewMutation.isPending ? '제출 중...' : '제출하기'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -248,6 +556,14 @@ const CreateReviewCard = () => {
         selectedType={selectedType}
         onTypeSelect={handleTypeSelect}
         originalType='general'
+      />
+
+      {/* 읽기 상태 선택 Bottom Sheet */}
+      <ReadingStatusBottomSheet
+        isVisible={isReadingStatusVisible}
+        onClose={() => setIsReadingStatusVisible(false)}
+        currentStatus={readingStatus as ReadingStatusType | null}
+        onStatusSelect={handleReadingStatusSelect}
       />
     </>
   );
@@ -577,20 +893,18 @@ const styles = StyleSheet.create({
   createReviewInput: {
     flex: 1,
   },
-  createTextInputTouchable: {
+  createTextInput: {
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 12,
     minHeight: 80,
-    justifyContent: 'flex-start',
     backgroundColor: '#F9FAFB',
-    marginBottom: 12,
-  },
-  createTextInputPlaceholder: {
+    marginBottom: 4,
     fontSize: 15,
-    color: '#9CA3AF',
+    color: '#374151',
+    textAlignVertical: 'top',
   },
   createReviewActions: {
     flexDirection: 'row',
@@ -638,24 +952,148 @@ const styles = StyleSheet.create({
     height: 32,
     gap: 6,
   },
+  bookAddButtonDisabled: {
+    backgroundColor: '#F9FAFB',
+    borderColor: '#F3F4F6',
+  },
   bookAddButtonText: {
     fontSize: 12,
     color: '#374151',
     fontWeight: '500',
   },
+  bookAddButtonTextDisabled: {
+    color: '#D1D5DB',
+  },
   submitButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
-    backgroundColor: '#16A34A',
+    backgroundColor: AppColors.primary,
     height: 32,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#D1D5DB',
   },
   submitButtonText: {
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
+  },
+  submitButtonTextDisabled: {
+    color: '#9CA3AF',
+  },
+  selectedBookContainer: {
+    marginTop: 4,
+    marginBottom: 8,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 12,
+  },
+  selectedBookInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  selectedBookCover: {
+    width: 48,
+    height: 72,
+    borderRadius: 4,
+  },
+  selectedBookDetails: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  selectedBookHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  selectedBookTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#111827',
+    flex: 1,
+  },
+  selectedBookAuthor: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  removeBookButton: {
+    padding: 4,
+  },
+  ratingSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ratingLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  stars: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  createRatingText: {
+    fontSize: 10,
+    color: '#6B7280',
+  },
+  selectedBookActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  readingStatusButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 4,
+  },
+  wantToReadStatus: {
+    backgroundColor: '#F3E8FF',
+    borderColor: '#C084FC',
+  },
+  readingStatus: {
+    backgroundColor: '#DBEAFE',
+    borderColor: '#60A5FA',
+  },
+  readStatus: {
+    backgroundColor: AppColors.border,
+    borderColor: '#34D399',
+  },
+  noneStatus: {
+    backgroundColor: '#FEF2F2',
+    borderColor: '#F87171',
+  },
+  readingStatusEmoji: {
+    fontSize: 12,
+  },
+  readingStatusText: {
+    fontSize: 10,
+    fontWeight: '500',
+    maxWidth: 60,
+  },
+  wantToReadText: {
+    color: '#7C3AED',
+  },
+  readingText: {
+    color: '#2563EB',
+  },
+  readText: {
+    color: '#059669',
+  },
+  noneText: {
+    color: '#DC2626',
   },
   reviewCard: {
     backgroundColor: 'white',

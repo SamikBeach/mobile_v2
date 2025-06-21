@@ -12,7 +12,13 @@ module.exports = defineConfig([
   {
     rules: {
       // TypeScript 관련 규칙
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
 
       // React Native 관련 규칙

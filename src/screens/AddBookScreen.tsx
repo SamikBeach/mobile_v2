@@ -20,6 +20,7 @@ import { RootStackParamList } from '../navigation/types';
 import { searchBooks } from '../apis/search/search';
 import { SearchBook } from '../apis/search/types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { AppColors } from '../constants';
 
 type AddBookScreenRouteProp = RouteProp<RootStackParamList, 'AddBook'>;
 type AddBookScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'AddBook'>;
@@ -190,7 +191,7 @@ const SearchResultsLoader: React.FC<SearchResultsLoaderProps> = ({
                 )}
                 {item.userReadingStatus === 'READ' && (
                   <View style={styles.readBadge}>
-                    <Check size={12} color='#10B981' />
+                    <Check size={12} color={AppColors.success} />
                     <Text style={styles.readText}>읽었어요</Text>
                   </View>
                 )}
@@ -764,7 +765,7 @@ const styles = StyleSheet.create({
   readBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#D1FAE5',
+    backgroundColor: AppColors.border,
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -773,7 +774,7 @@ const styles = StyleSheet.create({
   readText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#10B981',
+    color: AppColors.success,
     marginLeft: 4,
   },
   selectedIndicator: {

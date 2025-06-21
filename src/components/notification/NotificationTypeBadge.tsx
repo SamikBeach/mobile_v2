@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Bell, BookOpen, MessageSquare, ThumbsUp, User } from 'lucide-react-native';
 import { NotificationTypeBadgeProps } from '../../types/notification';
+import { AppColors } from '../../constants';
 
 export function NotificationTypeBadge({ type }: NotificationTypeBadgeProps) {
   const getIcon = () => {
@@ -56,7 +57,7 @@ export function NotificationTypeBadge({ type }: NotificationTypeBadgeProps) {
       case 'follow':
         return '#fef3c7';
       case 'library_update':
-        return '#dcfce7';
+        return AppColors.backgroundMedium;
       case 'library_subscribe':
         return '#dbeafe';
       default:

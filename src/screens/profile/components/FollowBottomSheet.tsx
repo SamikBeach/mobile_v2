@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   notFollowingButton: {
-    backgroundColor: '#2563EB',
+    backgroundColor: '#111827',
   },
   followingButton: {
     backgroundColor: '#F3F4F6',

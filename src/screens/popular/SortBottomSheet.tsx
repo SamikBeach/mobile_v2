@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import { Check } from 'lucide-react-native';
+import { Check, Star, Users, Bookmark, Calendar, ArrowDownAZ } from 'lucide-react-native';
 
 interface SortBottomSheetProps {
   visible: boolean;
@@ -17,6 +17,27 @@ const sortOptions = [
   { value: 'publishDate-desc', label: '출간일순' },
   { value: 'title-asc', label: '제목순' },
 ];
+
+// Get sort icon
+const getSortIcon = (sortOption: string, isSelected: boolean) => {
+  const color = isSelected ? '#1D4ED8' : '#6B7280';
+  const size = 16;
+
+  switch (sortOption) {
+    case 'rating-desc':
+      return <Star size={size} color={color} />;
+    case 'reviews-desc':
+      return <Users size={size} color={color} />;
+    case 'library-desc':
+      return <Bookmark size={size} color={color} />;
+    case 'publishDate-desc':
+      return <Calendar size={size} color={color} />;
+    case 'title-asc':
+      return <ArrowDownAZ size={size} color={color} />;
+    default:
+      return <Star size={size} color={color} />;
+  }
+};
 
 export const SortBottomSheet: React.FC<SortBottomSheetProps> = ({
   visible,
@@ -77,14 +98,17 @@ export const SortBottomSheet: React.FC<SortBottomSheetProps> = ({
             style={styles.optionItem}
             onPress={() => handleSortSelect(option.value)}
           >
-            <Text
-              style={[
-                styles.optionText,
-                selectedSort === option.value && styles.selectedOptionText,
-              ]}
-            >
-              {option.label}
-            </Text>
+            <View style={styles.optionLeftContent}>
+              {getSortIcon(option.value, selectedSort === option.value)}
+              <Text
+                style={[
+                  styles.optionText,
+                  selectedSort === option.value && styles.selectedOptionText,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </View>
             {selectedSort === option.value && <Check size={20} color='#1D4ED8' />}
           </TouchableOpacity>
         ))}
@@ -155,6 +179,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: 'transparent',
     minHeight: 56,
+  },
+  optionLeftContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   optionText: {
     fontSize: 16,

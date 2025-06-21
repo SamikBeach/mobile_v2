@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   Linking,
+  FlatList,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import {
@@ -18,6 +19,8 @@ import {
   keepPreviousData,
 } from '@tanstack/react-query';
 import { useRoute, RouteProp, useNavigation } from '@react-navigation/native';
+import type { NavigationProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../navigation/types';
 import { useAtomValue } from 'jotai';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
@@ -47,6 +50,7 @@ import { ReviewBottomSheet } from '../components/ReviewBottomSheet';
 import { ReviewActionBottomSheet } from '../components/ReviewActionBottomSheet';
 import { CommentBottomSheet } from '../components/CommentBottomSheet';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { LibraryCard } from '../components/Library/LibraryCard';
 import { useReviewComments, useReviewCommentCount } from '../hooks/useReviewComments';
 import {
   InteractiveRatingStars,
@@ -54,9 +58,94 @@ import {
 } from '../components/InteractiveRatingStars';
 import { useBookRating } from '../hooks/useBookRating';
 import { useReviewDialog } from '../hooks/useReviewDialog';
+import {
+  createOrUpdateReadingStatus,
+  deleteReadingStatusByBookId,
+} from '../apis/reading-status/reading-status';
+import { addBookToLibraryWithIsbn, getLibrariesByBookId } from '../apis/library/library';
+import { AppColors } from '../constants';
 
 // Route 타입 정의
 type BookDetailRouteProp = RouteProp<{ BookDetail: { isbn: string } }, 'BookDetail'>;
+
+// 서재 목록 컴포넌트
+const BookLibrariesList: React.FC<{
+  isbn: string;
+  bookId: number;
+  onLibraryCountChange?: (count: number) => void;
+}> = ({ isbn, bookId, onLibraryCountChange }) => {
+  const currentUser = useAtomValue(userAtom);
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  const {
+    data: librariesData,
+    isLoading,
+    error,
+  } = useSuspenseQuery({
+    queryKey: ['book-libraries-full', bookId],
+    queryFn: () => getLibrariesByBookId(bookId, 1, 10, isbn),
+  });
+
+  // 라이브러리 개수 업데이트
+  useEffect(() => {
+    if (librariesData && onLibraryCountChange) {
+      onLibraryCountChange(librariesData.meta.total || 0);
+    }
+  }, [librariesData, onLibraryCountChange]);
+
+  const handleLibraryPress = (library: any) => {
+    navigation.navigate('LibraryDetail', { libraryId: library.id });
+  };
+
+  const handleOwnerPress = (ownerId: number) => {
+    // TODO: 유저 프로필 네비게이션 구현 필요
+    console.log('Owner pressed:', ownerId);
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.emptyState}>
+        <LoadingSpinner />
+        <Text style={styles.emptyStateText}>서재 목록을 불러오는 중...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>서재 목록을 불러오는데 실패했습니다.</Text>
+      </View>
+    );
+  }
+
+  if (!librariesData?.data || librariesData.data.length === 0) {
+    return (
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyStateText}>이 책이 등록된 서재가 없습니다.</Text>
+      </View>
+    );
+  }
+
+  return (
+    <FlatList
+      data={librariesData.data}
+      renderItem={({ item }) => (
+        <LibraryCard
+          library={item}
+          onPress={() => handleLibraryPress(item)}
+          onOwnerPress={handleOwnerPress}
+          currentUserId={currentUser?.id}
+          hidePublicTag={true}
+        />
+      )}
+      keyExtractor={item => item.id.toString()}
+      showsVerticalScrollIndicator={false}
+      scrollEnabled={false} // TabSection 내부에서는 스크롤 비활성화
+      contentContainerStyle={{ paddingVertical: 8 }}
+    />
+  );
+};
 
 // 날짜 포맷팅 함수 (웹 버전과 동일)
 const formatReviewDate = (dateStr: string) => {
@@ -210,12 +299,28 @@ const BookInfo: React.FC<{ book: BookDetails }> = ({ book }) => {
 };
 
 // 탭 섹션 컴포넌트
-const TabSection: React.FC<{ isbn: string; onReviewPress?: () => void }> = ({
-  isbn,
-  onReviewPress,
-}) => {
-  const [activeTab, setActiveTab] = useState<'reviews' | 'libraries' | 'videos'>('reviews');
+const TabSection: React.FC<{
+  isbn: string;
+  bookId: number;
+  onReviewPress?: () => void;
+  onEditReviewPress?: (review: Review) => void;
+}> = ({ isbn, bookId, onReviewPress, onEditReviewPress }) => {
+  const [activeTab, setActiveTab] = useState<'reviews' | 'libraries'>('reviews');
   const [reviewCount, setReviewCount] = useState(0);
+  const [libraryCount, setLibraryCount] = useState(0);
+
+  // 서재 데이터 미리 가져오기 (탭 헤더 개수 표시용 및 캐싱)
+  const { data: librariesData } = useSuspenseQuery({
+    queryKey: ['book-libraries-full', bookId],
+    queryFn: () => getLibrariesByBookId(bookId, 1, 10, isbn),
+  });
+
+  // 실제 서재 개수 업데이트
+  useEffect(() => {
+    if (librariesData?.meta.total !== undefined) {
+      setLibraryCount(librariesData.meta.total);
+    }
+  }, [librariesData]);
 
   return (
     <View style={styles.tabSection}>
@@ -234,15 +339,7 @@ const TabSection: React.FC<{ isbn: string; onReviewPress?: () => void }> = ({
           onPress={() => setActiveTab('libraries')}
         >
           <Text style={[styles.tabText, activeTab === 'libraries' && styles.activeTabText]}>
-            이 책이 등록된 서재 (0)
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tabItem, activeTab === 'videos' && styles.activeTabItem]}
-          onPress={() => setActiveTab('videos')}
-        >
-          <Text style={[styles.tabText, activeTab === 'videos' && styles.activeTabText]}>
-            관련 영상
+            이 책이 등록된 서재 ({libraryCount})
           </Text>
         </TouchableOpacity>
       </View>
@@ -254,17 +351,20 @@ const TabSection: React.FC<{ isbn: string; onReviewPress?: () => void }> = ({
             isbn={isbn}
             onReviewCountChange={setReviewCount}
             onReviewPress={onReviewPress}
+            onEditReviewPress={onEditReviewPress}
           />
         )}
         {activeTab === 'libraries' && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>등록된 서재가 없습니다.</Text>
-          </View>
-        )}
-        {activeTab === 'videos' && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>관련 영상이 없습니다.</Text>
-          </View>
+          <Suspense
+            fallback={
+              <View style={styles.emptyState}>
+                <LoadingSpinner />
+                <Text style={styles.emptyStateText}>서재 목록을 불러오는 중...</Text>
+              </View>
+            }
+          >
+            <BookLibrariesList isbn={isbn} bookId={bookId} onLibraryCountChange={setLibraryCount} />
+          </Suspense>
         )}
       </View>
     </View>
@@ -277,6 +377,7 @@ interface BookDetailContentProps {
   onReadingStatusPress: () => void;
   onLibraryPress: () => void;
   onReviewPress: () => void;
+  onEditReviewPress: (review: Review) => void;
 }
 
 // 메인 책 상세 컴포넌트
@@ -285,6 +386,7 @@ const BookDetailContent: React.FC<BookDetailContentProps> = ({
   onReadingStatusPress,
   onLibraryPress,
   onReviewPress,
+  onEditReviewPress,
 }) => {
   const navigation = useNavigation();
 
@@ -432,7 +534,12 @@ const BookDetailContent: React.FC<BookDetailContentProps> = ({
         <Text style={styles.dataProvider}>정보제공: 알라딘</Text>
 
         {/* 탭 섹션 */}
-        <TabSection isbn={isbn} onReviewPress={onReviewPress} />
+        <TabSection
+          isbn={isbn}
+          bookId={book.id}
+          onReviewPress={onReviewPress}
+          onEditReviewPress={onEditReviewPress}
+        />
       </View>
     </ScrollView>
   );
@@ -704,7 +811,8 @@ const BookReviewsList: React.FC<{
   isbn: string;
   onReviewCountChange?: (count: number) => void;
   onReviewPress?: () => void;
-}> = ({ isbn, onReviewCountChange, onReviewPress }) => {
+  onEditReviewPress?: (review: Review) => void;
+}> = ({ isbn, onReviewCountChange, onReviewPress, onEditReviewPress }) => {
   const currentUser = useAtomValue(userAtom);
   const queryClient = useQueryClient();
   const navigation = useNavigation();
@@ -981,16 +1089,10 @@ const BookReviewsList: React.FC<{
 
   // 리뷰 수정 핸들러
   const handleEditReview = useCallback(() => {
-    if (selectedReview) {
-      // TODO: 리뷰 수정 기능 구현
-      console.log('리뷰 수정:', selectedReview.id);
-      Toast.show({
-        type: 'info',
-        text1: '알림',
-        text2: '리뷰 수정 기능은 준비 중입니다.',
-      });
+    if (selectedReview && onEditReviewPress) {
+      onEditReviewPress(selectedReview);
     }
-  }, [selectedReview]);
+  }, [selectedReview, onEditReviewPress]);
 
   // 리뷰 삭제 핸들러
   const handleDeleteReview = useCallback(() => {
@@ -1107,18 +1209,33 @@ const ReviewBottomSheetWithData: React.FC<{
   initialRating: number;
   initialContent: string;
   isEditMode: boolean;
-}> = ({ isbn, isVisible, onClose, initialRating, initialContent, isEditMode }) => {
+  editingReview?: Review | null;
+}> = ({ isbn, isVisible, onClose, initialRating, initialContent, isEditMode, editingReview }) => {
   const { data: book } = useSuspenseQuery({
     queryKey: ['book-detail', isbn],
     queryFn: () => getBookByIsbn(isbn),
   });
 
-  const { handleReviewSubmit, isSubmitting } = useReviewDialog({
+  const { handleReviewSubmit, isSubmitting, openEditMode } = useReviewDialog({
     book,
     isbn,
-    userRating: book?.userRating,
+    userRating: book?.userRating
+      ? {
+          id: 0,
+          rating: book.userRating,
+          bookId: book.id,
+          comment: '',
+        }
+      : null,
     userReadingStatus: book?.userReadingStatus as ReadingStatusType | null,
   });
+
+  // 리뷰 수정 모드로 설정
+  React.useEffect(() => {
+    if (isVisible && editingReview && isEditMode) {
+      openEditMode(editingReview);
+    }
+  }, [isVisible, editingReview, isEditMode, openEditMode]);
 
   const handleSubmitAndClose = async (
     rating: number,
@@ -1144,19 +1261,104 @@ const ReviewBottomSheetWithData: React.FC<{
   );
 };
 
-// 메인 화면 컴포넌트
 export const BookDetailScreen: React.FC = () => {
   const route = useRoute<BookDetailRouteProp>();
   const { isbn } = route.params;
+  const queryClient = useQueryClient();
 
-  // useBookRating 훅 사용
   const { userRating, userRatingData } = useBookRating(isbn);
 
-  // 바텀시트 상태들
   const [readingStatusBottomSheetVisible, setReadingStatusBottomSheetVisible] = useState(false);
   const [libraryBottomSheetVisible, setLibraryBottomSheetVisible] = useState(false);
   const [createLibraryBottomSheetVisible, setCreateLibraryBottomSheetVisible] = useState(false);
   const [reviewBottomSheetVisible, setReviewBottomSheetVisible] = useState(false);
+
+  // 리뷰 수정을 위한 상태 추가
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
+  const [reviewEditBottomSheetVisible, setReviewEditBottomSheetVisible] = useState(false);
+
+  // 현재 책 데이터 가져오기
+  const { data: book } = useSuspenseQuery({
+    queryKey: ['book-detail', isbn],
+    queryFn: () => getBookByIsbn(isbn),
+  });
+
+  // 읽기 상태 업데이트 mutation
+  const readingStatusMutation = useMutation({
+    mutationFn: async (status: ReadingStatusType | null) => {
+      if (!book) throw new Error('책 정보가 없습니다.');
+
+      if (status === null) {
+        // 읽기 상태 삭제
+        await deleteReadingStatusByBookId(book.id);
+        return null;
+      }
+
+      return createOrUpdateReadingStatus(book.id, { status }, isbn);
+    },
+    onSuccess: (data, status) => {
+      // 쿼리 무효화하여 UI 업데이트
+      queryClient.invalidateQueries({ queryKey: ['book-detail', isbn] });
+
+      // Toast 표시
+      const statusText = status ? StatusTexts[status] : '선택 안함';
+      Toast.show({
+        type: 'success',
+        text1: '읽기 상태 변경',
+        text2: `'${statusText}'로 변경되었습니다.`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('읽기 상태 변경 실패:', error);
+      Toast.show({
+        type: 'error',
+        text1: '오류',
+        text2: '읽기 상태 변경에 실패했습니다.',
+      });
+    },
+  });
+
+  // 서재에 책 추가 mutation
+  const addToLibraryMutation = useMutation({
+    mutationFn: async (libraryId: number) => {
+      if (!book) throw new Error('책 정보가 없습니다.');
+
+      return addBookToLibraryWithIsbn({
+        libraryId,
+        bookId: book.id,
+        isbn,
+      });
+    },
+    onSuccess: (_data, _libraryId) => {
+      // 서재 목록 쿼리 무효화
+      queryClient.invalidateQueries({ queryKey: ['user-libraries'] });
+
+      // 성공 Toast 표시
+      Toast.show({
+        type: 'success',
+        text1: '서재에 추가',
+        text2: `"${book?.title}"이 서재에 추가되었습니다.`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('서재에 추가 실패:', error);
+
+      // 409 Conflict 에러 (이미 추가된 책)
+      if (error.response?.status === 409) {
+        Toast.show({
+          type: 'info',
+          text1: '이미 추가됨',
+          text2: '이 책은 이미 해당 서재에 추가되어 있습니다.',
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: '오류',
+          text2: '서재에 책을 추가하는데 실패했습니다.',
+        });
+      }
+    },
+  });
 
   const handleReadingStatusPress = () => {
     setReadingStatusBottomSheetVisible(true);
@@ -1164,7 +1366,14 @@ export const BookDetailScreen: React.FC = () => {
 
   const handleReadingStatusSelect = (status: ReadingStatusType | null) => {
     setReadingStatusBottomSheetVisible(false);
-    console.log('Selected reading status:', status);
+
+    // 현재 상태와 같으면 변경하지 않음
+    const currentStatus = book?.userReadingStatus as ReadingStatusType | null;
+    if (currentStatus === status) {
+      return;
+    }
+
+    readingStatusMutation.mutate(status);
   };
 
   const handleLibraryPress = () => {
@@ -1173,7 +1382,7 @@ export const BookDetailScreen: React.FC = () => {
 
   const handleLibrarySelect = async (libraryId: number) => {
     setLibraryBottomSheetVisible(false);
-    console.log('Selected library:', libraryId);
+    addToLibraryMutation.mutate(libraryId);
   };
 
   const handleCreateNewLibrary = () => {
@@ -1190,6 +1399,12 @@ export const BookDetailScreen: React.FC = () => {
     setReviewBottomSheetVisible(true);
   };
 
+  // 리뷰 수정 핸들러 추가
+  const handleEditReviewPress = (review: Review) => {
+    setEditingReview(review);
+    setReviewEditBottomSheetVisible(true);
+  };
+
   return (
     <>
       <View style={styles.safeArea}>
@@ -1199,6 +1414,7 @@ export const BookDetailScreen: React.FC = () => {
             onReadingStatusPress={handleReadingStatusPress}
             onLibraryPress={handleLibraryPress}
             onReviewPress={handleReviewPress}
+            onEditReviewPress={handleEditReviewPress}
           />
         </Suspense>
       </View>
@@ -1207,7 +1423,7 @@ export const BookDetailScreen: React.FC = () => {
       <ReadingStatusBottomSheet
         isVisible={readingStatusBottomSheetVisible}
         onClose={() => setReadingStatusBottomSheetVisible(false)}
-        currentStatus={null} // TODO: 실제 책 데이터에서 가져와야 함
+        currentStatus={book?.userReadingStatus as ReadingStatusType | null}
         onStatusSelect={handleReadingStatusSelect}
       />
 
@@ -1235,6 +1451,22 @@ export const BookDetailScreen: React.FC = () => {
           initialRating={userRating}
           initialContent={userRatingData?.comment || ''}
           isEditMode={!!userRatingData}
+        />
+      </Suspense>
+
+      {/* 리뷰 수정 바텀시트 */}
+      <Suspense fallback={null}>
+        <ReviewBottomSheetWithData
+          isbn={isbn}
+          isVisible={reviewEditBottomSheetVisible}
+          onClose={() => {
+            setReviewEditBottomSheetVisible(false);
+            setEditingReview(null);
+          }}
+          initialRating={editingReview ? getReviewRating(editingReview) : 0}
+          initialContent={editingReview?.content || ''}
+          isEditMode={true}
+          editingReview={editingReview}
         />
       </Suspense>
     </>
@@ -1409,7 +1641,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3B82F6', // bg-blue-500
   },
   greenBackground: {
-    backgroundColor: '#10B981', // bg-green-500
+    backgroundColor: AppColors.success, // bg-green-500
   },
   statTextContainer: {
     flexDirection: 'column',
@@ -1703,7 +1935,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   reviewActionButtonLiked: {
-    borderColor: '#10B981',
+    borderColor: AppColors.success,
     backgroundColor: '#ECFDF5',
   },
   reviewActionText: {

@@ -10,7 +10,6 @@ import {
   Dimensions,
 } from 'react-native';
 import {
-  User,
   UserCircle,
   UserPlus,
   Check,
@@ -20,17 +19,32 @@ import {
   Users,
   AreaChart,
   Bell,
-  ChevronRight,
 } from 'lucide-react-native';
 import { useAtomValue } from 'jotai';
-import Toast from 'react-native-toast-message';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { userAtom } from '../../atoms/user';
-import { LoadingSpinner } from '../../components';
+import {
+  LoadingSpinner,
+  ReadingStatusChart,
+  GenreAnalysisChart,
+  RatingStatsChart,
+  ReviewStatsChart,
+  ReviewSummaryStatsChart,
+  LikesAndCommentsChart,
+  FollowerStatsChart,
+  CommunityActivityChart,
+  CommunityInfluenceChart,
+  ReadingStatusByPeriodChart,
+  AuthorPublisherChart,
+  LibraryCompositionChart,
+  LibraryPopularityChart,
+  LibraryUpdatePatternChart,
+  SearchActivityChart,
+} from '../../components';
 import { useUserProfile } from '../../hooks/useUserProfile';
 import { useIsMyProfile } from '../../hooks/useIsMyProfile';
 import { useUserFollow } from '../../hooks/useUserFollow';
-import { ProfileEditBottomSheet } from '../my/components/ProfileEditBottomSheet';
+import { ProfileEditBottomSheet } from './components/ProfileEditBottomSheet';
 import { ReadBooksSection } from './components/ReadBooksSection';
 import { ReviewsSection as ReviewsSectionComponent } from './components/ReviewsSection';
 import { LibrariesSection as LibrariesSectionComponent } from './components/LibrariesSection';
@@ -336,14 +350,132 @@ const ProfileSummary: React.FC<{
   );
 };
 
-// Section Content Components (placeholders)
+// 통계 섹션 타입 정의
+type StatsSectionId = 'reading' | 'activity' | 'community' | 'library' | 'etc';
 
-const StatsSection: React.FC = () => (
-  <View style={styles.sectionContainer}>
-    <Text style={styles.sectionTitle}>통계</Text>
-    <Text style={styles.sectionPlaceholder}>통계 정보가 여기에 표시됩니다.</Text>
-  </View>
-);
+// 통계 섹션 메뉴 정의
+const profileSections = [
+  { id: 'reading' as StatsSectionId, name: '읽기 상태' },
+  { id: 'activity' as StatsSectionId, name: '리뷰와 평점' },
+  { id: 'community' as StatsSectionId, name: '커뮤니티 활동' },
+  { id: 'library' as StatsSectionId, name: '서재' },
+  { id: 'etc' as StatsSectionId, name: '기타' },
+];
+
+const StatsSection: React.FC<{ userId: number }> = ({ userId }) => {
+  const [selectedSection, setSelectedSection] = useState<StatsSectionId>('reading');
+
+  // 선택된 섹션에 따라 차트 렌더링
+  const renderSectionContent = () => {
+    switch (selectedSection) {
+      case 'reading':
+        return (
+          <View style={styles.chartsContainer}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ReadingStatusChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ReadingStatusByPeriodChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <GenreAnalysisChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <AuthorPublisherChart userId={userId} />
+            </Suspense>
+          </View>
+        );
+      case 'activity':
+        return (
+          <View style={styles.chartsContainer}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ReviewStatsChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <RatingStatsChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <ReviewSummaryStatsChart userId={userId} />
+            </Suspense>
+          </View>
+        );
+      case 'community':
+        return (
+          <View style={styles.chartsContainer}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LikesAndCommentsChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <FollowerStatsChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <CommunityActivityChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <CommunityInfluenceChart userId={userId} />
+            </Suspense>
+          </View>
+        );
+      case 'library':
+        return (
+          <View style={styles.chartsContainer}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LibraryCompositionChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LibraryPopularityChart userId={userId} />
+            </Suspense>
+            <Suspense fallback={<LoadingSpinner />}>
+              <LibraryUpdatePatternChart userId={userId} />
+            </Suspense>
+          </View>
+        );
+      case 'etc':
+        return (
+          <View style={styles.chartsContainer}>
+            <Suspense fallback={<LoadingSpinner />}>
+              <SearchActivityChart userId={userId} />
+            </Suspense>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={styles.statsContainer}>
+      {/* 탭 메뉴 */}
+      <View style={styles.tabsContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabsScroll}
+          contentContainerStyle={styles.tabsScrollContent}
+        >
+          {profileSections.map(section => (
+            <TouchableOpacity
+              key={section.id}
+              style={[styles.tabButton, selectedSection === section.id && styles.activeTabButton]}
+              onPress={() => setSelectedSection(section.id)}
+            >
+              <Text
+                style={[styles.tabText, selectedSection === section.id && styles.activeTabText]}
+              >
+                {section.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* 선택된 섹션 콘텐츠 */}
+      <ScrollView style={styles.chartsScrollContainer} showsVerticalScrollIndicator={false}>
+        {renderSectionContent()}
+      </ScrollView>
+    </View>
+  );
+};
 
 // Loading Skeletons
 const HeaderSkeleton: React.FC = () => (
@@ -386,7 +518,6 @@ const SummarySkeleton: React.FC = () => (
 // Profile Content Component with Error Boundary
 const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
   const [selectedSection, setSelectedSection] = useState('read');
-  const { profileData } = useUserProfile(userId);
   const isMyProfile = useIsMyProfile(userId);
 
   // userId가 유효하지 않은 경우 처리
@@ -395,46 +526,52 @@ const ProfileContent: React.FC<{ userId: number }> = ({ userId }) => {
   }
 
   const renderSectionContent = () => {
+    const sectionLoadingFallback = (
+      <View style={styles.sectionLoadingContainer}>
+        <LoadingSpinner />
+      </View>
+    );
+
     switch (selectedSection) {
       case 'read':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <ReadBooksSection userId={userId} />
           </Suspense>
         );
       case 'reviews':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <ReviewsSectionComponent userId={userId} />
           </Suspense>
         );
       case 'libraries':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <LibrariesSectionComponent userId={userId} />
           </Suspense>
         );
       case 'community':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <CommunitySectionComponent userId={userId} />
           </Suspense>
         );
       case 'subscriptions':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <SubscribedLibrariesSection userId={userId} isMyProfile={isMyProfile} />
           </Suspense>
         );
       case 'stats':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <StatsSection />
+          <Suspense fallback={sectionLoadingFallback}>
+            <StatsSection userId={userId} />
           </Suspense>
         );
       default:
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={sectionLoadingFallback}>
             <ReadBooksSection userId={userId} />
           </Suspense>
         );
@@ -474,16 +611,14 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId: propUserId
 
   // props로 전달된 userId가 있으면 사용하고, 없으면 route params, 마지막으로 현재 사용자 ID 사용
   const userId = propUserId || route.params?.userId || currentUser?.id;
-  const section = route.params?.section || 'read';
-
-  const handleRetry = () => {
-    // 페이지 새로고침 로직
-    // React Navigation에서는 리로드 대신 refetch 등을 사용
-  };
 
   // userId가 없는 경우 로그인 필요 화면
   if (!userId) {
-    return <ErrorFallback onRetry={() => {}} />;
+    return (
+      <View style={styles.loginRequiredContainer}>
+        <Text style={styles.loginRequiredText}>로그인이 필요합니다</Text>
+      </View>
+    );
   }
 
   return (
@@ -491,8 +626,6 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId: propUserId
       <Suspense
         fallback={
           <View style={styles.loadingContainer}>
-            <HeaderSkeleton />
-            <SummarySkeleton />
             <LoadingSpinner />
           </View>
         }
@@ -514,6 +647,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'white',
   },
   errorContainer: {
@@ -667,6 +802,16 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     backgroundColor: 'white',
   },
+  loginRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  loginRequiredText: {
+    fontSize: 16,
+    color: '#6B7280',
+  },
   notFollowingButton: {
     backgroundColor: '#111827',
   },
@@ -732,6 +877,13 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
   },
+  sectionLoadingContainer: {
+    flex: 1,
+    minHeight: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 40,
+  },
   sectionContainer: {
     padding: 16,
   },
@@ -760,5 +912,51 @@ const styles = StyleSheet.create({
   },
   skeletonIcon: {
     backgroundColor: '#E5E7EB',
+  },
+  statsContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  tabsContainer: {
+    backgroundColor: 'white',
+    paddingTop: 2,
+    paddingBottom: 4,
+  },
+  tabsScroll: {
+    paddingHorizontal: 20,
+  },
+  tabsScrollContent: {
+    paddingRight: 20,
+  },
+  tabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: 'white',
+    marginRight: 8,
+    flexShrink: 0,
+  },
+  activeTabButton: {
+    borderColor: '#BFDBFE',
+    backgroundColor: '#EFF6FF',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  activeTabText: {
+    color: '#1D4ED8',
+  },
+  chartsScrollContainer: {
+    flex: 1,
+  },
+  chartsContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
   },
 });

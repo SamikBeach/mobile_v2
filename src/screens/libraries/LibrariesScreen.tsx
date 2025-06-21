@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,15 +12,15 @@ import {
   NativeScrollEvent,
   TextInput,
 } from 'react-native';
-import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
-import { Plus, BookOpen, Users, Clock, Flame, Library, Calendar } from 'lucide-react-native';
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus, Clock, Flame, Library, Calendar } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { LoadingSpinner } from '../../components';
-import { LibraryCard } from '../../components';
+import { LoadingSpinner, LibraryCard } from '../../components';
 import { CreateLibraryBottomSheet } from '../../components/CreateLibraryBottomSheet';
 import { getLibraries, getLibraryTags, LibraryListItem } from '../../apis/library';
 import { SortBottomSheet } from './components/SortBottomSheet';
 import { TimeRangeBottomSheet } from './components/TimeRangeBottomSheet';
+import { AppColors } from '../../constants';
 
 // Sort options
 const sortOptions = [
@@ -28,6 +28,23 @@ const sortOptions = [
   { value: 'books', label: '담긴 책 많은 순', icon: Library },
   { value: 'latest', label: '최신순', icon: Clock },
 ];
+
+// Get sort icon based on sort option
+const getSortIcon = (sortOption: string, isActive: boolean) => {
+  const color = isActive ? '#1D4ED8' : '#6B7280';
+  const size = 12;
+
+  switch (sortOption) {
+    case 'popular':
+      return <Flame size={size} color={color} />;
+    case 'books':
+      return <Library size={size} color={color} />;
+    case 'latest':
+      return <Clock size={size} color={color} />;
+    default:
+      return <Flame size={size} color={color} />;
+  }
+};
 
 // Time range options
 const timeRangeOptions = [
@@ -159,7 +176,7 @@ const SortFilter = ({
       style={[styles.sortButton, timeRange !== 'all' && styles.activeSortButton]}
       onPress={onTimeRangePress}
     >
-      <Calendar size={12} color={timeRange !== 'all' ? '#1D4ED8' : '#6B7280'} />
+      <Calendar size={14} color={timeRange !== 'all' ? '#1D4ED8' : '#6B7280'} />
       <Text style={[styles.sortButtonText, timeRange !== 'all' && styles.activeSortButtonText]}>
         {timeRangeOptions.find(opt => opt.value === timeRange)?.label || '전체 기간'}
       </Text>
@@ -169,7 +186,7 @@ const SortFilter = ({
       style={[styles.sortButton, selectedSort !== 'popular' && styles.activeSortButton]}
       onPress={onSortPress}
     >
-      <Flame size={12} color={selectedSort !== 'popular' ? '#1D4ED8' : '#6B7280'} />
+      {getSortIcon(selectedSort, selectedSort !== 'popular')}
       <Text
         style={[styles.sortButtonText, selectedSort !== 'popular' && styles.activeSortButtonText]}
       >
@@ -205,6 +222,7 @@ const LibrariesScreenSkeleton = () => (
 // Main Libraries Screen Component
 export const LibrariesScreen = () => {
   const navigation = useNavigation();
+  const queryClient = useQueryClient();
 
   // State - 모든 hooks를 최상단에 위치
   const [selectedTag, setSelectedTag] = useState('all');
@@ -223,11 +241,7 @@ export const LibrariesScreen = () => {
   const scrollDirection = useRef<'up' | 'down'>('up');
 
   // Tags query
-  const {
-    data: tags = [],
-    isLoading: tagsLoading,
-    error: tagsError,
-  } = useQuery({
+  const { data: tags = [] } = useQuery({
     queryKey: ['library-tags'],
     queryFn: async () => {
       const result = await getLibraryTags(50);
@@ -257,7 +271,7 @@ export const LibrariesScreen = () => {
         timeRange: timeRange,
         search: searchQuery || undefined,
       }),
-    getNextPageParam: (lastPage, pages) => {
+    getNextPageParam: lastPage => {
       if (lastPage.meta.page < lastPage.meta.totalPages) {
         return lastPage.meta.page + 1;
       }
@@ -343,10 +357,11 @@ export const LibrariesScreen = () => {
     setShowCreateLibraryBottomSheet(true);
   }, []);
 
-  const handleLibraryCreated = useCallback((libraryId: number) => {
+  const handleLibraryCreated = useCallback(() => {
     // 새 서재가 생성된 후 목록 새로고침
-    // TODO: Query 무효화나 리프레시 로직 추가
-  }, []);
+    queryClient.invalidateQueries({ queryKey: ['libraries'] });
+    setShowCreateLibraryBottomSheet(false);
+  }, [queryClient]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -364,7 +379,14 @@ export const LibrariesScreen = () => {
   );
 
   // 모든 데이터 계산도 hooks 이후에
-  const libraries = data?.pages.flatMap(page => page.data) || [];
+  const libraries = useMemo(() => {
+    const allLibraries = data?.pages.flatMap(page => page.data) || [];
+    // ID 중복 제거
+    const uniqueLibraries = allLibraries.filter(
+      (library, index, self) => self.findIndex(l => l.id === library.id) === index
+    );
+    return uniqueLibraries;
+  }, [data]);
 
   // 모든 hooks 호출 후 조건부 렌더링
   if (librariesLoading && !libraries.length) {
@@ -404,7 +426,7 @@ export const LibrariesScreen = () => {
       <FlatList
         data={libraries}
         renderItem={renderLibraryItem}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item, index) => `library-${item.id}-${index}`}
         numColumns={1}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
@@ -613,7 +635,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#16A34A',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

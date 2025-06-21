@@ -16,7 +16,19 @@ import {
   UpdateStatisticsSettingRequest,
   StatisticsSettingResponse,
   ReadingStatusStatsResponse,
-  RecentPopularSearchResponse,
+  ReadingStatusByPeriodResponse,
+  GenreAnalysisResponse,
+  RatingStatsResponse,
+  ReviewStatsResponse,
+  ActivityFrequencyResponse,
+  UserInteractionResponse,
+  FollowerStatsResponse,
+  CommunityActivityResponse,
+  ReviewInfluenceResponse,
+  LibraryCompositionResponse,
+  LibraryPopularityResponse,
+  LibraryUpdatePatternResponse,
+  SearchActivityResponse,
 } from './types';
 
 /**
@@ -253,10 +265,98 @@ export const getReadingStatusStats = async (
 };
 
 /**
- * 인기 검색어 조회
+ * 기간별 독서 상태 통계를 조회합니다.
+ * @param userId 사용자 ID
  */
-export const getRecentPopularSearches = async (): Promise<RecentPopularSearchResponse[]> => {
-  const response = await axios.get('/user/recent-popular-searches');
+export const getReadingStatusByPeriod = async (
+  userId: number
+): Promise<ReadingStatusByPeriodResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/reading-status-by-period`);
+  return response.data;
+};
+
+/**
+ * 장르 분석 통계 조회
+ */
+export const getGenreAnalysis = async (userId: number): Promise<GenreAnalysisResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/genre-analysis`);
+  return response.data;
+};
+
+/**
+ * 평점 통계 조회
+ */
+export const getRatingStats = async (userId: number): Promise<RatingStatsResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/ratings`);
+  return response.data;
+};
+
+/**
+ * 리뷰 통계 조회
+ */
+export const getReviewStats = async (userId: number): Promise<ReviewStatsResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/reviews`);
+  return response.data;
+};
+
+/**
+ * 활동 빈도 통계 조회
+ */
+export const getActivityFrequency = async (userId: number): Promise<ActivityFrequencyResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/activity-frequency`);
+  return response.data;
+};
+
+/**
+ * 사용자 상호작용 통계 조회
+ */
+export const getUserInteraction = async (userId: number): Promise<UserInteractionResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/user-interaction`);
+  return response.data;
+};
+
+/**
+ * 팔로워 통계 조회
+ */
+export const getFollowerStats = async (userId: number): Promise<FollowerStatsResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/follower`);
+  return response.data;
+};
+
+/**
+ * 커뮤니티 활동 통계 조회
+ */
+export const getCommunityActivity = async (userId: number): Promise<CommunityActivityResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/community-activity`);
+  return response.data;
+};
+
+/**
+ * 리뷰 영향력 통계 조회
+ */
+export const getReviewInfluence = async (userId: number): Promise<ReviewInfluenceResponse> => {
+  const response = await axios.get(`/user/${userId}/stats/review-influence`);
+  return response.data;
+};
+
+/**
+ * 통계 설정 조회 (특정 사용자용)
+ */
+export const getUserStatisticsSettings = async (
+  userId: number
+): Promise<StatisticsSettingResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics-settings`);
+  return response.data;
+};
+
+/**
+ * 통계 설정 업데이트 (특정 사용자용)
+ */
+export const updateUserStatisticsSettings = async (
+  userId: number,
+  data: UpdateStatisticsSettingRequest
+): Promise<StatisticsSettingResponse> => {
+  const response = await axios.put(`/user/${userId}/statistics-settings`, data);
   return response.data;
 };
 
@@ -273,5 +373,41 @@ export const deactivateAccount = async (): Promise<AccountActionResponse> => {
  */
 export const deleteAccount = async (): Promise<AccountActionResponse> => {
   const response = await axios.delete('/user/me');
+  return response.data;
+};
+
+/**
+ * 서재 구성 통계 조회
+ */
+export const getLibraryComposition = async (
+  userId: number
+): Promise<LibraryCompositionResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/library-composition`);
+  return response.data;
+};
+
+/**
+ * 서재 인기도 통계 조회
+ */
+export const getLibraryPopularity = async (userId: number): Promise<LibraryPopularityResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/library-popularity`);
+  return response.data;
+};
+
+/**
+ * 서재 업데이트 패턴 통계 조회
+ */
+export const getLibraryUpdatePattern = async (
+  userId: number
+): Promise<LibraryUpdatePatternResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/library-update-pattern`);
+  return response.data;
+};
+
+/**
+ * 검색 활동 통계 조회
+ */
+export const getSearchActivity = async (userId: number): Promise<SearchActivityResponse> => {
+  const response = await axios.get(`/user/${userId}/statistics/search-activity`);
   return response.data;
 };

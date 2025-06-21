@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import Toast, { BaseToast } from 'react-native-toast-message';
+import { AppColors } from '../constants';
 
 const toastConfig = {
   success: (props: any) => (
     <BaseToast
       {...props}
       style={{
-        borderLeftColor: '#10B981',
+        borderLeftColor: AppColors.success,
         borderLeftWidth: 0,
         backgroundColor: '#1F2937',
         borderRadius: 12,
@@ -45,7 +46,7 @@ const toastConfig = {
             width: 24,
             height: 24,
             borderRadius: 12,
-            backgroundColor: '#10B981',
+            backgroundColor: AppColors.success,
             justifyContent: 'center',
             alignItems: 'center',
             marginRight: 12,

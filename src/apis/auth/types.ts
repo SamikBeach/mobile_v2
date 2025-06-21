@@ -191,7 +191,7 @@ export interface ChangePasswordResponse {
  * 계정 삭제 요청
  */
 export interface DeleteAccountRequest {
-  password: string;
+  password?: string; // 소셜 로그인 사용자는 비밀번호가 없을 수 있음
 }
 
 /**

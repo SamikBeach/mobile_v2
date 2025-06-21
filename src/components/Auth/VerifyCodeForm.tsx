@@ -10,6 +10,7 @@ import {
 import { useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import { completeRegistration } from '../../apis/auth';
+import { AppColors } from '../../constants';
 
 interface VerifyCodeFormProps {
   email: string;
@@ -17,7 +18,7 @@ interface VerifyCodeFormProps {
   onClose: () => void;
 }
 
-export const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ email, onSuccess, onClose }) => {
+export const VerifyCodeForm: React.FC<VerifyCodeFormProps> = ({ email, onSuccess }) => {
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
   submitButton: {
     height: 40,
     borderRadius: 12,
-    backgroundColor: '#16A34A',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 4,

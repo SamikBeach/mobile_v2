@@ -27,20 +27,17 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
   // 서재 태그들
   const libraryTags = (library as LibraryListItem).tags || [];
 
-  // 태그 색상 생성 함수 (프론트엔드와 동일)
+  // 태그 색상 생성 함수 (서재 필터와 동일한 파스텔 색상)
   const getTagColor = (index: number) => {
     const colors = [
-      '#FDE68A',
-      '#FCA5A5',
-      '#A7F3D0',
-      '#93C5FD',
-      '#C7D2FE',
-      '#F9A8D4',
-      '#FED7AA',
-      '#D1FAE5',
-      '#DBEAFE',
-      '#F3E8FF',
-      '#FEF3C7',
+      '#FFF8E2', // 파스텔 옐로우
+      '#F2E2FF', // 파스텔 퍼플
+      '#FFE2EC', // 파스텔 코럴
+      '#E2FFFC', // 파스텔 민트
+      '#E2F0FF', // 파스텔 블루
+      '#FFECDA', // 파스텔 오렌지
+      '#ECFFE2', // 파스텔 그린
+      '#FFE2F7', // 파스텔 핑크
     ];
     return colors[index % colors.length];
   };
@@ -127,15 +124,25 @@ export const LibraryCard: React.FC<LibraryCardProps> = ({
       <View style={styles.booksContainer}>
         {displayBooks && displayBooks.length > 0 ? (
           <View style={styles.booksGrid}>
-            {displayBooks.map((book: any) => (
-              <View key={book.id} style={styles.bookImageContainer}>
-                <Image
-                  source={{ uri: book.coverImage }}
-                  style={styles.bookImage}
-                  resizeMode='cover'
-                />
-              </View>
-            ))}
+            {Array.from({ length: 3 }).map((_, index) => {
+              const book = displayBooks[index];
+              return (
+                <View
+                  key={index}
+                  style={[styles.bookImageContainer, !book && styles.emptySlotContainer]}
+                >
+                  {book ? (
+                    <Image
+                      source={{ uri: book.coverImage }}
+                      style={styles.bookImage}
+                      resizeMode='cover'
+                    />
+                  ) : (
+                    <View style={styles.emptyBookSlot} />
+                  )}
+                </View>
+              );
+            })}
           </View>
         ) : (
           <View style={styles.emptyBooksContainer}>
@@ -223,8 +230,8 @@ const styles = StyleSheet.create({
     gap: 4, // gap-1 on mobile, gap-1.5 on sm
   },
   tag: {
-    paddingHorizontal: 6, // px-1.5 on mobile, px-2 on sm
-    paddingVertical: 2, // py-0.5
+    paddingHorizontal: 8, // px-2 on mobile, px-2.5 on sm
+    paddingVertical: 4, // py-1
     borderRadius: 12, // rounded-full
     flexShrink: 0, // flex-shrink-0
   },
@@ -283,6 +290,15 @@ const styles = StyleSheet.create({
   bookImage: {
     width: '100%',
     height: '100%',
+  },
+  emptyBookSlot: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
+  },
+  emptySlotContainer: {
+    borderWidth: 0,
+    backgroundColor: 'transparent',
   },
   emptyBooksContainer: {
     minHeight: 100, // reduced min height for empty state

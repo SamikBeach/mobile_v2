@@ -15,6 +15,7 @@ import { useMutation } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import { RootStackParamList } from '../navigation/types';
 import { submitFeedback, FeedbackDto } from '../apis/feedback';
+import { AppColors } from '../constants';
 
 export function FeedbackScreen() {
   const navigation = useNavigation();
@@ -198,7 +199,7 @@ export function FeedbackScreen() {
                 borderRadius: 12,
                 paddingHorizontal: 16,
                 paddingVertical: 8,
-                backgroundColor: isPending ? '#dcfce7' : '#16a34a',
+                backgroundColor: isPending ? AppColors.backgroundMedium : AppColors.primary,
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 8,
@@ -208,11 +209,11 @@ export function FeedbackScreen() {
             >
               {isPending ? (
                 <>
-                  <ActivityIndicator size='small' color='#16a34a' />
+                  <ActivityIndicator size='small' color={AppColors.primary} />
                   <Text
                     style={{
                       fontSize: 14,
-                      color: '#16a34a',
+                      color: AppColors.primary,
                       fontWeight: '500',
                     }}
                   >

@@ -8,10 +8,17 @@ import { ReadingStatusType } from '../apis/reading-status/types';
 import { Review } from '../apis/review/types';
 import { BookDetails } from '../apis/book/types';
 
+interface UserRating {
+  id: number;
+  rating: number;
+  bookId: number;
+  comment?: string;
+}
+
 interface UseReviewDialogProps {
   book: BookDetails | null;
   isbn: string;
-  userRating?: any;
+  userRating?: UserRating | null;
   userReadingStatus?: ReadingStatusType | null;
 }
 

@@ -13,7 +13,7 @@ import {
 import { Star, X, ChevronDown, Trash2, PenLine } from 'lucide-react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
-import { ReadingStatusType, StatusTexts } from '../constants';
+import { ReadingStatusType, StatusTexts, AppColors } from '../constants';
 
 interface ReviewBottomSheetProps {
   isVisible: boolean;
@@ -41,6 +41,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
   userReadingStatus = null,
 }) => {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const textInputRef = useRef<TextInput>(null);
 
   // State 관리
   const [rating, setRating] = useState(initialRating);
@@ -83,9 +84,11 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     if (isVisible) {
       // 다이얼로그가 열릴 때마다 초기값으로 설정
       setRating(initialRating);
-      if (isEditMode && initialContent) {
+
+      if (isEditMode) {
+        // 수정 모드일 때는 항상 초기값 설정 (내용이 빈 문자열이어도)
         setContent(initialContent);
-      } else if (!isEditMode) {
+      } else {
         // 새로 작성하는 경우 내용 초기화
         setContent('');
       }
@@ -120,22 +123,34 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     setRating(0);
   };
 
+  // TextInput의 현재 값을 가져오는 함수
+  const getCurrentTextContent = (): string => {
+    return content;
+  };
+
+  // TextInput 변경 핸들러
+  const handleTextChange = (text: string) => {
+    setContent(text);
+  };
+
   const handleSubmit = () => {
     if (rating === 0) {
       Alert.alert('별점 필요', '리뷰를 등록하기 위해서는 별점을 입력해주세요.');
       return;
     }
 
+    const currentContent = getCurrentTextContent();
+
     if (isCreateMode) {
-      onSubmit(rating, content, readingStatus);
+      onSubmit(rating, currentContent, readingStatus);
     } else {
-      onSubmit(rating, content);
+      onSubmit(rating, currentContent);
     }
   };
 
   // 리뷰 내용이 있는지 확인하는 함수 (내용만 체크)
   const hasContent = () => {
-    return content.trim().length > 0;
+    return getCurrentTextContent().trim().length > 0;
   };
 
   const handleClose = () => {
@@ -323,7 +338,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
     (props: any) => {
       const handleBackdropPress = () => {
         // 리뷰 내용이 있으면 확인 알림 (바텀시트는 닫지 않음)
-        if (content.trim().length > 0) {
+        if (getCurrentTextContent().trim().length > 0) {
           Alert.alert(
             '작성 중인 리뷰가 있습니다',
             '정말로 나가시겠습니까? 작성 중인 리뷰는 저장되지 않습니다.',
@@ -367,7 +382,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
         </View>
       );
     },
-    [content, onClose]
+    [onClose]
   );
 
   const renderContent = () => (
@@ -445,6 +460,8 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
       {/* 리뷰 내용 입력 */}
       <View style={styles.textInputSection}>
         <TextInput
+          ref={textInputRef}
+          value={content}
           style={[
             styles.textInput,
             {
@@ -453,8 +470,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
           ]}
           multiline
           numberOfLines={6}
-          value={content}
-          onChangeText={setContent}
+          onChangeText={handleTextChange}
           placeholder={
             isDeleteMode ? '내용을 비워두면 리뷰가 삭제됩니다' : '이 책에 대한 리뷰를 남겨주세요'
           }
@@ -479,7 +495,7 @@ export const ReviewBottomSheet: React.FC<ReviewBottomSheetProps> = ({
             styles.button,
             styles.submitButton,
             {
-              backgroundColor: isDeleteMode ? '#EF4444' : '#16A34A',
+              backgroundColor: isDeleteMode ? '#EF4444' : AppColors.primary,
               opacity: rating === 0 || isSubmitting ? 0.5 : 1,
             },
           ]}
@@ -789,7 +805,7 @@ const styles = StyleSheet.create({
   },
   selectedOption: {
     backgroundColor: '#F0FDF4',
-    borderColor: '#16A34A',
+    borderColor: AppColors.primary,
   },
   readingStatusContainer: {
     padding: 20,

@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { BookOpen, Hash, MessageSquare, User } from 'lucide-react-native';
 import { PostTypeBadgeProps } from '../../types/notification';
+import { AppColors } from '../../constants';
 
 export function PostTypeBadge({ sourceType }: PostTypeBadgeProps) {
   if (!sourceType) return null;
@@ -44,7 +45,7 @@ export function PostTypeBadge({ sourceType }: PostTypeBadgeProps) {
       case 'comment':
         return { bg: '#f3e8ff', text: '#a855f7' };
       case 'library':
-        return { bg: '#dcfce7', text: '#16a34a' };
+        return { bg: AppColors.backgroundMedium, text: '#16a34a' };
       case 'user':
         return { bg: '#fef3c7', text: '#d97706' };
       default:

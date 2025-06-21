@@ -1,7 +1,7 @@
 import React, { useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
-import { Check } from 'lucide-react-native';
+import { Check, Calendar, Clock, CalendarClock } from 'lucide-react-native';
 
 interface TimeRangeBottomSheetProps {
   visible: boolean;
@@ -11,11 +11,33 @@ interface TimeRangeBottomSheetProps {
 }
 
 const timeRangeOptions = [
-  { value: 'all', label: '전체 기간' },
-  { value: 'today', label: '오늘' },
-  { value: 'week', label: '이번 주' },
-  { value: 'month', label: '이번 달' },
-  { value: 'year', label: '올해' },
+  {
+    value: 'all',
+    label: '전체 기간',
+    icon: (isActive: boolean) => <Calendar size={16} color={isActive ? '#1D4ED8' : '#6B7280'} />,
+  },
+  {
+    value: 'today',
+    label: '오늘',
+    icon: (isActive: boolean) => <Clock size={16} color={isActive ? '#1D4ED8' : '#6B7280'} />,
+  },
+  {
+    value: 'week',
+    label: '이번 주',
+    icon: (isActive: boolean) => <Clock size={16} color={isActive ? '#1D4ED8' : '#6B7280'} />,
+  },
+  {
+    value: 'month',
+    label: '이번 달',
+    icon: (isActive: boolean) => <Calendar size={16} color={isActive ? '#1D4ED8' : '#6B7280'} />,
+  },
+  {
+    value: 'year',
+    label: '올해',
+    icon: (isActive: boolean) => (
+      <CalendarClock size={16} color={isActive ? '#1D4ED8' : '#6B7280'} />
+    ),
+  },
 ];
 
 export const TimeRangeBottomSheet: React.FC<TimeRangeBottomSheetProps> = ({
@@ -71,23 +93,24 @@ export const TimeRangeBottomSheet: React.FC<TimeRangeBottomSheetProps> = ({
       </View>
 
       <View style={styles.optionsContainer}>
-        {timeRangeOptions.map(option => (
-          <TouchableOpacity
-            key={option.value}
-            style={styles.optionItem}
-            onPress={() => handleTimeRangeSelect(option.value)}
-          >
-            <Text
-              style={[
-                styles.optionText,
-                selectedTimeRange === option.value && styles.selectedOptionText,
-              ]}
+        {timeRangeOptions.map(option => {
+          const isSelected = selectedTimeRange === option.value;
+          return (
+            <TouchableOpacity
+              key={option.value}
+              style={styles.optionItem}
+              onPress={() => handleTimeRangeSelect(option.value)}
             >
-              {option.label}
-            </Text>
-            {selectedTimeRange === option.value && <Check size={20} color='#1D4ED8' />}
-          </TouchableOpacity>
-        ))}
+              <View style={styles.optionLeft}>
+                {option.icon(isSelected)}
+                <Text style={[styles.optionText, isSelected && styles.selectedOptionText]}>
+                  {option.label}
+                </Text>
+              </View>
+              {isSelected && <Check size={20} color='#1D4ED8' />}
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </BottomSheetView>
   );
@@ -155,6 +178,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     backgroundColor: 'transparent',
     minHeight: 56,
+  },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   optionText: {
     fontSize: 16,
