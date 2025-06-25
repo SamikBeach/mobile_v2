@@ -24,7 +24,6 @@ const { width: screenWidth } = Dimensions.get('window');
 
 type PeriodType = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
-// 읽기 상태별 컬러 매핑 (파스텔톤)
 const STATUS_COLORS = {
   [ReadingStatusType.READ]: '#86efac', // green-300 (파스텔)
   [ReadingStatusType.READING]: '#93c5fd', // blue-300 (파스텔)
