@@ -1,4 +1,3 @@
-// 태그 색상 배열 - 파스텔톤
 export const TAG_COLORS = [
   '#FFF8E2', // 파스텔 옐로우
   '#F2E2FF', // 파스텔 퍼플
