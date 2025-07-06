@@ -293,7 +293,6 @@ export const CommentBottomSheet: React.FC<CommentBottomSheetProps> = ({
     }
   };
 
-  // Backdrop component
   const renderBackdrop = useCallback(
     (props: any) => (
       <BottomSheetBackdrop

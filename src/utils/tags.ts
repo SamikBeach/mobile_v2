@@ -1,4 +1,3 @@
-// 태그 색상 배열 - 파스텔톤
 export const TAG_COLORS = [
   '#FFF8E2', // 파스텔 옐로우
   '#F2E2FF', // 파스텔 퍼플
@@ -10,10 +9,6 @@ export const TAG_COLORS = [
   '#FFE2F7', // 파스텔 핑크
 ];
 
-/**
- * 태그 인덱스에 따른 색상을 반환합니다.
- * 웹 버전과 동일한 색상 팔레트를 사용합니다.
- */
 export const getTagColor = (index: number): string => {
   const colors = [
     '#F1F5F9', // slate-100
