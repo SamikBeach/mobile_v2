@@ -13,9 +13,19 @@ const { width: screenWidth } = Dimensions.get('window');
 
 type ChartType = 'authors' | 'publishers';
 
+interface AuthorPublisherData {
+  name: string;
+  count: number;
+  genres?: string[];
+  categories?: string[];
+}
+
 // 커스텀 막대 차트 컴포넌트
 interface CustomBarChartProps {
-  data: any;
+  data: {
+    labels: string[];
+    datasets: { data: number[] }[];
+  };
   width: number;
   height: number;
   color: string;
@@ -176,7 +186,22 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
   if (!data.isPublic) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>작가 & 출판사 통계</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>작가 & 출판사 통계</Text>
+          <View style={styles.switchContainer}>
+            <View style={styles.switchWrapper}>
+              <Globe size={16} color='#64748B' />
+              <Switch
+                value={isPublic}
+                onValueChange={setIsPublic}
+                trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
+                thumbColor={isPublic ? '#FFFFFF' : '#F8FAFC'}
+                ios_backgroundColor='#F1F5F9'
+                style={styles.switch}
+              />
+            </View>
+          </View>
+        </View>
         <View style={styles.privateContainer}>
           <Text style={styles.privateText}>이 통계는 비공개 설정되어 있습니다.</Text>
         </View>
@@ -184,41 +209,34 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
     );
   }
 
-  // 가상 작가/출판사 데이터
-  const chartData = {
-    authors: {
-      labels: ['플라톤', '아리스토텔레스', '니체', '칸트', '데카르트'],
-      datasets: [
-        {
-          data: [8, 6, 5, 4, 3],
-        },
-      ],
-    },
-    publishers: {
-      labels: ['민음사', '창비', '문학동네', '을유문화사', '열린책들'],
-      datasets: [
-        {
-          data: [14, 11, 9, 8, 7],
-        },
-      ],
-    },
+  // 임시 데이터 (API 구현 전까지)
+  const mockData: { topAuthors: AuthorPublisherData[]; topPublishers: AuthorPublisherData[] } = {
+    topAuthors: [],
+    topPublishers: [],
   };
 
-  const favoriteAuthors = [
-    { name: '플라톤', books: 8, genres: ['철학', '고전'] },
-    { name: '아리스토텔레스', books: 6, genres: ['철학', '논리학'] },
-    { name: '니체', books: 5, genres: ['철학', '문학'] },
-    { name: '칸트', books: 4, genres: ['철학', '윤리학'] },
-    { name: '데카르트', books: 3, genres: ['철학', '수학'] },
-  ];
-
-  const favoritePublishers = [
-    { name: '민음사', books: 14, categories: ['문학', '철학'] },
-    { name: '창비', books: 11, categories: ['한국문학', '시'] },
-    { name: '문학동네', books: 9, categories: ['소설', '에세이'] },
-    { name: '을유문화사', books: 8, categories: ['인문', '철학'] },
-    { name: '열린책들', books: 7, categories: ['해외문학', '고전'] },
-  ];
+  // API 데이터를 차트 형식으로 변환
+  const getChartData = () => {
+    if (selectedChart === 'authors') {
+      return {
+        labels: mockData.topAuthors.map((author: AuthorPublisherData) => author.name),
+        datasets: [
+          {
+            data: mockData.topAuthors.map((author: AuthorPublisherData) => author.count),
+          },
+        ],
+      };
+    } else {
+      return {
+        labels: mockData.topPublishers.map((publisher: AuthorPublisherData) => publisher.name),
+        datasets: [
+          {
+            data: mockData.topPublishers.map((publisher: AuthorPublisherData) => publisher.count),
+          },
+        ],
+      };
+    }
+  };
 
   // 차트 색상 정의
   const getChartColor = () => {
@@ -231,6 +249,34 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
     { id: 'authors' as ChartType, name: '작가' },
     { id: 'publishers' as ChartType, name: '출판사' },
   ];
+
+  // 데이터가 없는 경우
+  const currentData = selectedChart === 'authors' ? mockData.topAuthors : mockData.topPublishers;
+  if (!currentData || currentData.length === 0) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>작가 & 출판사 통계</Text>
+          <View style={styles.switchContainer}>
+            <View style={styles.switchWrapper}>
+              <Globe size={16} color='#64748B' />
+              <Switch
+                value={isPublic}
+                onValueChange={setIsPublic}
+                trackColor={{ false: '#F1F5F9', true: '#3B82F6' }}
+                thumbColor={isPublic ? '#FFFFFF' : '#F8FAFC'}
+                ios_backgroundColor='#F1F5F9'
+                style={styles.switch}
+              />
+            </View>
+          </View>
+        </View>
+        <View style={styles.privateContainer}>
+          <Text style={styles.privateText}>아직 데이터가 없습니다.</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -269,7 +315,7 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
       {/* 차트 */}
       <View style={styles.chartContainer}>
         <CustomBarChart
-          data={chartData[selectedChart]}
+          data={getChartData()}
           width={screenWidth - 64}
           height={220}
           color={getChartColor()}
@@ -282,29 +328,23 @@ export const AuthorPublisherChart: React.FC<AuthorPublisherChartProps> = ({ user
           {selectedChart === 'authors' ? '선호 작가 TOP 5' : '선호 출판사 TOP 5'}
         </Text>
         <View style={styles.detailList}>
-          {(selectedChart === 'authors' ? favoriteAuthors : favoritePublishers).map(
-            (item, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.detailItem,
-                  index ===
-                    (selectedChart === 'authors' ? favoriteAuthors : favoritePublishers).length -
-                      1 && styles.lastDetailItem,
-                ]}
-              >
-                <View style={styles.detailInfo}>
-                  <Text style={styles.detailName}>{item.name}</Text>
-                  <Text style={styles.detailMeta}>
-                    {selectedChart === 'authors'
-                      ? (item as any).genres.join(', ')
-                      : (item as any).categories.join(', ')}
-                  </Text>
-                </View>
-                <Text style={styles.detailCount}>{item.books}권</Text>
+          {currentData.map((item: AuthorPublisherData, index: number) => (
+            <View
+              key={index}
+              style={[styles.detailItem, index === currentData.length - 1 && styles.lastDetailItem]}
+            >
+              <View style={styles.detailInfo}>
+                <Text style={styles.detailName}>{item.name}</Text>
+                {selectedChart === 'authors' && item.genres && (
+                  <Text style={styles.detailMeta}>{item.genres.join(', ')}</Text>
+                )}
+                {selectedChart === 'publishers' && item.categories && (
+                  <Text style={styles.detailMeta}>{item.categories.join(', ')}</Text>
+                )}
               </View>
-            )
-          )}
+              <Text style={styles.detailCount}>{item.count}권</Text>
+            </View>
+          ))}
         </View>
       </View>
     </View>
