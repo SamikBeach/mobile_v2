@@ -80,7 +80,7 @@ let isRefreshing = false;
 let failedQueue: QueueItem[] = [];
 
 // 대기열 처리 함수
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
